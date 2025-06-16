@@ -1,0 +1,180 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Beautiful CSS Modal</title>
+    <style>
+        /* 1. General page styling */
+        body {
+            background-color: #f0f2f5; /* Off-white background to make the modal pop */
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            min-height: 100vh;
+            margin: 0;
+            color: #303133;
+        }
+
+        /* 2. Main modal container */
+        .modal-container {
+            --background: #ffffff;
+            --rad: 10px;
+            --border: #666;
+            --border-thickness: 2px;
+            /* Sizing and Positioning */
+            position: fixed;
+            inset: 40px; /* Fills the screen with a 40px margin on all sides */
+            
+            /* Layout */
+            display: flex;
+            flex-direction: column;
+
+            /* Appearance */
+            overflow: hidden; /* Crucial for clipping the iframe's corners */
+        }
+
+        /* 3. Modal Header for Tabs */
+        .modal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-end; /* Aligns tabs to the bottom edge */
+            padding: 0 16px;
+            position: relative;
+            flex-shrink: 0; /* Prevents the header from shrinking */
+        }
+        
+        /* 4. Tab styling (shared) */
+        .tab {
+            padding: 12px 16px;
+            color: #606266; /* Muted color for text/icons */
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-size: 14px;
+            cursor: pointer;
+            border-radius: var(--rad) var(--rad) 0 0;
+            transition: background-color 0.2s ease;
+            user-select: none;
+        }
+
+        /* 5. Active Tab (the magic part) */
+        .tab.active, .tab.close-button {
+            /* Seamless integration */
+            background-color: var(--background); /* Same as content background */
+            border: var(--border-thickness) solid var(--border); /* Matching border */
+            border-bottom-color: var(--background); /* "Erases" the bottom border to blend with content */
+            margin-bottom: -1px; /* Pulls tab down to cover the header's border-bottom */
+            z-index: 1; /* Ensures it sits on top of the header's border */
+            
+            /* Active state appearance */
+            color: #303133; /* Darker, more prominent color */
+            font-weight: 500;
+        }
+
+        /* 6. Close Button styling */
+        .tab.close-button {
+            padding: 8px; /* Makes it more of a square icon button */
+        }
+        
+        .tab.close-button:hover {
+            background-color: #f5f7fa; /* Subtle hover effect */
+        }
+        
+        /* 7. SVG Icon styling */
+        .tab svg {
+            stroke: currentColor;
+        }
+
+        .tab.active svg {
+            width: 16px;
+            height: 16px;
+        }
+
+        .tab.close-button svg {
+            width: 20px;
+            height: 20px;
+        }
+
+        /* 8. Modal Content Area */
+        .modal-content {
+            flex-grow: 1; /* Takes up all remaining vertical space */
+            position: relative;
+            border-radius: var(--rad);
+            overflow: hidden;
+            bottom: calc(var(--border-thickness) - 1px);
+            border: var(--border-thickness) solid var(--border);
+        }
+
+        .modal-content iframe {
+            width: 100%;
+            height: 100%;
+            border: 0;
+        }
+    </style>
+</head>
+<body>
+
+    <div class="modal-container">
+        <div class="modal-header">
+            <!-- The active title tab on the left -->
+            <div class="tab active">
+                <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round">
+                   <path stroke="none" d="M0 0h24v24H0z" fill="none"/>
+                   <path d="M4 7h3a1 1 0 0 0 1 -1v-1a2 2 0 0 1 4 0v1a1 1 0 0 0 1 1h3a1 1 0 0 1 1 1v3a1 1 0 0 0 1 1h1a2 2 0 0 1 0 4h-1a1 1 0 0 0 -1 1v3a1 1 0 0 1 -1 1h-3a1 1 0 0 1 -1 -1v-1a2 2 0 0 0 -4 0v1a1 1 0 0 1 -1 1h-3a1 1 0 0 1 -1 -1v-3a1 1 0 0 1 1 -1h1a2 2 0 0 0 0 -4h-1a1 1 0 0 1 -1 -1v-3a1 1 0 0 1 1 -1" />
+                </svg>
+                <span>My Extension</span>
+            </div>
+
+            <!-- The close button on the right -->
+            <div class="tab close-button">
+                <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+                   <line x1="18" y1="6" x2="6" y2="18"></line>
+                   <line x1="6" y1="6" x2="18" y2="18"></line>
+                </svg>
+            </div>
+        </div>
+        <div class="modal-content">
+            <iframe srcdoc='
+                <!DOCTYPE html>
+                <html>
+                <head>
+                    <style>
+                        body { 
+                            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+                            color: #333;
+                            padding: 24px;
+                            background-color: #ffffff;
+                            margin: 0;
+                        }
+                        h1 {
+                            font-weight: 500;
+                            color: #111;
+                            border-bottom: 1px solid #eee;
+                            padding-bottom: 8px;
+                            margin-top: 0;
+                        }
+                        p {
+                            line-height: 1.6;
+                        }
+                        code {
+                            background-color: #f0f2f5;
+                            padding: 2px 6px;
+                            border-radius: 4px;
+                            font-family: "SF Mono", "Fira Code", monospace;
+                        }
+                    </style>
+                </head>
+                <body>
+                    <h1>Extension Content</h1>
+                    <p>This is the main view for the extension. It is rendered inside an <code>iframe</code> to isolate its styles and scripts from the host page.</p>
+                    <p>The tab at the top is designed to look like it is part of this content panel, creating a seamless and integrated user experience.</p>
+                </body>
+                </html>
+            ' frameborder="0"></iframe>
+        </div>
+    </div>
+
+</body>
+</html>

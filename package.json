@@ -1,0 +1,28 @@
+{
+  "name": "extension-to-userscript",
+  "version": "0.1.0",
+  "description": "Converts simple browser extensions to userscripts",
+  "main": "src/converter.js",
+  "bin": {
+    "ext2us": "src/converter.js"
+  },
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "start": "node src/converter.js"
+  },
+  "keywords": [
+    "userscript",
+    "extension",
+    "converter",
+    "tampermonkey",
+    "greasemonkey"
+  ],
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "yargs": "^17.7.2"
+  },
+  "engines": {
+    "node": ">=14.0.0"
+  }
+}
