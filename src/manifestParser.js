@@ -21,6 +21,11 @@ async function parseManifest(manifestPath) {
       action: manifest.action || {},
       icons: manifest.icons || {},
       web_accessible_resources: manifest.web_accessible_resources || [],
+      _id: locale(manifest.name)
+        ?.replace(/[^a-z0-9]+/gi, "-")
+        .replace(/\-+$/, "")
+        .replace(/^-+/, "")
+        .toLowerCase(),
       // Add other relevant fields as needed in later phases (background, options_ui, etc.)
     };
 

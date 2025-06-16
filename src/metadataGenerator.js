@@ -7,7 +7,7 @@ function generateMetadata(
   requiredGmGrants = [],
   extensionRoot = null,
 ) {
-  const { name, version, description, content_scripts } = parsedManifest;
+  const { name, version, description, content_scripts, _id } = parsedManifest;
 
   const lines = ["// ==UserScript=="];
   lines.push(`// @name        ${name || "Converted Extension"}`);
@@ -16,12 +16,10 @@ function generateMetadata(
     lines.push(`// @description ${description}`);
   }
   // Simple namespace generation, improve later
-  lines.push(
-    `// @namespace   ${name ? name.toLowerCase().replace(/\s+/g, "-") : "converted-extension"}-namespace`,
-  );
+  lines.push(`// @namespace   ${_id}`);
   lines.push(`// @author      Converter Script`); // Placeholder
   lines.push(
-    `// @require      data:text/plain;base64,d2luZG93LnRydXN0ZWRUeXBlcy5jcmVhdGVQb2xpY3koJ2RlZmF1bHQnLCB7IGNyZWF0ZUhUTUw6IHN0ciA9PiBzdHIsIGNyZWF0ZVNjcmlwdFVSTDogc3RyPT4gc3RyLCBjcmVhdGVTY3JpcHQ6IHN0cj0+IHN0ciB9KTs=`,
+    `// @require     data:text/javascript;base64,${fs.readFileSync(path.resolve(".", "src", "templates", "trustedTypes.template.js")).toString("base64")}`,
   );
   // Aggregate @match directives from all content scripts
   const matches = new Set();

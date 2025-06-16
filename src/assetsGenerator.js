@@ -188,6 +188,13 @@ class AssetGenerator {
       /\.(woff|woff2|ttf|otf|eot)$/i, // Font files
       /\.(mp4|webm|ogg|mp3|wav)$/i, // Media files (can be large)
     ];
+
+    // Unified regex patterns
+    this.REGEX_PATTERNS = {
+      HTML_ASSETS: /(src|href)\s*=\s*(?:["']([^"']+)["']|([^\s>]+))/gi,
+      CSS_ASSETS: /url\s*\(\s*["']?([^"')]+)["']?\s*\)/gi,
+      EXTERNAL_URLS: /^(data:|https?:\/\/|\/\/|#|javascript:|mailto:)/,
+    };
   }
 
   /**
@@ -239,7 +246,14 @@ class AssetGenerator {
       );
     }
 
-    if (!(await fs.exists(absAssetPath))) {
+    async function checkFileExists(file) {
+      return fs
+        .access(file, fs.constants.F_OK)
+        .then(() => true)
+        .catch(() => false);
+    }
+
+    if (!(await checkFileExists(absAssetPath))) {
       absAssetPath = path.join(this.extensionRoot, assetPath);
     }
 
@@ -262,40 +276,44 @@ class AssetGenerator {
   }
 
   /**
-   * Extracts asset paths from HTML content
-   * @param {string} html
+   * Extracts asset paths from content using unified logic
+   * @param {string} content
+   * @param {string} contentType - 'HTML' or 'CSS'
    * @returns {Array<string>}
    */
-  extractHtmlAssetPaths(html) {
+  extractAssetPaths(content, contentType) {
     try {
-      if (!html || typeof html !== "string" || html.trim().length === 0) {
+      if (
+        !content ||
+        typeof content !== "string" ||
+        content.trim().length === 0
+      ) {
         return [];
       }
 
-      const regex = /(src|href)\s*=\s*["']([^"']+)["']/gi;
+      const regex =
+        contentType === "HTML"
+          ? this.REGEX_PATTERNS.HTML_ASSETS
+          : this.REGEX_PATTERNS.CSS_ASSETS;
+
       const assets = [];
       let match;
       let matchCount = 0;
       const maxMatches = 1000;
 
-      while ((match = regex.exec(html)) !== null && matchCount < maxMatches) {
+      while (
+        (match = regex.exec(content)) !== null &&
+        matchCount < maxMatches
+      ) {
         matchCount++;
-        const url = match[2];
+        const url = contentType === "HTML" ? match[2] : match[1];
 
         if (!url || typeof url !== "string") {
           continue;
         }
 
-        // Skip external URLs, data URLs, and fragments
-        if (
-          url.startsWith("data:") ||
-          url.startsWith("http://") ||
-          url.startsWith("https://") ||
-          url.startsWith("//") ||
-          url.startsWith("#") ||
-          url.startsWith("javascript:") ||
-          url.startsWith("mailto:")
-        ) {
+        // Skip external URLs using unified pattern
+        if (this.REGEX_PATTERNS.EXTERNAL_URLS.test(url)) {
           continue;
         }
 
@@ -303,66 +321,22 @@ class AssetGenerator {
       }
 
       const uniqueAssets = [...new Set(assets)];
-      console.log(`Extracted ${uniqueAssets.length} unique HTML asset path(s)`);
+      console.log(
+        `Extracted ${uniqueAssets.length} unique ${contentType} asset path(s)`,
+      );
 
       return uniqueAssets;
     } catch (error) {
-      console.error("Error extracting HTML asset paths:", error.message);
+      console.error(
+        `Error extracting ${contentType} asset paths:`,
+        error.message,
+      );
       return [];
     }
   }
 
   /**
-   * Extracts asset paths from CSS content (url() imports)
-   * @param {string} css
-   * @returns {Array<string>}
-   */
-  extractCssAssetPaths(css) {
-    try {
-      if (!css || typeof css !== "string" || css.trim().length === 0) {
-        return [];
-      }
-
-      // Match url() imports in CSS
-      const regex = /url\s*\(\s*["']?([^"')]+)["']?\s*\)/gi;
-      const assets = [];
-      let match;
-      let matchCount = 0;
-      const maxMatches = 1000;
-
-      while ((match = regex.exec(css)) !== null && matchCount < maxMatches) {
-        matchCount++;
-        const url = match[1];
-
-        if (!url || typeof url !== "string") {
-          continue;
-        }
-
-        // Skip external URLs and data URLs
-        if (
-          url.startsWith("data:") ||
-          url.startsWith("http://") ||
-          url.startsWith("https://") ||
-          url.startsWith("//")
-        ) {
-          continue;
-        }
-
-        assets.push(url);
-      }
-
-      const uniqueAssets = [...new Set(assets)];
-      console.log(`Extracted ${uniqueAssets.length} unique CSS asset path(s)`);
-
-      return uniqueAssets;
-    } catch (error) {
-      console.error("Error extracting CSS asset paths:", error.message);
-      return [];
-    }
-  }
-
-  /**
-   * Replaces asset references in content based on asset type
+   * Replaces asset references in content using unified regex patterns
    * @param {string} content
    * @param {string} assetPath
    * @param {string} dataUrl
@@ -498,13 +472,7 @@ class AssetGenerator {
     this.processedFiles.add(normalizedPath);
     console.log(`Processing ${assetType} file: ${normalizedPath}`);
 
-    let assetPaths = [];
-
-    if (assetType === "HTML") {
-      assetPaths = this.extractHtmlAssetPaths(content);
-    } else if (assetType === "CSS") {
-      assetPaths = this.extractCssAssetPaths(content);
-    }
+    const assetPaths = this.extractAssetPaths(content, assetType);
 
     if (assetPaths.length === 0) {
       console.log(`No assets found in ${assetType} file: ${normalizedPath}`);
@@ -613,86 +581,183 @@ class AssetGenerator {
   }
 
   /**
-   * Processes options page and adds it to the assets map
+   * Gets page path from manifest based on page type and manifest structure
    * @param {object} manifest - Parsed manifest object
-   * @returns {Promise<{optionsPagePath: string|null}>}
+   * @param {string} pageType - 'options' or 'popup'
+   * @returns {string|null} Relative path to the page or null
    */
-  async processOptionsPage(manifest) {
+  getPagePath(manifest, pageType) {
     try {
-      const optionsPageRel = this.getOptionsPagePath(manifest);
-      if (!optionsPageRel) {
-        console.log("No options page declared in manifest.");
-        return { optionsPagePath: null };
+      if (!manifest || typeof manifest !== "object") {
+        console.warn(`Invalid manifest provided to get${pageType}PagePath`);
+        return null;
       }
 
-      console.log(`Processing options page: ${optionsPageRel}`);
+      if (pageType === "options") {
+        // Check options_ui.page first (preferred)
+        if (
+          manifest.options_ui &&
+          typeof manifest.options_ui === "object" &&
+          manifest.options_ui.page
+        ) {
+          if (typeof manifest.options_ui.page === "string") {
+            return manifest.options_ui.page;
+          } else {
+            console.warn(
+              "options_ui.page exists but is not a string:",
+              typeof manifest.options_ui.page,
+            );
+          }
+        }
 
-      const normalizedOptionsRel = normalizePath(optionsPageRel);
-      const optionsFullPath = path.resolve(
-        this.extensionRoot,
-        normalizedOptionsRel,
+        // Fallback to options_page
+        if (manifest.options_page) {
+          if (typeof manifest.options_page === "string") {
+            return manifest.options_page;
+          } else {
+            console.warn(
+              "options_page exists but is not a string:",
+              typeof manifest.options_page,
+            );
+          }
+        }
+      } else if (pageType === "popup") {
+        // Check manifest v3 action.default_popup
+        if (
+          manifest.action &&
+          typeof manifest.action === "object" &&
+          manifest.action.default_popup
+        ) {
+          if (typeof manifest.action.default_popup === "string") {
+            return manifest.action.default_popup;
+          } else {
+            console.warn(
+              "action.default_popup exists but is not a string:",
+              typeof manifest.action.default_popup,
+            );
+          }
+        }
+
+        // Check manifest v2 browser_action.default_popup
+        if (
+          manifest.browser_action &&
+          typeof manifest.browser_action === "object" &&
+          manifest.browser_action.default_popup
+        ) {
+          if (typeof manifest.browser_action.default_popup === "string") {
+            return manifest.browser_action.default_popup;
+          } else {
+            console.warn(
+              "browser_action.default_popup exists but is not a string:",
+              typeof manifest.browser_action.default_popup,
+            );
+          }
+        }
+
+        // Check manifest v2 page_action.default_popup
+        if (
+          manifest.page_action &&
+          typeof manifest.page_action === "object" &&
+          manifest.page_action.default_popup
+        ) {
+          if (typeof manifest.page_action.default_popup === "string") {
+            return manifest.page_action.default_popup;
+          } else {
+            console.warn(
+              "page_action.default_popup exists but is not a string:",
+              typeof manifest.page_action.default_popup,
+            );
+          }
+        }
+      }
+
+      return null;
+    } catch (error) {
+      console.error(
+        `Error extracting ${pageType} page path from manifest:`,
+        error.message,
       );
+      return null;
+    }
+  }
 
-      // Validate that the options page is within the extension directory
-      const relativePath = path.relative(this.extensionRoot, optionsFullPath);
+  /**
+   * Unified method to process HTML pages (options or popup)
+   * @param {object} manifest - Parsed manifest object
+   * @param {string} pageType - 'options' or 'popup'
+   * @returns {Promise<{[pageType + 'PagePath']: string|null}>}
+   */
+  async processHtmlPage(manifest, pageType) {
+    try {
+      const pageRel = this.getPagePath(manifest, pageType);
+      if (!pageRel) {
+        console.log(`No ${pageType} page declared in manifest.`);
+        return { [`${pageType}PagePath`]: null };
+      }
+
+      console.log(`Processing ${pageType} page: ${pageRel}`);
+
+      const normalizedPageRel = normalizePath(pageRel);
+      const pageFullPath = path.resolve(this.extensionRoot, normalizedPageRel);
+
+      // Validate that the page is within the extension directory
+      const relativePath = path.relative(this.extensionRoot, pageFullPath);
       if (relativePath.startsWith("..")) {
         throw new Error(
-          `Options page path resolves outside extension directory: ${optionsPageRel}`,
+          `${pageType} page path resolves outside extension directory: ${pageRel}`,
         );
       }
 
-      // Validate options page file exists and is readable
+      // Validate page file exists and is readable
       try {
-        const stats = await fs.stat(optionsFullPath);
+        const stats = await fs.stat(pageFullPath);
         if (!stats.isFile()) {
           throw new Error(
-            `Options page path exists but is not a file: ${optionsPageRel}`,
+            `${pageType} page path exists but is not a file: ${pageRel}`,
           );
         }
-        await fs.access(optionsFullPath, fs.constants.R_OK);
+        await fs.access(pageFullPath, fs.constants.R_OK);
       } catch (fileError) {
         if (fileError.code === "ENOENT") {
-          throw new Error(`Options page file not found: ${optionsPageRel}`);
+          throw new Error(`${pageType} page file not found: ${pageRel}`);
         } else if (fileError.code === "EACCES") {
-          throw new Error(
-            `Options page file is not readable: ${optionsPageRel}`,
-          );
+          throw new Error(`${pageType} page file is not readable: ${pageRel}`);
         } else {
           throw new Error(
-            `Options page file validation failed: ${optionsPageRel} - ${fileError.message}`,
+            `${pageType} page file validation failed: ${pageRel} - ${fileError.message}`,
           );
         }
       }
 
-      const htmlContent = await fs.readFile(optionsFullPath, "utf-8");
+      const htmlContent = await fs.readFile(pageFullPath, "utf-8");
 
       if (!htmlContent || htmlContent.trim().length === 0) {
-        console.warn(`Options page file is empty: ${optionsPageRel}`);
+        console.warn(`${pageType} page file is empty: ${pageRel}`);
       }
 
       const updatedHtml = await this.processAssetRecursively(
         htmlContent,
-        optionsFullPath,
+        pageFullPath,
         "HTML",
       );
 
       // Add to assets map
-      this.assetsMap[normalizedOptionsRel] = this.locale(updatedHtml);
+      this.assetsMap[normalizedPageRel] = this.locale(updatedHtml);
 
       console.log(
-        `Successfully processed options page: ${normalizedOptionsRel} (${Math.round(updatedHtml.length / 1024)}KB)`,
+        `Successfully processed ${pageType} page: ${normalizedPageRel} (${Math.round(updatedHtml.length / 1024)}KB)`,
       );
 
-      return { optionsPagePath: normalizedOptionsRel };
+      return { [`${pageType}PagePath`]: normalizedPageRel };
     } catch (error) {
-      const errorMsg = `Error processing options page: ${error.message}`;
+      const errorMsg = `Error processing ${pageType} page: ${error.message}`;
       console.error(errorMsg);
 
       // Return empty result but don't throw - this allows the conversion to continue
       console.warn(
-        "Options page processing failed, continuing without options page",
+        `${pageType} page processing failed, continuing without ${pageType} page`,
       );
-      return { optionsPagePath: null };
+      return { [`${pageType}PagePath`]: null };
     }
   }
 
@@ -788,208 +853,6 @@ class AssetGenerator {
   }
 
   /**
-   * Detects the options page path from manifest (v2 or v3 style).
-   * @param {object} manifest Parsed manifest.json content.
-   * @returns {string|null} Relative path to the options page within the extension or null.
-   */
-  getOptionsPagePath(manifest) {
-    try {
-      if (!manifest || typeof manifest !== "object") {
-        console.warn("Invalid manifest provided to getOptionsPagePath");
-        return null;
-      }
-
-      if (
-        manifest.options_ui &&
-        typeof manifest.options_ui === "object" &&
-        manifest.options_ui.page
-      ) {
-        if (typeof manifest.options_ui.page === "string") {
-          return manifest.options_ui.page;
-        } else {
-          console.warn(
-            "options_ui.page exists but is not a string:",
-            typeof manifest.options_ui.page,
-          );
-        }
-      }
-
-      if (manifest.options_page) {
-        if (typeof manifest.options_page === "string") {
-          return manifest.options_page;
-        } else {
-          console.warn(
-            "options_page exists but is not a string:",
-            typeof manifest.options_page,
-          );
-        }
-      }
-
-      return null;
-    } catch (error) {
-      console.error(
-        "Error extracting options page path from manifest:",
-        error.message,
-      );
-      return null;
-    }
-  }
-
-  /**
-   * Detects the popup page path from manifest (v2 or v3 style).
-   * @param {object} manifest Parsed manifest.json content.
-   * @returns {string|null} Relative path to the popup page within the extension or null.
-   */
-  getPopupPagePath(manifest) {
-    try {
-      if (!manifest || typeof manifest !== "object") {
-        console.warn("Invalid manifest provided to getPopupPagePath");
-        return null;
-      }
-
-      // Manifest v3 - action.default_popup
-      if (
-        manifest.action &&
-        typeof manifest.action === "object" &&
-        manifest.action.default_popup
-      ) {
-        if (typeof manifest.action.default_popup === "string") {
-          return manifest.action.default_popup;
-        } else {
-          console.warn(
-            "action.default_popup exists but is not a string:",
-            typeof manifest.action.default_popup,
-          );
-        }
-      }
-
-      // Manifest v2 - browser_action.default_popup
-      if (
-        manifest.browser_action &&
-        typeof manifest.browser_action === "object" &&
-        manifest.browser_action.default_popup
-      ) {
-        if (typeof manifest.browser_action.default_popup === "string") {
-          return manifest.browser_action.default_popup;
-        } else {
-          console.warn(
-            "browser_action.default_popup exists but is not a string:",
-            typeof manifest.browser_action.default_popup,
-          );
-        }
-      }
-
-      // Manifest v2 - page_action.default_popup
-      if (
-        manifest.page_action &&
-        typeof manifest.page_action === "object" &&
-        manifest.page_action.default_popup
-      ) {
-        if (typeof manifest.page_action.default_popup === "string") {
-          return manifest.page_action.default_popup;
-        } else {
-          console.warn(
-            "page_action.default_popup exists but is not a string:",
-            typeof manifest.page_action.default_popup,
-          );
-        }
-      }
-
-      return null;
-    } catch (error) {
-      console.error(
-        "Error extracting popup page path from manifest:",
-        error.message,
-      );
-      return null;
-    }
-  }
-
-  /**
-   * Processes popup page and adds it to the assets map
-   * @param {object} manifest - Parsed manifest object
-   * @returns {Promise<{popupPagePath: string|null}>}
-   */
-  async processPopupPage(manifest) {
-    try {
-      const popupPageRel = this.getPopupPagePath(manifest);
-      if (!popupPageRel) {
-        console.log("No popup page declared in manifest.");
-        return { popupPagePath: null };
-      }
-
-      console.log(`Processing popup page: ${popupPageRel}`);
-
-      const normalizedPopupRel = normalizePath(popupPageRel);
-      const popupFullPath = path.resolve(
-        this.extensionRoot,
-        normalizedPopupRel,
-      );
-
-      // Validate that the popup page is within the extension directory
-      const relativePath = path.relative(this.extensionRoot, popupFullPath);
-      if (relativePath.startsWith("..")) {
-        throw new Error(
-          `Popup page path resolves outside extension directory: ${popupPageRel}`,
-        );
-      }
-
-      // Validate popup page file exists and is readable
-      try {
-        const stats = await fs.stat(popupFullPath);
-        if (!stats.isFile()) {
-          throw new Error(
-            `Popup page path exists but is not a file: ${popupPageRel}`,
-          );
-        }
-        await fs.access(popupFullPath, fs.constants.R_OK);
-      } catch (fileError) {
-        if (fileError.code === "ENOENT") {
-          throw new Error(`Popup page file not found: ${popupPageRel}`);
-        } else if (fileError.code === "EACCES") {
-          throw new Error(
-            `Popup page file is not readable: ${popupPageRel}`,
-          );
-        } else {
-          throw new Error(
-            `Popup page file validation failed: ${popupPageRel} - ${fileError.message}`,
-          );
-        }
-      }
-
-      const htmlContent = await fs.readFile(popupFullPath, "utf-8");
-
-      if (!htmlContent || htmlContent.trim().length === 0) {
-        console.warn(`Popup page file is empty: ${popupPageRel}`);
-      }
-
-      const updatedHtml = await this.processAssetRecursively(
-        htmlContent,
-        popupFullPath,
-        "HTML",
-      );
-
-      // Add to assets map
-      this.assetsMap[normalizedPopupRel] = this.locale(updatedHtml);
-
-      console.log(
-        `Successfully processed popup page: ${normalizedPopupRel} (${Math.round(updatedHtml.length / 1024)}KB)`,
-      );
-
-      return { popupPagePath: normalizedPopupRel };
-    } catch (error) {
-      const errorMsg = `Error processing popup page: ${error.message}`;
-      console.error(errorMsg);
-
-      // Return empty result but don't throw - this allows the conversion to continue
-      console.warn(
-        "Popup page processing failed, continuing without popup page",
-      );
-      return { popupPagePath: null };
-    }
-  }
-
-  /**
    * Generates the complete assets map for the extension
    * @param {object} manifest - Parsed manifest object
    * @returns {Promise<{assetsMap: object, optionsPagePath: string|null, popupPagePath: string|null}>}
@@ -1001,24 +864,36 @@ class AssetGenerator {
     this.assetsMap = {};
     this.processedFiles.clear();
 
-    // Process options page
-    const { optionsPagePath } = await this.processOptionsPage(manifest);
+    // Check if options and popup pages are the same
+    const optionsPath = this.getPagePath(manifest, "options");
+    const popupPath = this.getPagePath(manifest, "popup");
 
-    // Process popup page
-    const { popupPagePath } = await this.processPopupPage(manifest);
+    if (optionsPath && popupPath && optionsPath === popupPath) {
+      // Process the shared page once and use result for both
+      console.log(`Options and popup share the same page: ${optionsPath}`);
+      const { popupPagePath } = await this.processHtmlPage(manifest, "popup");
+      return {
+        assetsMap: { ...this.assetsMap },
+        optionsPagePath: popupPagePath,
+        popupPagePath: popupPagePath,
+      };
+    } else {
+      // Process pages separately
+      const { optionsPagePath } = await this.processHtmlPage(
+        manifest,
+        "options",
+      );
+      const { popupPagePath } = await this.processHtmlPage(manifest, "popup");
 
-    // Process web accessible resources
-    await this.processWebAccessibleResources(manifest);
+      // Process web accessible resources
+      await this.processWebAccessibleResources(manifest);
 
-    console.log(
-      `Generated assets map with ${Object.keys(this.assetsMap).length} entries`,
-    );
-
-    return {
-      assetsMap: { ...this.assetsMap },
-      optionsPagePath,
-      popupPagePath,
-    };
+      return {
+        assetsMap: { ...this.assetsMap },
+        optionsPagePath,
+        popupPagePath,
+      };
+    }
   }
 }
 

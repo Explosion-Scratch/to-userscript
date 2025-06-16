@@ -7,22 +7,25 @@ Create a chrome.runtime.sendMessage polyfill https://developer.chrome.com/docs/e
 // 1) EVENT BUS FACTORY
 // ===================================================================
 function createEventBus(
-  type = "page",
-  {
-    allowedOrigin = "*",
-    children = [],
-    parentWindow = null
-  } = {}
+  scopeId,
+  type = "page", // "page" or "iframe"
+  { allowedOrigin = "*", children = [], parentWindow = null } = {},
 ) {
+  if (!scopeId) throw new Error("createEventBus requires a scopeId");
+
   const handlers = {};
 
   function handleIncoming(ev) {
+    // origin check
     if (allowedOrigin !== "*" && ev.origin !== allowedOrigin) return;
+
     const msg = ev.data;
-    if (!msg || msg.__eventBus !== true) return;
+    // must be our eventBus message, same scope
+    if (!msg || msg.__eventBus !== true || msg.scopeId !== scopeId) return;
+
     const { event, payload } = msg;
 
-    // PAGE: if it's an INIT from an iframe, add it to children
+    // PAGE: if it's an INIT from an iframe, adopt it
     if (type === "page" && event === "__INIT__") {
       const win = ev.source;
       if (win && !children.includes(win)) {
@@ -31,19 +34,25 @@ function createEventBus(
       return;
     }
 
-    // Otherwise dispatch to any listeners
-    (handlers[event] || []).forEach(fn =>
-      fn(payload, { origin: ev.origin, source: ev.source })
+    // dispatch to listeners
+    (handlers[event] || []).forEach((fn) =>
+      fn(payload, { origin: ev.origin, source: ev.source }),
     );
   }
 
   window.addEventListener("message", handleIncoming);
 
   function emitTo(win, event, payload) {
-    win.postMessage({ __eventBus: true, event, payload }, allowedOrigin);
+    const envelope = {
+      __eventBus: true,
+      scopeId,
+      event,
+      payload,
+    };
+    win.postMessage(envelope, allowedOrigin);
   }
 
-  // IFRAME announces itself to the PAGE
+  // IFRAME: announce to page on startup
   if (type === "iframe") {
     setTimeout(() => {
       const pw = parentWindow || window.parent;
@@ -60,23 +69,24 @@ function createEventBus(
     },
     off(event, fn) {
       if (!handlers[event]) return;
-      handlers[event] = handlers[event].filter(h => h !== fn);
+      handlers[event] = handlers[event].filter((h) => h !== fn);
     },
     emit(event, payload) {
-      // 1) dispatch locally
-      (handlers[event] || []).forEach(fn =>
-        fn(payload, { origin: location.origin, source: window })
+      // dispatch locally first
+      (handlers[event] || []).forEach((fn) =>
+        fn(payload, { origin: location.origin, source: window }),
       );
-      // 2) broadcast
+
+      // then propagate
       if (type === "page") {
-        children.forEach(win => emitTo(win, event, payload));
+        children.forEach((win) => emitTo(win, event, payload));
       } else {
         const pw = parentWindow || window.parent;
         if (pw && pw.postMessage) {
           emitTo(pw, event, payload);
         }
       }
-    }
+    },
   };
 }
 
@@ -91,7 +101,7 @@ function createRuntime(type = "background", bus) {
 
   // port-based
   let nextPortId = 1;
-  const ports = {};      // all open ports by id
+  const ports = {}; // all open ports by id
   const onConnectListeners = [];
 
   function parseArgs(args) {
@@ -101,14 +111,21 @@ function createRuntime(type = "background", bus) {
       throw new Error("sendMessage requires at least one argument");
     }
     // last object could be options
-    if (arr.length && typeof arr[arr.length - 1] === "object" && !Array.isArray(arr[arr.length - 1])) {
+    if (
+      arr.length &&
+      typeof arr[arr.length - 1] === "object" &&
+      !Array.isArray(arr[arr.length - 1])
+    ) {
       options = arr.pop();
     }
     // last function is callback
     if (arr.length && typeof arr[arr.length - 1] === "function") {
       callback = arr.pop();
     }
-    if (arr.length === 2 && (typeof arr[0] === "string" || typeof arr[0] === "number")) {
+    if (
+      arr.length === 2 &&
+      (typeof arr[0] === "string" || typeof arr[0] === "number")
+    ) {
       [target, message] = arr;
     } else {
       [message] = arr;
@@ -121,31 +138,34 @@ function createRuntime(type = "background", bus) {
   // -------------------------
   if (type === "background") {
     bus.on("__REQUEST__", ({ id, message }, _) => {
-      let responded = false, isAsync = false;
+      let responded = false,
+        isAsync = false;
       function sendResponse(resp) {
         if (responded) return;
         responded = true;
         bus.emit("__RESPONSE__", { id, response: resp });
       }
-      const results = msgListeners.map(fn => {
-        try {
-          const ret = fn(message, sendResponse);
-          if (ret === true || (ret && typeof ret.then === "function")) {
-            isAsync = true;
+      const results = msgListeners
+        .map((fn) => {
+          try {
+            const ret = fn(message, sendResponse);
+            if (ret === true || (ret && typeof ret.then === "function")) {
+              isAsync = true;
+              return ret;
+            }
             return ret;
+          } catch (e) {
+            console.error(e);
           }
-          return ret;
-        } catch (e) {
-          console.error(e);
-        }
-      }).filter(r => r !== undefined);
+        })
+        .filter((r) => r !== undefined);
 
-      const promises = results.filter(r => r && typeof r.then === "function");
+      const promises = results.filter((r) => r && typeof r.then === "function");
       if (!isAsync && promises.length === 0) {
         const out = results.length === 1 ? results[0] : results;
         sendResponse(out);
       } else if (promises.length) {
-        Promise.all(promises).then(vals => {
+        Promise.all(promises).then((vals) => {
           if (!responded) {
             const out = vals.length === 1 ? vals[0] : vals;
             sendResponse(out);
@@ -174,7 +194,7 @@ function createRuntime(type = "background", bus) {
     }
     const { target, message, callback } = parseArgs(args);
     const id = nextId++;
-    const promise = new Promise(resolve => {
+    const promise = new Promise((resolve) => {
       pending[id] = { resolve, callback };
       bus.emit("__REQUEST__", { id, message });
     });
@@ -201,7 +221,7 @@ function createRuntime(type = "background", bus) {
     ports[portId] = backgroundPort;
 
     // notify background listeners
-    onConnectListeners.forEach(fn => fn(backgroundPort));
+    onConnectListeners.forEach((fn) => fn(backgroundPort));
 
     // send back a CONNECT_ACK so the client can
     // start listening on its end:
@@ -241,7 +261,7 @@ function createRuntime(type = "background", bus) {
     // client ends wait for CONNECT_ACK
 
     function _drainBuffer() {
-      buffer.forEach(m => _post(m));
+      buffer.forEach((m) => _post(m));
       buffer = [];
     }
 
@@ -259,7 +279,7 @@ function createRuntime(type = "background", bus) {
     }
 
     function _receive(msg) {
-      onMessageHandlers.forEach(fn => fn(msg));
+      onMessageHandlers.forEach((fn) => fn(msg));
     }
 
     function disconnect() {
@@ -269,7 +289,7 @@ function createRuntime(type = "background", bus) {
     }
 
     function _disconnect() {
-      onDisconnectHandlers.forEach(fn => fn());
+      onDisconnectHandlers.forEach((fn) => fn());
       onMessageHandlers = [];
       onDisconnectHandlers = [];
     }
@@ -277,17 +297,25 @@ function createRuntime(type = "background", bus) {
     return {
       name,
       onMessage: {
-        addListener(fn) { onMessageHandlers.push(fn); },
-        removeListener(fn) { onMessageHandlers = onMessageHandlers.filter(x => x !== fn); }
+        addListener(fn) {
+          onMessageHandlers.push(fn);
+        },
+        removeListener(fn) {
+          onMessageHandlers = onMessageHandlers.filter((x) => x !== fn);
+        },
       },
       onDisconnect: {
-        addListener(fn) { onDisconnectHandlers.push(fn); },
-        removeListener(fn) { onDisconnectHandlers = onDisconnectHandlers.filter(x => x !== fn); }
+        addListener(fn) {
+          onDisconnectHandlers.push(fn);
+        },
+        removeListener(fn) {
+          onDisconnectHandlers = onDisconnectHandlers.filter((x) => x !== fn);
+        },
       },
       postMessage,
       disconnect,
-      _ready,       // internal
-      _drainBuffer  // internal
+      _ready, // internal
+      _drainBuffer, // internal
     };
   }
 
@@ -319,21 +347,25 @@ function createRuntime(type = "background", bus) {
     // rpc:
     sendMessage,
     onMessage: {
-      addListener(fn) { msgListeners.push(fn); },
+      addListener(fn) {
+        msgListeners.push(fn);
+      },
       removeListener(fn) {
         const i = msgListeners.indexOf(fn);
         if (i >= 0) msgListeners.splice(i, 1);
-      }
+      },
     },
 
     // port API:
     connect,
     onConnect: {
-      addListener(fn) { onConnect(fn); },
+      addListener(fn) {
+        onConnect(fn);
+      },
       removeListener(fn) {
         const i = onConnectListeners.indexOf(fn);
         if (i >= 0) onConnectListeners.splice(i, 1);
-      }
-    }
+      },
+    },
   };
 }

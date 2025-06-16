@@ -18,23 +18,6 @@ async function generateBuildPolyfillString(
   assetsMap = {},
   manifest = {},
 ) {
-  // // 1. Get the message bus code from polyfill.js with appropriate target
-  // let messageBusCode = "";
-  // if (target === "postmessage") {
-  //   messageBusCode = await polyfill.getMessageBusCode("postmessage");
-  // } else {
-  //   // For userscript, vanilla, and handle_postmessage targets, use default message bus
-  //   const defaultMessageBus = await polyfill.getMessageBusCode();
-  //   if (target === "handle_postmessage") {
-  //     // Also include the handle_postmessage extension
-  //     const handlePostMessageBus =
-  //       await polyfill.getMessageBusCode("handle_postmessage");
-  //     messageBusCode = defaultMessageBus + "\n\n" + handlePostMessageBus;
-  //   } else {
-  //     messageBusCode = defaultMessageBus;
-  //   }
-  // }
-
   // 2. Get abstraction layer code
   const abstractionLayerCode =
     await abstractionLayer.getAbstractionLayerCode(target);
@@ -60,7 +43,9 @@ ${abstractionLayerCode}
 
 ${assetsHelperFunctions}
 
-${polyfillTemplate.replaceAll("{{IS_IFRAME}}", target === "postmessage" ? "true" : "false")}
+${polyfillTemplate
+  .replaceAll("{{IS_IFRAME}}", target === "postmessage" ? "true" : "false")
+  .replaceAll("{{SCRIPT_ID}}", manifest._id)}
 
 // Export the buildPolyfill function for use
 if (typeof window !== 'undefined') {
@@ -180,22 +165,22 @@ function _createAssetUrl(path = '') {
     console.warn('[runtime.getURL] Asset not found for', path);
     return path;
   }
-  
+
   const mime = _getMimeTypeFromPath(path);
   const ext = (path.split('.').pop() || '').toLowerCase();
-  
+
   if (CAN_USE_BLOB_CSP) {
     // For web accessible resources, handle different content types appropriately
     let blob;
     if (_isTextAsset(ext)) {
-      // For text assets (including processed CSS with inlined assets), 
+      // For text assets (including processed CSS with inlined assets),
       // the content is already processed and should be used as-is
       blob = new Blob([assetData], { type: mime });
     } else {
       // For binary assets, the content is base64 encoded
       blob = _base64ToBlob(assetData, mime);
     }
-    
+
     return URL.createObjectURL(blob);
   } else {
     if (_isTextAsset(ext)) {

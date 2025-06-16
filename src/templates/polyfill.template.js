@@ -9,7 +9,7 @@ function buildPolyfill({ isBackground = false, isOtherPage = false } = {}) {
   const contextId = `${contextType}_${Math.random().toString(36).substring(2, 15)}`;
 
   const IS_IFRAME = "{{IS_IFRAME}}" === "true";
-  const BUS = createEventBus(IS_IFRAME ? "iframe" : "page");
+  const BUS = createEventBus("{{SCRIPT_ID}}", IS_IFRAME ? "iframe" : "page");
   const RUNTIME = createRuntime(isBackground ? "background" : "tab", BUS);
 
   // TODO: Stub
@@ -60,23 +60,6 @@ function buildPolyfill({ isBackground = false, isOtherPage = false } = {}) {
         if (!path) return "";
         if (path.startsWith("/")) {
           path = path.substring(1);
-        }
-
-        // Check if the requested resource is a web accessible resource
-        if (
-          typeof INJECTED_MANIFEST !== "undefined" &&
-          INJECTED_MANIFEST.web_accessible_resources
-        ) {
-          if (
-            _isWebAccessibleResource(
-              path,
-              INJECTED_MANIFEST.web_accessible_resources,
-            )
-          ) {
-            console.log(
-              `[runtime.getURL] Accessing web accessible resource: ${path}`,
-            );
-          }
         }
 
         // Use the integrated asset creation function

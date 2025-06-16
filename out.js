@@ -733,7 +733,7 @@ function buildPolyfill({ isBackground = false, isOtherPage = false } = {}) {
             : { isWebAccessibleResource: window._isWebAccessibleResource };
           
           if (isWebAccessibleResource && isWebAccessibleResource(path, INJECTED_MANIFEST.web_accessible_resources)) {
-            console.log(`[runtime.getURL] Accessing web accessible resource: ${path}`);
+            //console.log(`[runtime.getURL] Accessing web accessible resource: ${path}`);
           }
         }
 
