@@ -313,8 +313,15 @@ function replaceComments(code) {
         contentCount: 0,
       });
     } else {
-      // Regular line: count as content for all open regions
-      output.push(line);
+      // Regular line: add accumulated indentation from all open regions
+      let accumulatedIndent = "";
+      stack.forEach(() => {
+        accumulatedIndent += "\t";
+      });
+
+      // Apply accumulated indentation to the line
+      const indentedLine = accumulatedIndent + line;
+      output.push(indentedLine);
       stack.forEach((region) => region.contentCount++);
     }
   });

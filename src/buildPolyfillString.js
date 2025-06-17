@@ -16,7 +16,7 @@ const abstractionLayer = require("./abstractionLayer");
 async function generateBuildPolyfillString(
   target = "userscript",
   assetsMap = {},
-  manifest = {},
+  manifest = {}
 ) {
   // 2. Get abstraction layer code
   const abstractionLayerCode =
@@ -25,7 +25,7 @@ async function generateBuildPolyfillString(
   // 3. Generate assets logic helper functions using the unified approach
   const assetsHelperFunctions = generateAssetsHelperFunctions(
     assetsMap,
-    target === "postmessage",
+    target === "postmessage"
   );
 
   const messagingTemplate = await templateManager.getMessagingTemplate();
@@ -34,7 +34,6 @@ async function generateBuildPolyfillString(
 
   // 4. Combine everything into a single string
   const combinedPolyfillString = `
-// --- Unified Polyfill String ---
 // This contains all necessary code to create a complete polyfill environment
 
 ${messagingTemplate}
