@@ -6,3 +6,4 @@ bun src/converter.js -i extensions/modern-wikipedia -o examples/modern-wikipedia
 bun src/converter.js -i extensions/web-search-navigator -o examples/web-search-navigator.js
 bun src/converter.js -i extensions/json-formatter -o examples/json-formatter.js
 bun src/converter.js -i extensions/return-dislikes -o examples/return-dislikes.js
+bun src/converter.js -i extensions/material-design-fileicons -o examples/material-design-fileicons.js
