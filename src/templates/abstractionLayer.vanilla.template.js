@@ -1,5 +1,4 @@
-// --- Abstraction Layer: Vanilla Target ---
-// Complete implementation with IndexedDB storage backend
+// --- Abstraction Layer: Vanilla Target
 
 let vanillaStorageDB = null;
 const STORAGE_DB_NAME = "VanillaExtensionStorage";
@@ -21,7 +20,9 @@ async function _initStorage() {
 
       request.onerror = () => {
         const error = new Error(
-          `Failed to open IndexedDB: ${request.error?.message || "Unknown error"}`,
+          `Failed to open IndexedDB: ${
+            request.error?.message || "Unknown error"
+          }`
         );
         console.error("IndexedDB initialization error:", error);
         reject(error);
@@ -57,7 +58,7 @@ async function _initStorage() {
         } catch (storeError) {
           console.error("Error creating object store:", storeError);
           reject(
-            new Error(`Failed to create object store: ${storeError.message}`),
+            new Error(`Failed to create object store: ${storeError.message}`)
           );
         }
       };
@@ -65,7 +66,7 @@ async function _initStorage() {
       request.onblocked = () => {
         console.warn("IndexedDB upgrade blocked by another connection");
         reject(
-          new Error("IndexedDB upgrade blocked. Please close other tabs."),
+          new Error("IndexedDB upgrade blocked. Please close other tabs.")
         );
       };
     } catch (error) {
@@ -140,7 +141,9 @@ function validateStorageValue(value) {
     const maxSize = 10 * 1024 * 1024; // 10MB
     if (sizeInBytes > maxSize) {
       throw new Error(
-        `Storage value too large (${Math.round(sizeInBytes / 1024 / 1024)}MB > 10MB)`,
+        `Storage value too large (${Math.round(
+          sizeInBytes / 1024 / 1024
+        )}MB > 10MB)`
       );
     }
   } catch (error) {
@@ -179,8 +182,10 @@ async function _storageSet(items) {
         request.onerror = () =>
           reject(
             new Error(
-              `Failed to store key '${key}': ${request.error?.message || "Unknown error"}`,
-            ),
+              `Failed to store key '${key}': ${
+                request.error?.message || "Unknown error"
+              }`
+            )
           );
       });
       promises.push(promise);
@@ -189,7 +194,7 @@ async function _storageSet(items) {
     await Promise.all(promises);
     console.log(
       `Successfully stored ${keys.length} item(s) to IndexedDB:`,
-      keys,
+      keys
     );
   } catch (error) {
     const errorMsg = `Storage set operation failed: ${error.message}`;
@@ -220,8 +225,10 @@ async function _storageGet(keys) {
         getAllRequest.onerror = () => {
           reject(
             new Error(
-              `Failed to get all storage items: ${getAllRequest.error?.message || "Unknown error"}`,
-            ),
+              `Failed to get all storage items: ${
+                getAllRequest.error?.message || "Unknown error"
+              }`
+            )
           );
         };
       });
@@ -243,7 +250,7 @@ async function _storageGet(keys) {
     keyList.forEach((key) => {
       if (typeof key !== "string") {
         throw new Error(
-          `Storage key must be a string, got ${typeof key} at key: ${key}`,
+          `Storage key must be a string, got ${typeof key} at key: ${key}`
         );
       }
     });
@@ -263,8 +270,10 @@ async function _storageGet(keys) {
         request.onerror = () => {
           reject(
             new Error(
-              `Failed to get storage key '${key}': ${request.error?.message || "Unknown error"}`,
-            ),
+              `Failed to get storage key '${key}': ${
+                request.error?.message || "Unknown error"
+              }`
+            )
           );
         };
       });
@@ -283,7 +292,9 @@ async function _storageGet(keys) {
     }
 
     console.log(
-      `Retrieved ${Object.keys(finalResult).length} item(s) from IndexedDB storage`,
+      `Retrieved ${
+        Object.keys(finalResult).length
+      } item(s) from IndexedDB storage`
     );
     return finalResult;
   } catch (error) {
@@ -302,7 +313,7 @@ async function _storageRemove(keysToRemove) {
       keyList = keysToRemove;
     } else {
       throw new Error(
-        `Invalid keys format for storage remove: ${typeof keysToRemove}`,
+        `Invalid keys format for storage remove: ${typeof keysToRemove}`
       );
     }
 
@@ -322,8 +333,10 @@ async function _storageRemove(keysToRemove) {
         request.onerror = () => {
           reject(
             new Error(
-              `Failed to remove storage key '${key}': ${request.error?.message || "Unknown error"}`,
-            ),
+              `Failed to remove storage key '${key}': ${
+                request.error?.message || "Unknown error"
+              }`
+            )
           );
         };
       });
@@ -332,7 +345,7 @@ async function _storageRemove(keysToRemove) {
     await Promise.all(promises);
     console.log(
       `Removed ${keyList.length} item(s) from IndexedDB storage:`,
-      keyList,
+      keyList
     );
   } catch (error) {
     const errorMsg = `Storage remove operation failed: ${error.message}`;
@@ -354,8 +367,10 @@ async function _storageClear() {
       request.onerror = () => {
         reject(
           new Error(
-            `Failed to clear storage: ${request.error?.message || "Unknown error"}`,
-          ),
+            `Failed to clear storage: ${
+              request.error?.message || "Unknown error"
+            }`
+          )
         );
       };
     });
@@ -401,7 +416,7 @@ async function _fetch(url, options = {}) {
     // Provide more detailed error information
     if (error.name === "TypeError" && error.message.includes("fetch")) {
       throw new Error(
-        `Network error or invalid URL: ${url} - ${error.message}`,
+        `Network error or invalid URL: ${url} - ${error.message}`
       );
     } else if (error.name === "AbortError") {
       throw new Error(`Fetch request aborted: ${url}`);
@@ -433,7 +448,7 @@ function _registerMenuCommand(name, func) {
   // Note: In vanilla JS, there's no standard browser equivalent to GM_registerMenuCommand
   // Extensions could implement their own UI for this, but for now we just store it
   console.warn(
-    `Vanilla menu command registration: "${name}" - No standard browser equivalent available`,
+    `Vanilla menu command registration: "${name}" - No standard browser equivalent available`
   );
 }
 

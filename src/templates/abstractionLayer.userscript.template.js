@@ -1,5 +1,4 @@
-// --- Abstraction Layer: Userscript Target ---
-// These functions provide the low-level implementation using GM_* APIs
+// --- Abstraction Layer: Userscript Target
 
 async function _storageSet(items) {
   try {
@@ -154,7 +153,7 @@ async function _fetch(url, options = {}) {
                 return Promise.resolve(response.response);
               }
               return Promise.reject(
-                new Error("Requires responseType:'blob' in GM_xmlhttpRequest"),
+                new Error("Requires responseType:'blob' in GM_xmlhttpRequest")
               );
             },
             arrayBuffer: () => {
@@ -163,8 +162,8 @@ async function _fetch(url, options = {}) {
               }
               return Promise.reject(
                 new Error(
-                  "Requires responseType:'arraybuffer' in GM_xmlhttpRequest",
-                ),
+                  "Requires responseType:'arraybuffer' in GM_xmlhttpRequest"
+                )
               );
             },
             clone: function () {
@@ -188,8 +187,10 @@ async function _fetch(url, options = {}) {
         onerror: function (response) {
           reject(
             new Error(
-              `GM_xmlhttpRequest network error: ${response.statusText || "Unknown Error"}`,
-            ),
+              `GM_xmlhttpRequest network error: ${
+                response.statusText || "Unknown Error"
+              }`
+            )
           );
         },
         onabort: function () {

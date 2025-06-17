@@ -82,13 +82,13 @@ function convertMatchPatternToRegExp(pattern) {
   }
   try {
     const singleEscapedPattern = convertMatchPatternToRegExpString(
-      pattern,
+      pattern
     ).replace(/\\\\/g, "\\");
     return new RegExp(singleEscapedPattern);
   } catch (error) {
     console.error(
       `Error converting match pattern to RegExp: ${pattern}`,
-      error,
+      error
     );
     return new RegExp("$."); // Matches nothing on error
   }
@@ -272,6 +272,66 @@ function isWebAccessibleResource(resourcePath, webAccessibleResources) {
   return false;
 }
 
+function replaceComments(code) {
+  const lines = code.split("\n");
+  const output = [];
+  const stack = []; // { level, title, indent, startIndex, contentCount }
+
+  const headerRegex = /^(\s*)\/\/\s*(-+)\s*(.+)$/;
+
+  lines.forEach((line) => {
+    const match = line.match(headerRegex);
+    if (match) {
+      const indent = match[1] || "";
+      const level = match[2].length;
+      // Sanitize title: replace non-alphanumeric with space, collapse spaces
+      let title = match[3]
+        .trim()
+        .replace(/[^a-zA-Z0-9 \-_]/g, " ")
+        .replace(/\s+/g, " ")
+        .trim();
+
+      // Close regions of same or deeper level
+      while (stack.length && stack[stack.length - 1].level >= level) {
+        const region = stack.pop();
+        if (region.contentCount > 0) {
+          output.push(`${region.indent}// #endregion`);
+        } else {
+          // remove empty region opening
+          output.splice(region.startIndex, 1);
+        }
+      }
+
+      // Open new region
+      const regionIndex = output.length;
+      output.push(`${indent}// #region ${title}`);
+      stack.push({
+        level,
+        title,
+        indent,
+        startIndex: regionIndex,
+        contentCount: 0,
+      });
+    } else {
+      // Regular line: count as content for all open regions
+      output.push(line);
+      stack.forEach((region) => region.contentCount++);
+    }
+  });
+
+  // Close any remaining open regions
+  while (stack.length) {
+    const region = stack.pop();
+    if (region.contentCount > 0) {
+      output.push(`${region.indent}// #endregion`);
+    } else {
+      output.splice(region.startIndex, 1);
+    }
+  }
+
+  return output.join("\n");
+}
+
 module.exports = {
   convertMatchPatternToRegExpString,
   convertMatchPatternToRegExp,
@@ -280,4 +340,5 @@ module.exports = {
   scriptBlacklist,
   matchGlobPattern,
   isWebAccessibleResource,
+  replaceComments,
 };

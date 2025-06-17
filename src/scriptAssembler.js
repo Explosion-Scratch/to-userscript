@@ -22,7 +22,7 @@ function generateCombinedExecutionLogic(scriptsToRun, cssToInject, scriptName) {
         (document.head || document.documentElement).appendChild(style);
       } else { console.warn(\`  CSS not found (${phaseName}): \${cssKey_${idx}}\`); }
     } catch(e) { console.error(\`  Failed injecting CSS (\${cssKey_${idx}}) in phase ${phaseName}\`, e, extensionCssData); }
-  `,
+  `
       )
       .join("\n");
   };
@@ -45,24 +45,36 @@ function generateCombinedExecutionLogic(scriptsToRun, cssToInject, scriptName) {
     */
     const getContent = (content) =>
       content.trim().replace(/^['"]use strict['"];?/, "");
-    return `const scriptPaths = ${JSON.stringify(allScripts.map((script) => script.path))};
+    return `const scriptPaths = ${JSON.stringify(
+      allScripts.map((script) => script.path)
+    )};
    console.log(\`  Executing JS (${phaseName}): \${scriptPaths}\`);
 
    try {
        // Keep variables from being redeclared for global scope, but also make them apply to global scope. (Theoretically)
-      with (globalThis){;\n${allScripts.map((script) => `// START: ${script.path}\n${getContent(script.content)}\n// END: ${script.path}`).join("\n\n")}\n;}
+      with (globalThis){;\n${allScripts
+        .map(
+          (script) =>
+            `// START: ${script.path}\n${getContent(script.content)}\n// END: ${
+              script.path
+            }`
+        )
+        .join("\n\n")}\n;}
    } catch(e) { console.error(\`  Error executing scripts \${scriptPaths}\`, e); }
   `;
   };
 
   // Assemble the function string using the helpers
   const functionString = `
+  // -- Script Execution Logic
 async function executeAllScripts(globalThis, extensionCssData) {
   const {chrome, browser, global, window, self} = globalThis;
-  const scriptName = ${JSON.stringify(scriptName)}; // Make name available inside
+  const scriptName = ${JSON.stringify(
+    scriptName
+  )}; // Make name available inside
   console.log(\`[\${scriptName}] Starting execution phases...\`);
 
-  // --- Document Start ---
+  // --- Document Start
   if (typeof document !== 'undefined') {
     console.log(\`[\${scriptName}] Executing document-start phase...\`);
     ${generateCssInjection("document-start", "start")}
@@ -82,7 +94,7 @@ async function executeAllScripts(globalThis, extensionCssData) {
   }
   */
 
-  // --- Document End ---
+  // --- Document End
    if (typeof document !== 'undefined') {
     console.log(\`[\${scriptName}] Executing document-end phase...\`);
     ${generateCssInjection("document-end", "end")}
@@ -92,7 +104,7 @@ async function executeAllScripts(globalThis, extensionCssData) {
   }
   
   /*
-  // --- Wait for Document Idle ---
+  // --- Wait for Document Idle
   console.log(\`[\${scriptName}] Waiting for document idle state...\`);
   if (typeof window !== 'undefined' && typeof window.requestIdleCallback === 'function') {
       await new Promise(resolve => window.requestIdleCallback(resolve, { timeout: 2000 })); // 2-second timeout fallback
@@ -104,7 +116,7 @@ async function executeAllScripts(globalThis, extensionCssData) {
   }
   */
 
-  // --- Document Idle ---
+  // --- Document Idle
    if (typeof document !== 'undefined') {
     console.log(\`[\${scriptName}] Executing document-idle phase...\`);
     ${generateCssInjection("document-idle", "idle")}

@@ -1,5 +1,4 @@
-// --- Abstraction Layer: PostMessage Target ---
-// These functions provide the implementation for iframe contexts using postmessage
+// --- Abstraction Layer: PostMessage Target
 
 let nextRequestId = 1;
 const pendingRequests = new Map(); // requestId -> { resolve, reject, timeout }

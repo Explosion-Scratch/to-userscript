@@ -1,4 +1,3 @@
-// This script is template-generated and contains the main execution logic.
 const SCRIPT_NAME = {{SCRIPT_NAME}};
 
 const INJECTED_MANIFEST = {{INJECTED_MANIFEST}};
@@ -15,7 +14,6 @@ const extensionCssData = {{EXTENSION_CSS_DATA}};
 
 const LOCALE_KEYS = {{LOCALE}}
 
-// --- Utility Functions Injected During Build ---
 // Function to convert match pattern string to a RegExp object
 const convertMatchPatternToRegExp = {{CONVERT_MATCH_PATTERN_TO_REGEXP_FUNCTION}};
 // Function to convert match pattern string to a double-escaped string for RegExp constructor
@@ -87,7 +85,6 @@ function _isWebAccessibleResource(resourcePath, webAccessibleResources) {
 window._matchGlobPattern = _matchGlobPattern;
 window._isWebAccessibleResource = _isWebAccessibleResource;
 
-// --- Combined Execution Logic ---
 // This function contains all the CSS injection and JS execution,
 // ordered by run_at timing internally using await.
 {{COMBINED_EXECUTION_LOGIC}}
@@ -126,7 +123,6 @@ function closePopupModal() {
     }, DURATION);
 }
 
-// --- Popup Page Helper ---
 function openPopupPage() {
     if (!POPUP_PAGE_PATH || typeof EXTENSION_ASSETS_MAP === 'undefined') {
         console.warn('No popup page available.');
@@ -306,7 +302,6 @@ function openPopupPage() {
     }
 }
 
-// --- Options Page Helper ---
 function openOptionsPage() {
     if (!OPTIONS_PAGE_PATH || typeof EXTENSION_ASSETS_MAP === 'undefined') {
         console.warn('No options page available.');
@@ -550,7 +545,6 @@ function generateCompletePolyfillForIframe() {
     `;
 }
 
-// --- Main Orchestration Logic ---
 async function main() {
     console.log(`[${SCRIPT_NAME}] Initializing...`);
 
@@ -652,12 +646,8 @@ async function main() {
 
     console.log(`[${SCRIPT_NAME}] Initialization sequence complete.`);
 
-} // End of main()
+}
 
-// --- Global Execution Start ---
-// Call main() once. The earliest @run-at in metadata block ensures the script
-// itself is loaded early enough. The internal logic in executeAllScripts handles
-// the actual timing delays.
 main().catch(e => console.error(`[${SCRIPT_NAME}] Error during script initialization:`, e));
 
 try {

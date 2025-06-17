@@ -1,7 +1,4 @@
-// --- Abstraction Layer: Handle PostMessage Target ---
-// This sets up the message handling backbone for iframe communication
-// It doesn't export functions but instead listens for postmessage requests
-
+// --- Abstraction layer: Handle postmesage for
 (function () {
   const pendingRequests = new Map(); // requestId -> { resolve, reject, timeout }
   let nextRequestId = 1;
@@ -71,6 +68,6 @@
   });
 
   console.log(
-    "[PostMessage Handler] Abstraction layer message handler initialized",
+    "[PostMessage Handler] Abstraction layer message handler initialized"
   );
 })();

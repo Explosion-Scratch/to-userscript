@@ -1,15 +1,9 @@
-// INITIAL INSTRUCTIONS:
-/*
-Create a chrome.runtime.sendMessage polyfill https://developer.chrome.com/docs/extensions/reference/api/runtime#method-sendMessage https://developer.mozilla.org/en-US/docs/Mozilla/Add-ons/WebExtensions/API/runtime/sendMessage . This should have a function for createRuntime(type = "background"|"tab"|"ext_page", event bus) where the function creates the runtime object with sendMessage and onMessage add listener functions. Create code to create the event bus as well. The event bus comes in one of two types, "page" or "iframe" where page is the main event bus and should be called once, and sets up listeners for the iframe event bus. The iframe event bus has the same on, off, emit, API but uses postMessage on window.parent to send the message to the background which triggers whatever listeners. The event bus should be able to be instantiated in either of these environments then called with .on(event, handler(data)), or .emit(event, data). The createRuntime should then use this as a backend and abstract so that a chrome.runtime type object is returned.
-*/
+// -- Messaging implementation
 
-// ===================================================================
-// 1) EVENT BUS FACTORY
-// ===================================================================
 function createEventBus(
   scopeId,
   type = "page", // "page" or "iframe"
-  { allowedOrigin = "*", children = [], parentWindow = null } = {},
+  { allowedOrigin = "*", children = [], parentWindow = null } = {}
 ) {
   if (!scopeId) throw new Error("createEventBus requires a scopeId");
 
@@ -36,7 +30,7 @@ function createEventBus(
 
     // dispatch to listeners
     (handlers[event] || []).forEach((fn) =>
-      fn(payload, { origin: ev.origin, source: ev.source }),
+      fn(payload, { origin: ev.origin, source: ev.source })
     );
   }
 
@@ -74,7 +68,7 @@ function createEventBus(
     emit(event, payload) {
       // dispatch locally first
       (handlers[event] || []).forEach((fn) =>
-        fn(payload, { origin: location.origin, source: window }),
+        fn(payload, { origin: location.origin, source: window })
       );
 
       // then propagate
@@ -133,9 +127,6 @@ function createRuntime(type = "background", bus) {
     return { target, message, options, callback };
   }
 
-  // -------------------------
-  // 1) BACKGROUND message RPC
-  // -------------------------
   if (type === "background") {
     bus.on("__REQUEST__", ({ id, message }, _) => {
       let responded = false,
@@ -175,9 +166,6 @@ function createRuntime(type = "background", bus) {
     });
   }
 
-  // -----------------------------
-  // 2) NON-BACKGROUND message RPC
-  // -----------------------------
   if (type !== "background") {
     bus.on("__RESPONSE__", ({ id, response }) => {
       const entry = pending[id];
@@ -209,12 +197,7 @@ function createRuntime(type = "background", bus) {
   // notifies its onConnect listeners with a Port object.
   bus.on("__PORT_CONNECT__", ({ portId, name }, { source }) => {
     // Only the background should handle incoming connect requests:
-    if (type !== "background") return;
-
-    // create two ends of the pipe:
-    //   - backgroundPort: what background code uses
-    //   - contentPort: what the client who called .connect() uses
-    //
+    if (type !== "background") return; //
     // Both share the same portId, but we keep separate
     // handler queues and wire them via the bus.
     const backgroundPort = makePort("background", portId, name, source);

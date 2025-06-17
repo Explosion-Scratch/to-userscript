@@ -1,12 +1,14 @@
-// Enhanced buildPolyfill function with integrated runtime.getURL
+// -- Polyfill Implementation
 function buildPolyfill({ isBackground = false, isOtherPage = false } = {}) {
   // Generate a unique context ID for this polyfill instance
   const contextType = isBackground
     ? "background"
     : isOtherPage
-      ? "options"
-      : "content";
-  const contextId = `${contextType}_${Math.random().toString(36).substring(2, 15)}`;
+    ? "options"
+    : "content";
+  const contextId = `${contextType}_${Math.random()
+    .toString(36)
+    .substring(2, 15)}`;
 
   const IS_IFRAME = "{{IS_IFRAME}}" === "true";
   const BUS = createEventBus("{{SCRIPT_ID}}", IS_IFRAME ? "iframe" : "page");
@@ -20,7 +22,7 @@ function buildPolyfill({ isBackground = false, isOtherPage = false } = {}) {
     });
   }
 
-  // --- Polyfill Implementation ---
+  // --- Chrome polyfill
   let chrome = {
     extension: {
       isAllowedIncognitoAccess: () => Promise.resolve(true),
@@ -51,7 +53,7 @@ function buildPolyfill({ isBackground = false, isOtherPage = false } = {}) {
           return JSON.parse(JSON.stringify(INJECTED_MANIFEST)); // Return deep copy
         }
         console.warn(
-          "INJECTED_MANIFEST not found for chrome.runtime.getManifest",
+          "INJECTED_MANIFEST not found for chrome.runtime.getManifest"
         );
         return { name: "Unknown", version: "0.0", manifest_version: 2 };
       },
@@ -68,7 +70,7 @@ function buildPolyfill({ isBackground = false, isOtherPage = false } = {}) {
         }
 
         console.warn(
-          `chrome.runtime.getURL fallback for '${path}'. Assets may not be available.`,
+          `chrome.runtime.getURL fallback for '${path}'. Assets may not be available.`
         );
         // Attempt a relative path resolution (highly context-dependent and likely wrong)
         try {
@@ -435,7 +437,7 @@ function buildPolyfill({ isBackground = false, isOtherPage = false } = {}) {
     tabs: {
       query: async (queryInfo) => {
         console.warn(
-          "chrome.tabs.query polyfill only returns current tab info.",
+          "chrome.tabs.query polyfill only returns current tab info."
         );
         const dummyId = Math.floor(Math.random() * 1000) + 1;
         return [
@@ -463,7 +465,7 @@ function buildPolyfill({ isBackground = false, isOtherPage = false } = {}) {
       },
       sendMessage: async (tabId, message) => {
         console.warn(
-          `chrome.tabs.sendMessage polyfill (to tab ${tabId}) redirects to runtime.sendMessage (current context).`,
+          `chrome.tabs.sendMessage polyfill (to tab ${tabId}) redirects to runtime.sendMessage (current context).`
         );
         return chrome.runtime.sendMessage(message);
       },
@@ -524,12 +526,12 @@ function buildPolyfill({ isBackground = false, isOtherPage = false } = {}) {
                   tag: id,
                 });
                 console.log(
-                  `[Notifications] Created notification after permission: ${id}`,
+                  `[Notifications] Created notification after permission: ${id}`
                 );
                 return id;
               } else {
                 console.warn(
-                  "[Notifications] Permission denied for notifications",
+                  "[Notifications] Permission denied for notifications"
                 );
                 return id; // Return ID even if notification wasn't shown
               }
@@ -539,7 +541,7 @@ function buildPolyfill({ isBackground = false, isOtherPage = false } = {}) {
             }
           } else {
             console.warn(
-              "[Notifications] Native notifications not supported, using console fallback",
+              "[Notifications] Native notifications not supported, using console fallback"
             );
             console.log(`[Notification] ${title}: ${message}`);
             return id;
@@ -547,7 +549,7 @@ function buildPolyfill({ isBackground = false, isOtherPage = false } = {}) {
         } catch (error) {
           console.error(
             "[Notifications] Error creating notification:",
-            error.message,
+            error.message
           );
           throw error;
         }
@@ -599,7 +601,7 @@ function buildPolyfill({ isBackground = false, isOtherPage = false } = {}) {
           });
 
           console.log(
-            `[ContextMenus] Created context menu item: ${title} (${menuId})`,
+            `[ContextMenus] Created context menu item: ${title} (${menuId})`
           );
 
           // Try to register a menu command as fallback
@@ -610,12 +612,12 @@ function buildPolyfill({ isBackground = false, isOtherPage = false } = {}) {
                 onclick ||
                   (() => {
                     console.log(`Context menu clicked: ${title}`);
-                  }),
+                  })
               );
             } catch (e) {
               console.warn(
                 "[ContextMenus] Failed to register as menu command:",
-                e.message,
+                e.message
               );
             }
           }
@@ -628,7 +630,7 @@ function buildPolyfill({ isBackground = false, isOtherPage = false } = {}) {
         } catch (error) {
           console.error(
             "[ContextMenus] Error creating context menu:",
-            error.message,
+            error.message
           );
           if (callback && typeof callback === "function") {
             setTimeout(() => callback(), 0);
@@ -656,7 +658,7 @@ function buildPolyfill({ isBackground = false, isOtherPage = false } = {}) {
         } catch (error) {
           console.error(
             "[ContextMenus] Error updating context menu:",
-            error.message,
+            error.message
           );
           if (callback && typeof callback === "function") {
             setTimeout(() => callback(), 0);
@@ -671,11 +673,11 @@ function buildPolyfill({ isBackground = false, isOtherPage = false } = {}) {
           ) {
             window._polyfillContextMenus.delete(menuItemId);
             console.log(
-              `[ContextMenus] Removed context menu item: ${menuItemId}`,
+              `[ContextMenus] Removed context menu item: ${menuItemId}`
             );
           } else {
             console.warn(
-              `[ContextMenus] Context menu item not found for removal: ${menuItemId}`,
+              `[ContextMenus] Context menu item not found for removal: ${menuItemId}`
             );
           }
 
@@ -685,7 +687,7 @@ function buildPolyfill({ isBackground = false, isOtherPage = false } = {}) {
         } catch (error) {
           console.error(
             "[ContextMenus] Error removing context menu:",
-            error.message,
+            error.message
           );
           if (callback && typeof callback === "function") {
             setTimeout(() => callback(), 0);
@@ -698,7 +700,7 @@ function buildPolyfill({ isBackground = false, isOtherPage = false } = {}) {
             const count = window._polyfillContextMenus.size;
             window._polyfillContextMenus.clear();
             console.log(
-              `[ContextMenus] Removed all ${count} context menu items`,
+              `[ContextMenus] Removed all ${count} context menu items`
             );
           }
 
@@ -708,7 +710,7 @@ function buildPolyfill({ isBackground = false, isOtherPage = false } = {}) {
         } catch (error) {
           console.error(
             "[ContextMenus] Error removing all context menus:",
-            error.message,
+            error.message
           );
           if (callback && typeof callback === "function") {
             setTimeout(() => callback(), 0);
@@ -740,13 +742,13 @@ function buildPolyfill({ isBackground = false, isOtherPage = false } = {}) {
     },
     set(target, key, value, receiver) {
       console.log(
-        `[${contextType}] [CHROME - ${_key}] Setting ${key} to ${value}`,
+        `[${contextType}] [CHROME - ${_key}] Setting ${key} to ${value}`
       );
       return Reflect.set(target, key, value, receiver);
     },
     has(target, key) {
       console.log(
-        `[${contextType}] [CHROME - ${_key}] Checking if ${key} exists`,
+        `[${contextType}] [CHROME - ${_key}] Checking if ${key} exists`
       );
       return Reflect.has(target, key);
     },
@@ -755,7 +757,7 @@ function buildPolyfill({ isBackground = false, isOtherPage = false } = {}) {
     Object.entries(chrome).map(([key, value]) => [
       key,
       new Proxy(value, loggingProxyHandler(key)),
-    ]),
+    ])
   );
 
   // Alias browser to chrome for common Firefox pattern
