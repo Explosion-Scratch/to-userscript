@@ -8,32 +8,14 @@ try {
   debug("Terser not available, falling back to simple minification");
 }
 
-function simpleMinify(code) {
-  debug("Applying simple minification fallback");
-
-  return (
-    code
-      // Remove single-line comments (but preserve URLs and important comments)
-      .replace(/\/\/(?![\/\s]*@|[\/\s]*http)[^\r\n]*/g, "")
-      // Remove multi-line comments (but preserve license blocks and important comments)
-      .replace(/\/\*(?![\s\S]*?@license|[\s\S]*?@preserve)[\s\S]*?\*\//g, "")
-      // Remove excessive whitespace
-      .replace(/\s+/g, " ")
-      // Remove whitespace around operators
-      .replace(/\s*([{}();,=+\-*\/&|!<>?:])\s*/g, "$1")
-      // Remove trailing semicolons before closing braces
-      .replace(/;(\s*})/g, "$1")
-      // Remove leading/trailing whitespace
-      .trim()
-  );
+let prettier = null;
+try {
+  prettier = require("prettier");
+} catch (error) {
+  debug("Prettier not available, beautify functionality will be limited.");
 }
 
 async function terserMinify(code) {
-  if (!terser) {
-    debug("Terser not available, using simple minification");
-    return simpleMinify(code);
-  }
-
   debug("Applying terser minification");
 
   try {
@@ -87,7 +69,47 @@ async function terserMinify(code) {
       "Terser minification failed, falling back to simple: %s",
       error.message
     );
-    return simpleMinify(code);
+    return code;
+  }
+}
+
+async function prettierBeautify(code) {
+  debug("Applying prettier beautification");
+
+  if (!prettier) {
+    debug("Prettier is not available, skipping beautification.");
+    return code;
+  }
+
+  try {
+    const result = await prettier.format(code, {
+      parser: "babel",
+      printWidth: 100,
+      tabWidth: 2,
+      useTabs: false,
+      semi: true,
+      singleQuote: false,
+      quoteProps: "as-needed",
+      jsxSingleQuote: false,
+      trailingComma: "es5",
+      bracketSpacing: true,
+      jsxBracketSameLine: false,
+      arrowParens: "always",
+      requirePragma: false,
+      insertPragma: false,
+      proseWrap: "preserve",
+      htmlWhitespaceSensitivity: "css",
+      vueIndentScriptAndStyle: false,
+      endOfLine: "lf",
+      embeddedLanguageFormatting: "auto",
+    });
+    return result;
+  } catch (error) {
+    debug(
+      "Prettier beautification failed, falling back to original code: %s",
+      error.message
+    );
+    return code;
   }
 }
 
@@ -151,11 +173,13 @@ async function minifyScript(filePath) {
   }
 }
 
-async function minifyScriptContent(content) {
-  debug("Starting minification of content (%d bytes)", content.length);
+async function beautifyScript(filePath) {
+  debug("Starting beautification of: %s", filePath);
 
   try {
-    // Extract userscript metadata block
+    const content = await fs.readFile(filePath, "utf-8");
+    debug("Original file size: %d bytes", content.length);
+
     const metadataMatch = content.match(
       /(^\/\/\s*==UserScript==[\s\S]*?\/\/\s*==\/UserScript==)/m
     );
@@ -167,45 +191,44 @@ async function minifyScriptContent(content) {
       metadataBlock = metadataMatch[1];
       scriptCode = content.replace(metadataMatch[0], "").trim();
       debug("Extracted metadata block (%d bytes)", metadataBlock.length);
+    } else {
+      debug("No userscript metadata block found");
     }
 
-    // Minify the script code
-    const minifiedCode = await terserMinify(scriptCode);
-    debug("Minified code size: %d bytes", minifiedCode.length);
+    const beautifiedCode = await prettierBeautify(scriptCode);
+    debug("Beautified code size: %d bytes", beautifiedCode.length);
 
-    // Combine metadata and minified code
     const finalContent = metadataBlock
-      ? `${metadataBlock}\n\n${minifiedCode}`
-      : minifiedCode;
+      ? `${metadataBlock}\n\n${beautifiedCode}`
+      : beautifiedCode;
 
-    const reduction = content.length - finalContent.length;
-    const reductionPercent = Math.round((reduction / content.length) * 100);
+    await fs.writeFile(filePath, finalContent, "utf-8");
+
+    const expansion = finalContent.length - content.length;
+    const expansionPercent = Math.round((expansion / content.length) * 100);
 
     debug(
-      "Content minification complete: %d bytes -> %d bytes (-%d bytes, -%d%%)",
+      "Beautification complete: %d bytes -> %d bytes (+%d bytes, +%d%%)",
       content.length,
       finalContent.length,
-      reduction,
-      reductionPercent
+      expansion,
+      expansionPercent
     );
 
     return {
-      content: finalContent,
       originalSize: content.length,
-      minifiedSize: finalContent.length,
-      reduction,
-      reductionPercent,
+      beautifiedSize: finalContent.length,
+      expansion,
+      expansionPercent,
     };
   } catch (error) {
-    const errorMsg = `Failed to minify script content: ${error.message}`;
-    debug("Content minification error: %s", errorMsg);
+    const errorMsg = `Failed to beautify script ${filePath}: ${error.message}`;
+    debug("Beautification error: %s", errorMsg);
     throw new Error(errorMsg);
   }
 }
 
 module.exports = {
   minifyScript,
-  minifyScriptContent,
-  simpleMinify,
-  terserMinify,
+  beautifyScript,
 };

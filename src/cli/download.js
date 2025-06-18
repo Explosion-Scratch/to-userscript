@@ -1,7 +1,6 @@
 const fs = require("fs").promises;
 const path = require("path");
 const fetch = require("node-fetch");
-const ora = require("ora");
 const chalk = require("chalk");
 const debug = require("debug")("to-userscript:downloader");
 const { getCrxUrl } = require("./downloadExt");
@@ -80,6 +79,8 @@ async function getFirefoxAddonUrl(webstoreUrl) {
   }
 }
 
+const ProgressBar = require("cli-progress");
+
 async function downloadFile(url, destinationPath) {
   debug("Downloading file from: %s", url);
   debug("Destination: %s", destinationPath);
@@ -110,21 +111,17 @@ async function downloadFile(url, destinationPath) {
   debug("Content-Length: %d bytes", contentLength);
   debug("Content-Type: %s", contentType);
 
-  // Create progress indicator if we know the file size
   let progressBar = null;
   if (contentLength > 0) {
-    const progressOptions = {
+    progressBar = new ProgressBar.SingleBar({
       format: "Downloading [{bar}] {percentage}% | {value}/{total} bytes",
       barCompleteChar: "█",
       barIncompleteChar: "░",
       hideCursor: true,
-    };
-
-    // Note: Using ora for now since cli-progress isn't in dependencies
-    // In a full implementation, you'd add cli-progress to package.json
-    progressBar = ora("Downloading...").start();
+    });
+    progressBar.start(contentLength, 0);
   } else {
-    progressBar = ora("Downloading...").start();
+    console.log(chalk.yellow("Downloading... (size unknown)"));
   }
 
   const fileStream = await fs.open(destinationPath, "w");
@@ -136,12 +133,16 @@ async function downloadFile(url, destinationPath) {
       downloadedBytes += chunk.length;
 
       if (contentLength > 0 && progressBar) {
-        const percentage = Math.round((downloadedBytes / contentLength) * 100);
-        progressBar.text = `Downloading... ${percentage}% (${downloadedBytes}/${contentLength} bytes)`;
+        progressBar.update(downloadedBytes);
       }
     }
 
-    progressBar.succeed(`Downloaded ${downloadedBytes} bytes`);
+    if (progressBar) {
+      progressBar.stop();
+      console.log(chalk.green(`Downloaded ${downloadedBytes} bytes`));
+    } else {
+      console.log(chalk.green(`Downloaded ${downloadedBytes} bytes`));
+    }
     debug(
       "Download completed: %d bytes written to %s",
       downloadedBytes,

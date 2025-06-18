@@ -153,15 +153,17 @@ async function run(config) {
       sourceInfo.type === "firefox-store" ||
       sourceInfo.type === "url"
     ) {
-      spinner.text = "Downloading extension...";
+      spinner.stop();
+      // spinner.text = "Downloading extension...";
       const downloadPath = path.join(tmpPath, "download");
       downloadedFile = await download.downloadExtension(
         sourceInfo,
         downloadPath
       );
-      debug("Downloaded file: %s", downloadedFile);
 
-      spinner.text = "Extracting downloaded archive...";
+      debug("Downloaded file: %s", downloadedFile);
+      spinner.start("Extracting downloaded archive...");
+
       inputDir = await unpack.unpack(
         downloadedFile,
         path.join(tmpPath, "unpacked")
@@ -224,6 +226,10 @@ async function run(config) {
       spinner.text = "Minifying output...";
       await minify.minifyScript(outputPath);
       debug("Minification complete");
+    } else if (config.beautify) {
+      spinner.text = "Beautifying output...";
+      await minify.beautifyScript(outputPath);
+      debug("Beautification complete");
     }
 
     spinner.succeed(chalk.green(`Conversion complete!`));

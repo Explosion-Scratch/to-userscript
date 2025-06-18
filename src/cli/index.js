@@ -31,6 +31,11 @@ async function main() {
               type: "boolean",
               default: false,
             })
+            .option("beautify", {
+              describe: "Beautify the JavaScript output using prettier",
+              type: "boolean",
+              default: false,
+            })
             .option("target", {
               describe: "Build target type",
               choices: ["userscript", "vanilla"],

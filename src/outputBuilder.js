@@ -10,7 +10,6 @@ const scriptAssembler = require("./scriptAssembler");
 const { generateBuildPolyfillString } = require("./buildPolyfillString");
 const { getIcon } = require("./getIcon");
 const { AssetGenerator } = require("./assetsGenerator");
-const prettier = require("prettier");
 
 /**
  * Prepares CSS data for injection into the template.
@@ -251,7 +250,6 @@ async function buildUserScript({
     "})();",
   ].join("\n");
 
-  finalScript = await prettier.format(finalScript, { parser: "babel" });
   finalScript = replaceComments(finalScript);
 
   return finalScript;
