@@ -3,7 +3,7 @@
 function createEventBus(
   scopeId,
   type = "page", // "page" or "iframe"
-  { allowedOrigin = "*", children = [], parentWindow = null } = {}
+  { allowedOrigin = "*", children = [], parentWindow = null } = {},
 ) {
   if (!scopeId) throw new Error("createEventBus requires a scopeId");
 
@@ -27,7 +27,7 @@ function createEventBus(
     }
 
     (handlers[event] || []).forEach((fn) =>
-      fn(payload, { origin: ev.origin, source: ev.source })
+      fn(payload, { origin: ev.origin, source: ev.source }),
     );
   }
 
@@ -67,23 +67,24 @@ function createEventBus(
      * @param {string} event - The event name.
      * @param {any} payload - The event payload.
      * @param {object} [options] - Emission options.
-     * @param {Window} [options.to] - A specific window to target. If omitted, broadcasts.
+     * @param {Window} [options.to] - A specific window to target. If provided, message is ONLY sent to the target.
      */
     emit(event, payload, { to } = {}) {
-      // dispatch locally first
-      (handlers[event] || []).forEach((fn) =>
-        fn(payload, { origin: location.origin, source: window })
-      );
-
-      // If a specific target window is provided, send only to it.
+      // If a specific target window is provided, send only to it and DO NOT dispatch locally.
+      // This prevents a port from receiving its own messages.
       if (to) {
         if (to && typeof to.postMessage === "function") {
           emitTo(to, event, payload);
         }
-        return;
+        return; // Exit after targeted send.
       }
 
-      // Otherwise, perform the default broadcast behavior.
+      // For broadcast messages (no 'to' target), dispatch locally first.
+      (handlers[event] || []).forEach((fn) =>
+        fn(payload, { origin: location.origin, source: window }),
+      );
+
+      // Then propagate the broadcast to other windows.
       if (type === "page") {
         children.forEach((win) => emitTo(win, event, payload));
       } else {
@@ -213,20 +214,23 @@ function createRuntime(type = "background", bus) {
     bus.emit("__PORT_CONNECT_ACK__", { portId, name }, { to: source });
   });
 
-  // Clients handle the ACK and finalize their Port object:
-  bus.on("__PORT_CONNECT_ACK__", ({ portId, name }) => {
+  // Clients handle the ACK and finalize their Port object by learning the remote window.
+  bus.on("__PORT_CONNECT_ACK__", ({ portId, name }, { source }) => {
     if (type === "background") return; // ignore
     const p = ports[portId];
     if (!p) return;
-    p._ready = true;
-    p._drainBuffer();
+    // Call the port's internal finalize method to complete the handshake
+    if (p._finalize) {
+      p._finalize(source);
+    }
   });
 
   // Any port message travels via "__PORT_MESSAGE__"
-  bus.on("__PORT_MESSAGE__", ({ portId, msg }, { source }) => {
+  bus.on("__PORT_MESSAGE__", (envelope, { source }) => {
+    const { portId } = envelope;
     const p = ports[portId];
     if (!p) return;
-    p._receive(msg, source);
+    p._receive(envelope, source);
   });
 
   // Any port disconnect:
@@ -237,13 +241,15 @@ function createRuntime(type = "background", bus) {
     delete ports[portId];
   });
 
+  // Refactored makePort to correctly manage internal state and the connection handshake.
   function makePort(side, portId, name, remoteWindow) {
     let onMessageHandlers = [];
     let onDisconnectHandlers = [];
     let buffer = [];
+    // Unique instance ID for this port instance
+    const instanceId = Math.random().toString(36).slice(2) + Date.now();
+    // These state variables are part of the closure and are updated by _finalize
     let _ready = side === "background";
-    // background ends are always ready
-    // client ends wait for CONNECT_ACK
 
     function _drainBuffer() {
       buffer.forEach((m) => _post(m));
@@ -251,8 +257,13 @@ function createRuntime(type = "background", bus) {
     }
 
     function _post(msg) {
-      // unidirectional: send from this side, receive on the other
-      bus.emit("__PORT_MESSAGE__", { portId, msg }, { to: remoteWindow });
+      // Always use the 'to' parameter for port messages, making them directional.
+      // Include senderInstanceId
+      bus.emit(
+        "__PORT_MESSAGE__",
+        { portId, msg, senderInstanceId: instanceId },
+        { to: remoteWindow },
+      );
     }
 
     function postMessage(msg) {
@@ -263,13 +274,16 @@ function createRuntime(type = "background", bus) {
       }
     }
 
-    function _receive(msg, source) {
+    function _receive(envelope, source) {
+      // envelope: { msg, senderInstanceId }
+      if (envelope.senderInstanceId === instanceId) return; // Don't dispatch to self
       onMessageHandlers.forEach((fn) =>
-        fn(msg, { id: portId, tab: { id: source } })
+        fn(envelope.msg, { id: portId, tab: { id: source } }),
       );
     }
 
     function disconnect() {
+      // Also use the 'to' parameter for disconnect messages
       bus.emit("__PORT_DISCONNECT__", { portId }, { to: remoteWindow });
       _disconnect();
       delete ports[portId];
@@ -279,6 +293,14 @@ function createRuntime(type = "background", bus) {
       onDisconnectHandlers.forEach((fn) => fn());
       onMessageHandlers = [];
       onDisconnectHandlers = [];
+    }
+
+    // This function is called on the client port when the ACK is received from background.
+    // It updates the port's state, completing the connection.
+    function _finalize(win) {
+      remoteWindow = win; // <-- This is the crucial part: learn the destination
+      _ready = true;
+      _drainBuffer();
     }
 
     return {
@@ -304,10 +326,10 @@ function createRuntime(type = "background", bus) {
       },
       postMessage,
       disconnect,
-      _ready, // internal
-      _drainBuffer, // internal
-      _receive, // internal
-      _disconnect, // internal
+      // Internal methods used by the runtime
+      _receive,
+      _disconnect,
+      _finalize, // Expose the finalizer for the ACK handler
     };
   }
 
@@ -318,7 +340,7 @@ function createRuntime(type = "background", bus) {
     const name = connectInfo.name || "";
     const portId = nextPortId++;
     // create the client side port
-    // remoteWindow is left undefined here; bus.emit will propagate upwards
+    // remoteWindow is initially null; it will be set by _finalize upon ACK.
     const clientPort = makePort("client", portId, name, null);
     ports[portId] = clientPort;
 
