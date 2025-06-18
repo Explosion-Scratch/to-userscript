@@ -46,12 +46,10 @@ async function readScript(filePath) {
     const errorMsg = `Error reading script file ${filePath}: ${error.message}`;
     console.error(errorMsg);
 
-    // Check if this is a critical error or if we should continue with empty content
     if (
       error.message.includes("not found") ||
       error.message.includes("not readable")
     ) {
-      // For missing/unreadable files, return empty string but log the issue
       console.warn(
         `Returning empty content for inaccessible script: ${filePath}`,
       );
@@ -117,10 +115,8 @@ async function readScriptsAndStyles(baseDir, contentScriptConfigs) {
   const errors = [];
 
   try {
-    // Validate base directory exists
     await validateFileAccess(baseDir);
   } catch (error) {
-    // If baseDir validation fails as a file, check if it's a directory
     try {
       const stats = await fs.stat(baseDir);
       if (!stats.isDirectory()) {
@@ -209,7 +205,7 @@ async function readScriptsAndStyles(baseDir, contentScriptConfigs) {
                 `Failed to read CSS file ${relativePath}: ${cssError.message}`,
               );
               // Continue processing other files even if one fails
-              cssContents[relativePath] = ""; // Use empty content as fallback
+              cssContents[relativePath] = "";
               processedCssPaths.add(relativePath);
             }
           }

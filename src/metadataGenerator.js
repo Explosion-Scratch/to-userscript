@@ -21,7 +21,6 @@ function generateMetadata(
   lines.push(
     `// @require     data:text/javascript;base64,${fs.readFileSync(path.resolve(".", "src", "templates", "trustedTypes.template.js")).toString("base64")}`,
   );
-  // Aggregate @match directives from all content scripts
   const matches = new Set();
   const MATCH_REPLACEMENTS = {
     "<all_urls>": "*://*/*",
@@ -36,7 +35,6 @@ function generateMetadata(
     });
   }
   if (matches.size === 0) {
-    // Add a broad match if none specified, maybe too broad? Or require manual edit?
     console.warn(
       "No @match patterns found in manifest content_scripts. Adding '// @match *://*/*' as a fallback. Review this carefully!",
     );
@@ -45,22 +43,18 @@ function generateMetadata(
     matches.forEach((match) => lines.push(`// @match       ${match}`));
   }
 
-  // Add @grant directives
   if (requiredGmGrants.length > 0) {
     requiredGmGrants.forEach((grant) => lines.push(`// @grant       ${grant}`));
   } else {
-    lines.push("// @grant       none"); // Explicitly state no grants if none needed
+    lines.push("// @grant       none");
   }
 
-  // Add other common directives (can be expanded later)
-  // Handle icons (pick size closest to 48px)
   const iconDataUrl = getIcon(parsedManifest, extensionRoot);
   if (iconDataUrl) {
     lines.push(`// @icon        ${iconDataUrl}`);
   }
 
-  // Determine the earliest run-at time required by any content script
-  let earliestRunAt = "document-idle"; // Default to latest
+  let earliestRunAt = "document-idle";
   const runAtOrder = {
     "document-start": 1,
     "document-end": 2,
@@ -70,7 +64,7 @@ function generateMetadata(
   if (content_scripts) {
     content_scripts.forEach((cs) => {
       // Note: Can be document-start or document_start formats
-      const runAt = cs.run_at?.replaceAll("_", "-") || "document-idle"; // Default for individual script if missing
+      const runAt = cs.run_at?.replaceAll("_", "-") || "document-idle";
       if (runAtOrder[runAt] < runAtOrder[earliestRunAt]) {
         earliestRunAt = runAt;
       }
@@ -79,7 +73,7 @@ function generateMetadata(
   lines.push(`// @run-at      ${earliestRunAt}`);
 
   lines.push("// ==/UserScript==");
-  lines.push(""); // Add a blank line after the block
+  lines.push("");
 
   return lines.join("\n");
 }

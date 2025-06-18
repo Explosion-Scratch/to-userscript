@@ -16,26 +16,21 @@ const abstractionLayer = require("./abstractionLayer");
 async function generateBuildPolyfillString(
   target = "userscript",
   assetsMap = {},
-  manifest = {}
+  manifest = {},
 ) {
-  // 2. Get abstraction layer code
   const abstractionLayerCode =
     await abstractionLayer.getAbstractionLayerCode(target);
 
-  // 3. Generate assets logic helper functions using the unified approach
   const assetsHelperFunctions = generateAssetsHelperFunctions(
     assetsMap,
-    target === "postmessage"
+    target === "postmessage",
   );
 
   const messagingTemplate = await templateManager.getMessagingTemplate();
 
   const polyfillTemplate = await templateManager.getPolyfillTemplate();
 
-  // 4. Combine everything into a single string
   const combinedPolyfillString = `
-// This contains all necessary code to create a complete polyfill environment
-
 ${messagingTemplate}
 
 ${abstractionLayerCode}
@@ -46,7 +41,6 @@ ${polyfillTemplate
   .replaceAll("{{IS_IFRAME}}", target === "postmessage" ? "true" : "false")
   .replaceAll("{{SCRIPT_ID}}", manifest._id)}
 
-// Export the buildPolyfill function for use
 if (typeof window !== 'undefined') {
     window.buildPolyfill = buildPolyfill;
 }
@@ -71,7 +65,6 @@ function _isTextAsset() { return false; }
 function _createAssetUrl() { return ''; }`;
   }
 
-  // For postmessage target, use a placeholder that will be replaced during template processing
   const assetMapJson = inlineAssets
     ? `{{EXTENSION_ASSETS_MAP}}`
     : JSON.stringify(assetsMap, null, 2);
@@ -81,36 +74,28 @@ const EXTENSION_ASSETS_MAP = ${assetMapJson};
 
 function _testBlobCSP() {
   try {
-    // Create a random blob with some simple JavaScript content
     const code = \`console.log("Blob CSP test");\`;
     const blob = new Blob([code], { type: 'application/javascript' });
     const blobUrl = URL.createObjectURL(blob);
 
-    // Create a script tag to load the blob URL
     const script = document.createElement('script');
     script.src = blobUrl;
 
-    // Add an error handler in case the CSP blocks it
     let blocked = false;
     script.onerror = () => {
       blocked = true;
     };
 
-    // Append the script to the document
     document.head.appendChild(script);
 
-    // Since CSP blocks are asynchronous, we need to return a promise
     return new Promise((resolve) => {
-      // Wait briefly to see if the error handler fires
       setTimeout(() => {
         resolve(!blocked);
-        // Clean up
         document.head.removeChild(script);
         URL.revokeObjectURL(blobUrl);
       }, 100);
     });
   } catch (e) {
-    // If creating or assigning the blob fails synchronously
     return Promise.resolve(false);
   }
 }
@@ -169,14 +154,10 @@ function _createAssetUrl(path = '') {
   const ext = (path.split('.').pop() || '').toLowerCase();
 
   if (CAN_USE_BLOB_CSP) {
-    // For web accessible resources, handle different content types appropriately
     let blob;
     if (_isTextAsset(ext)) {
-      // For text assets (including processed CSS with inlined assets),
-      // the content is already processed and should be used as-is
       blob = new Blob([assetData], { type: mime });
     } else {
-      // For binary assets, the content is base64 encoded
       blob = _base64ToBlob(assetData, mime);
     }
 

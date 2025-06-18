@@ -17,7 +17,6 @@ async function validateTemplatePath(templatePath) {
         `Template path exists but is not a file: ${templatePath}`,
       );
     }
-    // Test readability
     await fs.access(templatePath, fs.constants.R_OK);
     return true;
   } catch (error) {
@@ -58,7 +57,6 @@ async function resolveTemplatePath(templateName, target = null) {
     await validateTemplatePath(templatePath);
     return { path: templatePath, fileName: templateFileName };
   } catch (error) {
-    // If target-specific template doesn't exist, try the base template
     if (target) {
       const baseFileName = [templateName, "template.js"].join(".");
       const basePath = path.join(templatesDir, baseFileName);
@@ -69,7 +67,6 @@ async function resolveTemplatePath(templateName, target = null) {
         );
         return { path: basePath, fileName: baseFileName };
       } catch (baseError) {
-        // Both failed, throw original error with context
         throw new Error(
           `Template resolution failed for '${templateName}' with target '${target}': ${error.message}. Base template also failed: ${baseError.message}`,
         );
@@ -111,8 +108,6 @@ async function getTemplate(templateName, target = null) {
     throw new Error(errorMsg);
   }
 }
-
-// Specific template getter functions for clarity
 
 async function getAbstractionLayerTemplate(target = "userscript") {
   return getTemplate("abstractionLayer", target);

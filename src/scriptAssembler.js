@@ -22,7 +22,7 @@ function generateCombinedExecutionLogic(scriptsToRun, cssToInject, scriptName) {
         (document.head || document.documentElement).appendChild(style);
       } else { console.warn(\`  CSS not found (${phaseName}): \${cssKey_${idx}}\`); }
     } catch(e) { console.error(\`  Failed injecting CSS (\${cssKey_${idx}}) in phase ${phaseName}\`, e, extensionCssData); }
-  `
+  `,
       )
       .join("\n");
   };
@@ -30,23 +30,11 @@ function generateCombinedExecutionLogic(scriptsToRun, cssToInject, scriptName) {
   // Helper to generate JS execution code for a given run_at phase
   const generateJsExecution = (runAtKey, phaseName) => {
     const allScripts = scriptsToRun[runAtKey] || [];
-    /*
-   const ID = Math.random().toString(36).substring(2, 15);
 
-        return `
-      const scriptPath_${ID} = ${JSON.stringify(script.path)}; // Use JSON.stringify for safety
-      console.log(\`  Executing JS (${phaseName}): \${scriptPath_${ID}}\`);
-      try {
-          with(__globals){;${script.content}\n;}
-      } catch(e) { console.error(\`  Error executing script \${scriptPath_${ID}}\`, e); }
-    `;
-`
-    (scriptsToRun[runAtKey] || [])
-    */
     const getContent = (content) =>
       content.trim().replace(/^['"]use strict['"];?/, "");
     return `const scriptPaths = ${JSON.stringify(
-      allScripts.map((script) => script.path)
+      allScripts.map((script) => script.path),
     )};
    console.log(\`  Executing JS (${phaseName}): \${scriptPaths}\`);
 
@@ -57,21 +45,18 @@ function generateCombinedExecutionLogic(scriptsToRun, cssToInject, scriptName) {
           (script) =>
             `// START: ${script.path}\n${getContent(script.content)}\n// END: ${
               script.path
-            }`
+            }`,
         )
         .join("\n\n")}\n;}
    } catch(e) { console.error(\`  Error executing scripts \${scriptPaths}\`, e); }
   `;
   };
 
-  // Assemble the function string using the helpers
   const functionString = `
   // -- Script Execution Logic
 async function executeAllScripts(globalThis, extensionCssData) {
   const {chrome, browser, global, window, self} = globalThis;
-  const scriptName = ${JSON.stringify(
-    scriptName
-  )}; // Make name available inside
+  const scriptName = ${JSON.stringify(scriptName)};
   console.log(\`[\${scriptName}] Starting execution phases...\`);
 
   // --- Document Start
@@ -102,7 +87,7 @@ async function executeAllScripts(globalThis, extensionCssData) {
   } else {
       console.log(\`[\${scriptName}] Skipping document-end phase (no document).\`);
   }
-  
+
   /*
   // --- Wait for Document Idle
   console.log(\`[\${scriptName}] Waiting for document idle state...\`);
@@ -130,7 +115,7 @@ async function executeAllScripts(globalThis, extensionCssData) {
     bubbles: true,
     cancelable: true
   }));
-}`; // End of function string
+}`;
 
   return functionString;
 }

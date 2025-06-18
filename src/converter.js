@@ -27,10 +27,9 @@ async function main() {
     .help()
     .alias("help", "h").argv;
 
-  // Resolve and normalize paths immediately
   const inputDir = utils.normalizePath(path.resolve(argv.inputDir));
   const outputFile = utils.normalizePath(path.resolve(argv.outputFile));
-  const manifestPath = path.join(inputDir, "manifest.json"); // Keep platform separators for fs ops
+  const manifestPath = path.join(inputDir, "manifest.json");
   try {
     console.log(`Parsing manifest: ${manifestPath}`);
     const { parsedManifest, locale } =
@@ -42,7 +41,6 @@ async function main() {
       `Manifest parsed: ${parsedManifest.name} v${parsedManifest.version}`,
     );
 
-    // Phase 1: Only handle content scripts
     const contentScriptConfigs = parsedManifest.content_scripts || [];
     if (contentScriptConfigs.length === 0) {
       console.warn(
@@ -60,7 +58,6 @@ async function main() {
       `Processed ${Object.keys(jsContents).length} JS file(s) and ${Object.keys(cssContents).length} CSS file(s).`,
     );
 
-    // Background scripts (manifest v2)
     const backgroundScriptsList =
       parsedManifest.background && parsedManifest.background.scripts
         ? parsedManifest.background.scripts
@@ -70,7 +67,6 @@ async function main() {
       backgroundScriptsList,
     );
 
-    // Phase 1: Only userscript target
     const target = "userscript";
     console.log(`Generating for target: ${target}`);
 

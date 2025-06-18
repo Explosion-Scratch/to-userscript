@@ -1,46 +1,33 @@
 const SCRIPT_NAME = {{SCRIPT_NAME}};
 
 const INJECTED_MANIFEST = {{INJECTED_MANIFEST}};
-// Minimal configs just to check if *any* script should run on this page
 const CONTENT_SCRIPT_CONFIGS_FOR_MATCHING = {{CONTENT_SCRIPT_CONFIGS_FOR_MATCHING_ONLY}};
-// Options page path (relative inside EXTENSION_ASSETS_MAP) if available
 const OPTIONS_PAGE_PATH = {{OPTIONS_PAGE_PATH}};
-// Popup page path (relative inside EXTENSION_ASSETS_MAP) if available
 const POPUP_PAGE_PATH = {{POPUP_PAGE_PATH}};
-// Extension icon as data URL (size closest to 48px)
 const EXTENSION_ICON = {{EXTENSION_ICON}};
-// CSS data is needed by the combined execution logic
 const extensionCssData = {{EXTENSION_CSS_DATA}};
 
 const LOCALE_KEYS = {{LOCALE}}
 
-// Function to convert match pattern string to a RegExp object
 const convertMatchPatternToRegExp = {{CONVERT_MATCH_PATTERN_TO_REGEXP_FUNCTION}};
-// Function to convert match pattern string to a double-escaped string for RegExp constructor
 const convertMatchPatternToRegExpString = {{CONVERT_MATCH_PATTERN_FUNCTION_STRING}};
 
-// Web accessible resources utility functions
 function _matchGlobPattern(pattern, path) {
   if (!pattern || !path) return false;
-  
-  // Normalize paths to use forward slashes
+
   pattern = pattern.replace(/\\/g, '/');
   path = path.replace(/\\/g, '/');
-  
-  // Handle exact matches first
+
   if (pattern === path) return true;
-  
-  // Convert glob pattern to regex
-  // Escape special regex chars except * and **
+
   let regexPattern = pattern
     .replace(/[.+?^${}()|[\]\\]/g, '\\$&')  // Escape regex chars
     .replace(/\*\*/g, '__DOUBLESTAR__')      // Temporarily replace **
     .replace(/\*/g, '[^/]*')                 // * matches any chars except /
     .replace(/__DOUBLESTAR__/g, '.*');       // ** matches any chars including /
-  
-  // Ensure pattern matches from start to end
+
   regexPattern = '^' + regexPattern + '$';
-  
+
   try {
     const regex = new RegExp(regexPattern);
     return regex.test(path);
@@ -54,13 +41,13 @@ function _isWebAccessibleResource(resourcePath, webAccessibleResources) {
   if (!Array.isArray(webAccessibleResources) || webAccessibleResources.length === 0) {
     return false;
   }
-  
+
   // Normalize the resource path
   const normalizedPath = resourcePath.replace(/\\/g, '/').replace(/^\/+/, '');
-  
+
   for (const webAccessibleResource of webAccessibleResources) {
     let patterns = [];
-    
+
     // Handle both manifest v2 and v3 formats
     if (typeof webAccessibleResource === 'string') {
       // Manifest v2 format: array of strings
@@ -69,7 +56,7 @@ function _isWebAccessibleResource(resourcePath, webAccessibleResources) {
       // Manifest v3 format: objects with resources array
       patterns = webAccessibleResource.resources;
     }
-    
+
     // Check if the path matches any pattern
     for (const pattern of patterns) {
       if (_matchGlobPattern(pattern, normalizedPath)) {
@@ -77,11 +64,10 @@ function _isWebAccessibleResource(resourcePath, webAccessibleResources) {
       }
     }
   }
-  
+
   return false;
 }
 
-// Make utility functions available globally
 window._matchGlobPattern = _matchGlobPattern;
 window._isWebAccessibleResource = _isWebAccessibleResource;
 
@@ -93,12 +79,12 @@ function closeOptionsModal() {
     const DURATION = 100;
     const backdrop = document.getElementById('extension-options-backdrop');
     const modal = document.getElementById('extension-options-modal');
-    
+
     if (!backdrop || !modal) return;
-    
+
     modal.style.animation = `modalCloseAnimation ${DURATION / 1000}s ease-out forwards`;
     backdrop.style.animation = `backdropFadeOut ${DURATION / 1000}s ease-out forwards`;
-    
+
     setTimeout(() => {
         if (confirm('Close options and reload the page?')) {
             window.location.reload();
@@ -112,12 +98,12 @@ function closePopupModal() {
     const DURATION = 100;
     const backdrop = document.getElementById('extension-popup-backdrop');
     const modal = document.getElementById('extension-popup-modal');
-    
+
     if (!backdrop || !modal) return;
-    
+
     modal.style.animation = `modalCloseAnimation ${DURATION / 1000}s ease-out forwards`;
     backdrop.style.animation = `backdropFadeOut ${DURATION / 1000}s ease-out forwards`;
-    
+
     setTimeout(() => {
         backdrop.remove();
     }, DURATION);
@@ -133,17 +119,17 @@ function openPopupPage() {
 
     let backdrop = document.getElementById('extension-popup-backdrop');
     let modal, iframe;
-    
+
     if (!backdrop) {
         backdrop = document.createElement('div');
         backdrop.id = 'extension-popup-backdrop';
-        
+
         modal = document.createElement('div');
         modal.id = 'extension-popup-modal';
-        
+
         const extensionName = INJECTED_MANIFEST.name || 'Extension Popup';
         const iconSrc = EXTENSION_ICON || 'data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSIyNCIgaGVpZ2h0PSIyNCIgdmlld0JveD0iMCAwIDI0IDI0IiBzdHJva2Utd2lkdGg9IjIiIGZpbGw9Im5vbmUiIHN0cm9rZT0iY3VycmVudENvbG9yIiBzdHJva2UtbGluZWNhcD0icm91bmQiIHN0cm9rZS1saW5lam9pbj0icm91bmQiPjxwYXRoIHN0cm9rZT0ibm9uZSIgZD0iTTAgMGgyNHYyNEgweiIgZmlsbD0ibm9uZSIvPjxwYXRoIGQ9Ik00IDdoM2ExIDEgMCAwIDAgMSAtMXYtMWEyIDIgMCAwIDEgNCAwdjFhMSAxIDAgMCAwIDEgMWgzYTEgMSAwIDAgMSAxIDF2M2ExIDEgMCAwIDAgMSAxaDFhMiAyIDAgMCAxIDAgNGgtMWExIDEgMCAwIDAgLTEgMXYzYTEgMSAwIDAgMSAtMSAxaC0zYTEgMSAwIDAgMSAtMSAtMXYtMWEyIDIgMCAwIDAgLTQgMHYxYTEgMSAwIDAgMSAtMSAxaC0zYTEgMSAwIDAgMSAtMSAtMXYtM2ExIDEgMCAwIDEgMSAtMWgxYTIgMiAwIDAgMCAwIC00aC0xYTEgMSAwIDAgMSAtMSAtMXYtM2ExIDEgMCAwIDEgMSAtMSIgLz48L3N2Zz4=';
-        
+
         backdrop.innerHTML = `
             <style>
                 #extension-popup-backdrop {
@@ -160,7 +146,7 @@ function openPopupPage() {
                     justify-content: center;
                     animation: backdropFadeIn 0.3s ease-out forwards;
                 }
-                
+
                 #extension-popup-modal {
                     width: 400px;
                     height: 600px;
@@ -177,7 +163,7 @@ function openPopupPage() {
                     overflow: hidden;
                     animation: modalOpenAnimation 0.3s ease-out forwards;
                 }
-                
+
                 #extension-popup-modal .modal-header {
                     display: flex;
                     justify-content: space-between;
@@ -186,7 +172,7 @@ function openPopupPage() {
                     position: relative;
                     flex-shrink: 0;
                 }
-                
+
                 #extension-popup-modal .tab {
                     padding: 12px 16px;
                     color: #606266;
@@ -199,7 +185,7 @@ function openPopupPage() {
                     transition: background-color 0.2s ease;
                     user-select: none;
                 }
-                
+
                 #extension-popup-modal .tab.active, #extension-popup-modal .tab.close-button {
                     background-color: var(--background);
                     border: var(--border-thickness) solid var(--border);
@@ -209,29 +195,29 @@ function openPopupPage() {
                     color: #303133;
                     font-weight: 500;
                 }
-                
+
                 #extension-popup-modal .tab.close-button {
                     padding: 8px;
                 }
-                
+
                 #extension-popup-modal .tab.close-button:hover {
                     background-color: #f5f7fa;
                 }
-                
+
                 #extension-popup-modal .tab svg {
                     stroke: currentColor;
                 }
-                
+
                 #extension-popup-modal .tab.active svg {
                     width: 16px;
                     height: 16px;
                 }
-                
+
                 #extension-popup-modal .tab.close-button svg {
                     width: 20px;
                     height: 20px;
                 }
-                
+
                 #extension-popup-modal .modal-content {
                     flex-grow: 1;
                     position: relative;
@@ -240,7 +226,7 @@ function openPopupPage() {
                     bottom: calc(var(--border-thickness) - 1px);
                     border: var(--border-thickness) solid var(--border);
                 }
-                
+
                 #extension-popup-modal .modal-content iframe {
                     width: 100%;
                     height: 100%;
@@ -249,7 +235,7 @@ function openPopupPage() {
                 }
             </style>
         `;
-        
+
         modal.innerHTML = `
             <div class="modal-header">
                 <div class="tab active">
@@ -267,9 +253,9 @@ function openPopupPage() {
                 <iframe></iframe>
             </div>
         `;
-        
+
         backdrop.appendChild(modal);
-        
+
         backdrop.addEventListener('click', (e) => {
             if (e.target === backdrop) {
                 closePopupModal();
@@ -287,7 +273,7 @@ function openPopupPage() {
         }
         backdrop.style.display = 'flex';
     }
-    
+
     try {
         const polyfillString = generateCompletePolyfillForIframe();
 
@@ -312,17 +298,17 @@ function openOptionsPage() {
 
     let backdrop = document.getElementById('extension-options-backdrop');
     let modal, iframe;
-    
+
     if (!backdrop) {
         backdrop = document.createElement('div');
         backdrop.id = 'extension-options-backdrop';
-        
+
         modal = document.createElement('div');
         modal.id = 'extension-options-modal';
-        
+
         const extensionName = INJECTED_MANIFEST.name || 'Extension Options';
         const iconSrc = EXTENSION_ICON || 'data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSIyNCIgaGVpZ2h0PSIyNCIgdmlld0JveD0iMCAwIDI0IDI0IiBzdHJva2Utd2lkdGg9IjIiIGZpbGw9Im5vbmUiIHN0cm9rZT0iY3VycmVudENvbG9yIiBzdHJva2UtbGluZWNhcD0icm91bmQiIHN0cm9rZS1saW5lam9pbj0icm91bmQiPjxwYXRoIHN0cm9rZT0ibm9uZSIgZD0iTTAgMGgyNHYyNEgweiIgZmlsbD0ibm9uZSIvPjxwYXRoIGQ9Ik00IDdoM2ExIDEgMCAwIDAgMSAtMXYtMWEyIDIgMCAwIDEgNCAwdjFhMSAxIDAgMCAwIDEgMWgzYTEgMSAwIDAgMSAxIDF2M2ExIDEgMCAwIDAgMSAxaDFhMiAyIDAgMCAxIDAgNGgtMWExIDEgMCAwIDAgLTEgMXYzYTEgMSAwIDAgMSAtMSAxaC0zYTEgMSAwIDAgMSAtMSAtMXYtMWEyIDIgMCAwIDAgLTQgMHYxYTEgMSAwIDAgMSAtMSAxaC0zYTEgMSAwIDAgMSAtMSAtMXYtM2ExIDEgMCAwIDEgMSAtMWgxYTIgMiAwIDAgMCAwIC00aC0xYTEgMSAwIDAgMSAtMSAtMXYtM2ExIDEgMCAwIDEgMSAtMSIgLz48L3N2Zz4=';
-        
+
         backdrop.innerHTML = `
             <style>
                 #extension-options-backdrop {
@@ -339,7 +325,7 @@ function openOptionsPage() {
                     justify-content: center;
                     animation: backdropFadeIn 0.3s ease-out forwards;
                 }
-                
+
                 @keyframes backdropFadeIn {
                     from {
                         opacity: 0;
@@ -350,7 +336,7 @@ function openOptionsPage() {
                         backdrop-filter: blur(3px);
                     }
                 }
-                
+
                 @keyframes backdropFadeOut {
                     from {
                         opacity: 1;
@@ -361,7 +347,7 @@ function openOptionsPage() {
                         backdrop-filter: blur(0px);
                     }
                 }
-                
+
                 @keyframes modalOpenAnimation {
                     from {
                         transform: scaleY(0.8);
@@ -372,7 +358,7 @@ function openOptionsPage() {
                         opacity: 1;
                     }
                 }
-                
+
                 @keyframes modalCloseAnimation {
                     from {
                         transform: scaleY(1);
@@ -383,7 +369,7 @@ function openOptionsPage() {
                         opacity: 0;
                     }
                 }
-                
+
                 #extension-options-modal {
                     width: calc(100vw - 80px);
                     height: calc(100vh - 80px);
@@ -400,7 +386,7 @@ function openOptionsPage() {
                     overflow: hidden;
                     animation: modalOpenAnimation 0.3s ease-out forwards;
                 }
-                
+
                 #extension-options-modal .modal-header {
                     display: flex;
                     justify-content: space-between;
@@ -409,7 +395,7 @@ function openOptionsPage() {
                     position: relative;
                     flex-shrink: 0;
                 }
-                
+
                 #extension-options-modal .tab {
                     padding: 12px 16px;
                     color: #606266;
@@ -422,7 +408,7 @@ function openOptionsPage() {
                     transition: background-color 0.2s ease;
                     user-select: none;
                 }
-                
+
                 #extension-options-modal .tab.active, #extension-options-modal .tab.close-button {
                     background-color: var(--background);
                     border: var(--border-thickness) solid var(--border);
@@ -432,29 +418,29 @@ function openOptionsPage() {
                     color: #303133;
                     font-weight: 500;
                 }
-                
+
                 #extension-options-modal .tab.close-button {
                     padding: 8px;
                 }
-                
+
                 #extension-options-modal .tab.close-button:hover {
                     background-color: #f5f7fa;
                 }
-                
+
                 #extension-options-modal .tab svg {
                     stroke: currentColor;
                 }
-                
+
                 #extension-options-modal .tab.active svg {
                     width: 16px;
                     height: 16px;
                 }
-                
+
                 #extension-options-modal .tab.close-button svg {
                     width: 20px;
                     height: 20px;
                 }
-                
+
                 #extension-options-modal .modal-content {
                     flex-grow: 1;
                     position: relative;
@@ -463,7 +449,7 @@ function openOptionsPage() {
                     bottom: calc(var(--border-thickness) - 1px);
                     border: var(--border-thickness) solid var(--border);
                 }
-                
+
                 #extension-options-modal .modal-content iframe {
                     width: 100%;
                     height: 100%;
@@ -472,7 +458,7 @@ function openOptionsPage() {
                 }
             </style>
         `;
-        
+
         modal.innerHTML = `
             <div class="modal-header">
                 <div class="tab active">
@@ -490,9 +476,9 @@ function openOptionsPage() {
                 <iframe></iframe>
             </div>
         `;
-        
+
         backdrop.appendChild(modal);
-        
+
         backdrop.addEventListener('click', (e) => {
             if (e.target === backdrop) {
                 closeOptionsModal();
@@ -510,7 +496,7 @@ function openOptionsPage() {
         }
         backdrop.style.display = 'flex';
     }
-    
+
     try {
         const polyfillString = generateCompletePolyfillForIframe();
 
@@ -525,9 +511,7 @@ function openOptionsPage() {
     }
 }
 
-// Helper function to generate complete polyfill code for iframe injection
 function generateCompletePolyfillForIframe() {
-    // The unified polyfill string is injected here during build
     const polyfillString = {{UNIFIED_POLYFILL_FOR_IFRAME}}
     let newMap = JSON.parse(JSON.stringify(EXTENSION_ASSETS_MAP));
     delete newMap[OPTIONS_PAGE_PATH];
@@ -548,23 +532,17 @@ function generateCompletePolyfillForIframe() {
 async function main() {
     console.log(`[${SCRIPT_NAME}] Initializing...`);
 
-    // A. Initialize Storage (if needed by abstraction layer)
     if (typeof _initStorage === 'function') {
         try {
             await _initStorage();
             console.log(`[${SCRIPT_NAME}] Storage initialized.`);
         } catch (e) {
             console.error('Error during storage initialization:', e);
-            // Decide whether to proceed if storage fails
         }
     }
 
-    // A2. Initialize background scripts first (they should always run)
     console.log(`[${SCRIPT_NAME}] Starting background scripts...`);
-    // Note: Background scripts are auto-executed before this main() function runs
-    // This is just a notification that they should have started
 
-    // B. Determine if any content script matches the current URL
     const currentUrl = window.location.href;
     let shouldRunAnyScript = false;
     console.log(`[${SCRIPT_NAME}] Checking URL: ${currentUrl}`);
@@ -573,11 +551,9 @@ async function main() {
         for (const config of CONTENT_SCRIPT_CONFIGS_FOR_MATCHING) {
             if (config.matches && config.matches.some(pattern => {
                 try {
-                    // Use the injected utility function
                     const regex = convertMatchPatternToRegExp(pattern);
                     if (regex.test(currentUrl)) {
-                       // console.log(`[${SCRIPT_NAME}] URL matched pattern: ${pattern}`); // Verbose logging
-                       return true; // Found a matching pattern
+                       return true;
                     }
                     return false;
                 } catch (e) {
@@ -587,7 +563,7 @@ async function main() {
             })) {
                 shouldRunAnyScript = true;
                 console.log(`[${SCRIPT_NAME}] URL match found via config:`, config);
-                break; // Found a matching config, no need to check further configs
+                break;
             }
         }
     } else {
@@ -596,21 +572,15 @@ async function main() {
 
 
     if (shouldRunAnyScript) {
-        // C. Build polyfill for content script context
-        // Only build polyfill if we actually need to run scripts
         let polyfillContext;
         try {
-            // Content script context
             polyfillContext = buildPolyfill({ isBackground: false });
         } catch (e) {
             console.error(`[${SCRIPT_NAME}] Failed to build polyfill:`, e);
-            return; // Cannot proceed without polyfill
+            return;
         }
 
         console.log(`[${SCRIPT_NAME}] Polyfill built. Executing combined script logic...`);
-        // Note: runtime.getURL is now integrated into the polyfill itself
-        // D. Execute the combined logic
-        // Pass the polyfill and CSS data to the function
         // async function executeAllScripts({chrome, browser, global, window, globalThis, self, __globals}, extensionCssData) {
         await executeAllScripts.call(polyfillContext.globalThis, polyfillContext, extensionCssData);
 
@@ -618,28 +588,24 @@ async function main() {
         console.log(`[${SCRIPT_NAME}] No matching content script patterns for this URL. No scripts will be executed.`);
     }
 
-    // E. Options Page Handling - Register menu command if available
     if (OPTIONS_PAGE_PATH) {
-        // Register GM menu command if available
         if (typeof _registerMenuCommand === 'function') {
-            try { 
-                _registerMenuCommand('Open Options', openOptionsPage); 
+            try {
+                _registerMenuCommand('Open Options', openOptionsPage);
                 console.log(`[${SCRIPT_NAME}] Options menu command registered.`);
-            } catch(e) { 
-                console.error('Failed to register menu command', e); 
+            } catch(e) {
+                console.error('Failed to register menu command', e);
             }
         }
     }
 
-    // F. Popup Page Handling - Register menu command if available
     if (POPUP_PAGE_PATH) {
-        // Register GM menu command if available
         if (typeof _registerMenuCommand === 'function') {
-            try { 
-                _registerMenuCommand('Open Popup', openPopupPage); 
+            try {
+                _registerMenuCommand('Open Popup', openPopupPage);
                 console.log(`[${SCRIPT_NAME}] Popup menu command registered.`);
-            } catch(e) { 
-                console.error('Failed to register popup menu command', e); 
+            } catch(e) {
+                console.error('Failed to register popup menu command', e);
             }
         }
     }

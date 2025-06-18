@@ -19,7 +19,6 @@ const prettier = require("prettier");
 function prepareCssDataString(cssContents) {
   const extensionCss = {};
   for (const [relativePath, content] of Object.entries(cssContents)) {
-    // Use normalized path and escape content for JSON embedding
     extensionCss[normalizePath(relativePath)] = JSON.stringify(content);
   }
   // Format as key: value pairs for embedding in the template object literal
@@ -43,7 +42,7 @@ function prepareCssDataString(cssContents) {
 function structureScriptsAndCssByRunAt(
   parsedManifest,
   jsContents,
-  cssContents
+  cssContents,
 ) {
   const scriptsToRun = {
     "document-start": [],
@@ -55,8 +54,6 @@ function structureScriptsAndCssByRunAt(
     "document-end": [],
     "document-idle": [],
   };
-  // Use Sets to track added paths *per run_at phase* to avoid duplicates if a script/style
-  // is listed in multiple content_script blocks with the same run_at.
   const processedJsPaths = new Set(); // Stores "path@runAt"
   const processedCssPaths = new Set(); // Stores "path@runAt"
 
@@ -70,7 +67,6 @@ function structureScriptsAndCssByRunAt(
       ? runAt
       : "document-idle";
 
-    // Add JS
     if (config.js) {
       config.js.forEach((jsPath) => {
         const normalizedPath = normalizePath(jsPath);
@@ -84,13 +80,13 @@ function structureScriptsAndCssByRunAt(
         }
       });
     }
-    // Add CSS
+
     if (config.css) {
       config.css.forEach((cssPath) => {
         const normalizedPath = normalizePath(cssPath);
         const processKey = `${normalizedPath}@${validRunAt}`;
         if (cssContents[normalizedPath] && !processedCssPaths.has(processKey)) {
-          cssToInject[validRunAt].push(normalizedPath); // Only need the path for CSS injection lookup
+          cssToInject[validRunAt].push(normalizedPath);
           processedCssPaths.add(processKey);
         }
       });
@@ -100,7 +96,6 @@ function structureScriptsAndCssByRunAt(
   return { scriptsToRun, cssToInject };
 }
 
-// Helper to build background execution snippet
 function buildBackgroundExecutionString(backgroundJsContents = {}, scriptName) {
   const bgPaths = Object.keys(backgroundJsContents);
   if (bgPaths.length === 0) return "";
@@ -113,17 +108,15 @@ function buildBackgroundExecutionString(backgroundJsContents = {}, scriptName) {
 (function(){
   const scriptName = ${JSON.stringify(scriptName)};
   console.log('[' + scriptName + '] Executing background scripts...');
-  
-  // Initialize background context with polyfill
+
   const backgroundPolyfill = buildPolyfill({ isBackground: true });
-  
-  // Execute background scripts in the polyfilled environment
+
   with(backgroundPolyfill){
 ${sanitizedScripts
   .map((s) => `    // BG: ${s.path}\n${getContent(s.content)}`)
   .join("\n\n")}
   }
-  
+
   console.log('[' + scriptName + '] Background scripts execution complete.');
 })();
 `;
@@ -141,16 +134,13 @@ async function buildUserScript({
   extensionRoot = null,
   locale,
 }) {
-  // 1. Generate unified assets map using AssetGenerator
   console.log("Generating unified assets map...");
   const assetGenerator = new AssetGenerator(extensionRoot, locale);
   const { assetsMap, optionsPagePath, popupPagePath } =
     await assetGenerator.generateAssetsMap(parsedManifest);
 
-  // 2. Prepare data for template injection
   const extensionCssString = prepareCssDataString(cssContents);
 
-  // Extract minimal config needed for initial matching check in the template
   const contentScriptConfigsForMatching = (
     parsedManifest.content_scripts || []
   ).map((cs) => ({
@@ -160,68 +150,59 @@ async function buildUserScript({
   const contentScriptConfigsForMatchingString = JSON.stringify(
     contentScriptConfigsForMatching,
     null,
-    2
+    2,
   );
 
-  // Stringify the manifest for the getManifest() polyfill
   const injectedManifestString = JSON.stringify(parsedManifest);
 
-  // 3. Structure JS/CSS by run_at for the execution logic generator
   const { scriptsToRun, cssToInject } = structureScriptsAndCssByRunAt(
     parsedManifest,
     jsContents,
-    cssContents
+    cssContents,
   );
 
-  // 4. Prepare background execution string (if any)
   const scriptName = parsedManifest.name || "Converted Script";
   const backgroundExecutionString = buildBackgroundExecutionString(
     backgroundJsContents,
-    scriptName
+    scriptName,
   );
 
-  // 5. Generate the combined execution function string
   const combinedExecutionLogicString =
     scriptAssembler.generateCombinedExecutionLogic(
       scriptsToRun,
       cssToInject,
-      scriptName
+      scriptName,
     );
 
-  // 6. Generate the unified polyfill string with the generated assets map
   const polyfillString = await generateBuildPolyfillString(
     "userscript",
     assetsMap,
-    parsedManifest
+    parsedManifest,
   );
   const optionsPolyfillString = await generateBuildPolyfillString(
     "postmessage",
     assetsMap,
-    parsedManifest
+    parsedManifest,
   );
 
-  // 7. Get extension icon (size closest to 48px)
   const extensionIcon = extensionRoot
     ? getIcon(parsedManifest, extensionRoot)
     : null;
 
-  // 8. Read the Orchestration Template
   const orchestrationTemplate =
     await templateManager.getOrchestrationTemplate();
 
-  // 9. Perform Replacements in the Orchestration Template
   const replacements = {
     "{{SCRIPT_NAME}}": JSON.stringify(scriptName),
     "{{INJECTED_MANIFEST}}": injectedManifestString,
-    // Provide minimal configs just for the initial URL match check
     "{{CONTENT_SCRIPT_CONFIGS_FOR_MATCHING_ONLY}}":
       contentScriptConfigsForMatchingString,
     "{{EXTENSION_CSS_DATA}}": extensionCssString, // Pass the actual CSS data object literal
     "{{CONVERT_MATCH_PATTERN_FUNCTION_STRING}}":
-      convertMatchPatternToRegExpString.toString(), // Inject the utility function's source code
+      convertMatchPatternToRegExpString.toString(),
     "{{CONVERT_MATCH_PATTERN_TO_REGEXP_FUNCTION}}":
-      convertMatchPatternToRegExp.toString(), // Inject the utility function's source code
-    "{{COMBINED_EXECUTION_LOGIC}}": combinedExecutionLogicString, // Inject the generated function
+      convertMatchPatternToRegExp.toString(),
+    "{{COMBINED_EXECUTION_LOGIC}}": combinedExecutionLogicString,
     "{{OPTIONS_PAGE_PATH}}": optionsPagePath
       ? JSON.stringify(optionsPagePath)
       : "null",
@@ -240,7 +221,7 @@ async function buildUserScript({
     // Use a robust regex for replacement
     const regex = new RegExp(
       placeholder.replace(/[-\/\\^$*+?.()|[\]{}]/g, "\\$&"),
-      "g"
+      "g",
     );
     // Ensure $ signs in the replacement value are properly escaped
     const safeValue =
@@ -248,7 +229,6 @@ async function buildUserScript({
     orchestrationLogic = orchestrationLogic.replace(regex, safeValue);
   }
 
-  // 10. Assemble the final script using the unified polyfill
   let finalScript = [
     metadataBlock,
     "(function() {",

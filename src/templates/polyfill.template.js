@@ -4,8 +4,8 @@ function buildPolyfill({ isBackground = false, isOtherPage = false } = {}) {
   const contextType = isBackground
     ? "background"
     : isOtherPage
-    ? "options"
-    : "content";
+      ? "options"
+      : "content";
   const contextId = `${contextType}_${Math.random()
     .toString(36)
     .substring(2, 15)}`;
@@ -53,24 +53,22 @@ function buildPolyfill({ isBackground = false, isOtherPage = false } = {}) {
           return JSON.parse(JSON.stringify(INJECTED_MANIFEST)); // Return deep copy
         }
         console.warn(
-          "INJECTED_MANIFEST not found for chrome.runtime.getManifest"
+          "INJECTED_MANIFEST not found for chrome.runtime.getManifest",
         );
         return { name: "Unknown", version: "0.0", manifest_version: 2 };
       },
       getURL: (path) => {
-        // Integrated implementation using the asset helper functions
         if (!path) return "";
         if (path.startsWith("/")) {
           path = path.substring(1);
         }
 
-        // Use the integrated asset creation function
         if (typeof _createAssetUrl === "function") {
           return _createAssetUrl(path);
         }
 
         console.warn(
-          `chrome.runtime.getURL fallback for '${path}'. Assets may not be available.`
+          `chrome.runtime.getURL fallback for '${path}'. Assets may not be available.`,
         );
         // Attempt a relative path resolution (highly context-dependent and likely wrong)
         try {
@@ -82,31 +80,9 @@ function buildPolyfill({ isBackground = false, isOtherPage = false } = {}) {
         }
         return path;
       },
-      connect: (extensionIdOrConnectInfo, connectInfo) => {
-        // Enhanced connect implementation using the unified message bus
-        const getName = () => {
-          if (typeof extensionIdOrConnectInfo === "string") {
-            return connectInfo && connectInfo.name ? connectInfo.name : "";
-          }
-          return extensionIdOrConnectInfo && extensionIdOrConnectInfo.name
-            ? extensionIdOrConnectInfo.name
-            : "";
-        };
-
-        return internalMessageBus.createPort(contextId, null, getName());
-      },
-      onConnect: {
-        addListener: function (callback) {
-          internalMessageBus.addConnectListener(contextId, callback);
-        },
-        removeListener: function (callback) {
-          internalMessageBus.removeConnectListener(contextId, callback);
-        },
-      },
       id: "polyfilled-extension-" + Math.random().toString(36).substring(2, 15),
       lastError: null,
       getPlatformInfo: async () => {
-        // Basic platform detection
         const platform = {
           os: "unknown",
           arch: "unknown",
@@ -121,7 +97,6 @@ function buildPolyfill({ isBackground = false, isOtherPage = false } = {}) {
           else if (userAgent.includes("android")) platform.os = "android";
           else if (userAgent.includes("ios")) platform.os = "ios";
 
-          // Basic architecture detection
           if (userAgent.includes("x86_64") || userAgent.includes("amd64")) {
             platform.arch = "x86-64";
           } else if (userAgent.includes("i386") || userAgent.includes("i686")) {
@@ -134,7 +109,6 @@ function buildPolyfill({ isBackground = false, isOtherPage = false } = {}) {
         return platform;
       },
       getBrowserInfo: async () => {
-        // Basic browser detection
         const info = {
           name: "unknown",
           version: "unknown",
@@ -163,14 +137,12 @@ function buildPolyfill({ isBackground = false, isOtherPage = false } = {}) {
     },
     storage: {
       local: {
-        // Uses functions from the Abstraction Layer with unified messaging for change events
         get: function (keys, callback) {
           if (typeof _storageGet !== "function")
             throw new Error("_storageGet not defined");
 
           const promise = _storageGet(keys);
 
-          // Support callback-based syntax
           if (typeof callback === "function") {
             promise
               .then((result) => {
@@ -187,7 +159,6 @@ function buildPolyfill({ isBackground = false, isOtherPage = false } = {}) {
             return;
           }
 
-          // Return promise for async/await usage
           return promise;
         },
         set: function (items, callback) {
@@ -195,12 +166,10 @@ function buildPolyfill({ isBackground = false, isOtherPage = false } = {}) {
             throw new Error("_storageSet not defined");
 
           const promise = _storageSet(items).then((result) => {
-            // Broadcast storage changes to all contexts
             broadcastStorageChange(items, "local");
             return result;
           });
 
-          // Support callback-based syntax
           if (typeof callback === "function") {
             promise
               .then((result) => {
@@ -217,7 +186,6 @@ function buildPolyfill({ isBackground = false, isOtherPage = false } = {}) {
             return;
           }
 
-          // Return promise for async/await usage
           return promise;
         },
         remove: function (keys, callback) {
@@ -225,7 +193,6 @@ function buildPolyfill({ isBackground = false, isOtherPage = false } = {}) {
             throw new Error("_storageRemove not defined");
 
           const promise = _storageRemove(keys).then((result) => {
-            // Create changes object for removed keys
             const changes = {};
             const keyList = Array.isArray(keys) ? keys : [keys];
             keyList.forEach((key) => {
@@ -235,7 +202,6 @@ function buildPolyfill({ isBackground = false, isOtherPage = false } = {}) {
             return result;
           });
 
-          // Support callback-based syntax
           if (typeof callback === "function") {
             promise
               .then((result) => {
@@ -252,7 +218,6 @@ function buildPolyfill({ isBackground = false, isOtherPage = false } = {}) {
             return;
           }
 
-          // Return promise for async/await usage
           return promise;
         },
         clear: function (callback) {
@@ -260,12 +225,10 @@ function buildPolyfill({ isBackground = false, isOtherPage = false } = {}) {
             throw new Error("_storageClear not defined");
 
           const promise = _storageClear().then((result) => {
-            // Broadcast clear event
             broadcastStorageChange({}, "local");
             return result;
           });
 
-          // Support callback-based syntax
           if (typeof callback === "function") {
             promise
               .then((result) => {
@@ -282,7 +245,6 @@ function buildPolyfill({ isBackground = false, isOtherPage = false } = {}) {
             return;
           }
 
-          // Return promise for async/await usage
           return promise;
         },
         onChanged: {
@@ -294,7 +256,6 @@ function buildPolyfill({ isBackground = false, isOtherPage = false } = {}) {
           },
         },
       },
-      // Sync/Managed are simple aliases or stubs for Phase 1
       sync: {
         get: function (keys, callback) {
           console.warn("chrome.storage.sync polyfill maps to local");
@@ -303,14 +264,11 @@ function buildPolyfill({ isBackground = false, isOtherPage = false } = {}) {
         set: function (items, callback) {
           console.warn("chrome.storage.sync polyfill maps to local");
 
-          // Create a promise that handles sync-specific broadcasting
           const promise = chrome.storage.local.set(items).then((result) => {
-            // Sync storage changes also broadcast with 'sync' area name
             broadcastStorageChange(items, "sync");
             return result;
           });
 
-          // Support callback-based syntax
           if (typeof callback === "function") {
             promise
               .then((result) => {
@@ -327,15 +285,12 @@ function buildPolyfill({ isBackground = false, isOtherPage = false } = {}) {
             return;
           }
 
-          // Return promise for async/await usage
           return promise;
         },
         remove: function (keys, callback) {
           console.warn("chrome.storage.sync polyfill maps to local");
 
-          // Create a promise that handles sync-specific broadcasting
           const promise = chrome.storage.local.remove(keys).then((result) => {
-            // Create changes object for removed keys
             const changes = {};
             const keyList = Array.isArray(keys) ? keys : [keys];
             keyList.forEach((key) => {
@@ -345,7 +300,6 @@ function buildPolyfill({ isBackground = false, isOtherPage = false } = {}) {
             return result;
           });
 
-          // Support callback-based syntax
           if (typeof callback === "function") {
             promise
               .then((result) => {
@@ -362,19 +316,16 @@ function buildPolyfill({ isBackground = false, isOtherPage = false } = {}) {
             return;
           }
 
-          // Return promise for async/await usage
           return promise;
         },
         clear: function (callback) {
           console.warn("chrome.storage.sync polyfill maps to local");
 
-          // Create a promise that handles sync-specific broadcasting
           const promise = chrome.storage.local.clear().then((result) => {
             broadcastStorageChange({}, "sync");
             return result;
           });
 
-          // Support callback-based syntax
           if (typeof callback === "function") {
             promise
               .then((result) => {
@@ -391,7 +342,6 @@ function buildPolyfill({ isBackground = false, isOtherPage = false } = {}) {
             return;
           }
 
-          // Return promise for async/await usage
           return promise;
         },
         onChanged: {
@@ -417,7 +367,6 @@ function buildPolyfill({ isBackground = false, isOtherPage = false } = {}) {
 
           const promise = Promise.resolve({});
 
-          // Support callback-based syntax
           if (typeof callback === "function") {
             promise.then((result) => {
               try {
@@ -429,7 +378,6 @@ function buildPolyfill({ isBackground = false, isOtherPage = false } = {}) {
             return;
           }
 
-          // Return promise for async/await usage
           return promise;
         },
       },
@@ -437,7 +385,7 @@ function buildPolyfill({ isBackground = false, isOtherPage = false } = {}) {
     tabs: {
       query: async (queryInfo) => {
         console.warn(
-          "chrome.tabs.query polyfill only returns current tab info."
+          "chrome.tabs.query polyfill only returns current tab info.",
         );
         const dummyId = Math.floor(Math.random() * 1000) + 1;
         return [
@@ -465,7 +413,7 @@ function buildPolyfill({ isBackground = false, isOtherPage = false } = {}) {
       },
       sendMessage: async (tabId, message) => {
         console.warn(
-          `chrome.tabs.sendMessage polyfill (to tab ${tabId}) redirects to runtime.sendMessage (current context).`
+          `chrome.tabs.sendMessage polyfill (to tab ${tabId}) redirects to runtime.sendMessage (current context).`,
         );
         return chrome.runtime.sendMessage(message);
       },
@@ -473,16 +421,13 @@ function buildPolyfill({ isBackground = false, isOtherPage = false } = {}) {
     notifications: {
       create: async (notificationId, options) => {
         try {
-          // Handle both create(options) and create(id, options) signatures
           let id = notificationId;
           let notificationOptions = options;
 
           if (typeof notificationId === "object" && notificationId !== null) {
-            // Single parameter: create(options)
             notificationOptions = notificationId;
             id = "notification_" + Math.random().toString(36).substring(2, 15);
           } else if (typeof notificationId === "string" && options) {
-            // Two parameters: create(id, options)
             id = notificationId;
             notificationOptions = options;
           } else {
@@ -504,9 +449,7 @@ function buildPolyfill({ isBackground = false, isOtherPage = false } = {}) {
             throw new Error("Notification must have title and message");
           }
 
-          // Use native browser notifications if available
           if ("Notification" in window) {
-            // Check permission
             if (Notification.permission === "granted") {
               const notification = new Notification(title, {
                 body: message,
@@ -517,7 +460,6 @@ function buildPolyfill({ isBackground = false, isOtherPage = false } = {}) {
               console.log(`[Notifications] Created notification: ${id}`);
               return id;
             } else if (Notification.permission === "default") {
-              // Request permission
               const permission = await Notification.requestPermission();
               if (permission === "granted") {
                 const notification = new Notification(title, {
@@ -526,14 +468,14 @@ function buildPolyfill({ isBackground = false, isOtherPage = false } = {}) {
                   tag: id,
                 });
                 console.log(
-                  `[Notifications] Created notification after permission: ${id}`
+                  `[Notifications] Created notification after permission: ${id}`,
                 );
                 return id;
               } else {
                 console.warn(
-                  "[Notifications] Permission denied for notifications"
+                  "[Notifications] Permission denied for notifications",
                 );
-                return id; // Return ID even if notification wasn't shown
+                return id;
               }
             } else {
               console.warn("[Notifications] Notifications are blocked");
@@ -541,7 +483,7 @@ function buildPolyfill({ isBackground = false, isOtherPage = false } = {}) {
             }
           } else {
             console.warn(
-              "[Notifications] Native notifications not supported, using console fallback"
+              "[Notifications] Native notifications not supported, using console fallback",
             );
             console.log(`[Notification] ${title}: ${message}`);
             return id;
@@ -549,7 +491,7 @@ function buildPolyfill({ isBackground = false, isOtherPage = false } = {}) {
         } catch (error) {
           console.error(
             "[Notifications] Error creating notification:",
-            error.message
+            error.message,
           );
           throw error;
         }
@@ -601,7 +543,7 @@ function buildPolyfill({ isBackground = false, isOtherPage = false } = {}) {
           });
 
           console.log(
-            `[ContextMenus] Created context menu item: ${title} (${menuId})`
+            `[ContextMenus] Created context menu item: ${title} (${menuId})`,
           );
 
           // Try to register a menu command as fallback
@@ -612,12 +554,12 @@ function buildPolyfill({ isBackground = false, isOtherPage = false } = {}) {
                 onclick ||
                   (() => {
                     console.log(`Context menu clicked: ${title}`);
-                  })
+                  }),
               );
             } catch (e) {
               console.warn(
                 "[ContextMenus] Failed to register as menu command:",
-                e.message
+                e.message,
               );
             }
           }
@@ -630,7 +572,7 @@ function buildPolyfill({ isBackground = false, isOtherPage = false } = {}) {
         } catch (error) {
           console.error(
             "[ContextMenus] Error creating context menu:",
-            error.message
+            error.message,
           );
           if (callback && typeof callback === "function") {
             setTimeout(() => callback(), 0);
@@ -658,7 +600,7 @@ function buildPolyfill({ isBackground = false, isOtherPage = false } = {}) {
         } catch (error) {
           console.error(
             "[ContextMenus] Error updating context menu:",
-            error.message
+            error.message,
           );
           if (callback && typeof callback === "function") {
             setTimeout(() => callback(), 0);
@@ -673,11 +615,11 @@ function buildPolyfill({ isBackground = false, isOtherPage = false } = {}) {
           ) {
             window._polyfillContextMenus.delete(menuItemId);
             console.log(
-              `[ContextMenus] Removed context menu item: ${menuItemId}`
+              `[ContextMenus] Removed context menu item: ${menuItemId}`,
             );
           } else {
             console.warn(
-              `[ContextMenus] Context menu item not found for removal: ${menuItemId}`
+              `[ContextMenus] Context menu item not found for removal: ${menuItemId}`,
             );
           }
 
@@ -687,7 +629,7 @@ function buildPolyfill({ isBackground = false, isOtherPage = false } = {}) {
         } catch (error) {
           console.error(
             "[ContextMenus] Error removing context menu:",
-            error.message
+            error.message,
           );
           if (callback && typeof callback === "function") {
             setTimeout(() => callback(), 0);
@@ -700,7 +642,7 @@ function buildPolyfill({ isBackground = false, isOtherPage = false } = {}) {
             const count = window._polyfillContextMenus.size;
             window._polyfillContextMenus.clear();
             console.log(
-              `[ContextMenus] Removed all ${count} context menu items`
+              `[ContextMenus] Removed all ${count} context menu items`,
             );
           }
 
@@ -710,7 +652,7 @@ function buildPolyfill({ isBackground = false, isOtherPage = false } = {}) {
         } catch (error) {
           console.error(
             "[ContextMenus] Error removing all context menus:",
-            error.message
+            error.message,
           );
           if (callback && typeof callback === "function") {
             setTimeout(() => callback(), 0);
@@ -742,13 +684,13 @@ function buildPolyfill({ isBackground = false, isOtherPage = false } = {}) {
     },
     set(target, key, value, receiver) {
       console.log(
-        `[${contextType}] [CHROME - ${_key}] Setting ${key} to ${value}`
+        `[${contextType}] [CHROME - ${_key}] Setting ${key} to ${value}`,
       );
       return Reflect.set(target, key, value, receiver);
     },
     has(target, key) {
       console.log(
-        `[${contextType}] [CHROME - ${_key}] Checking if ${key} exists`
+        `[${contextType}] [CHROME - ${_key}] Checking if ${key} exists`,
       );
       return Reflect.has(target, key);
     },
@@ -757,7 +699,7 @@ function buildPolyfill({ isBackground = false, isOtherPage = false } = {}) {
     Object.entries(chrome).map(([key, value]) => [
       key,
       new Proxy(value, loggingProxyHandler(key)),
-    ])
+    ]),
   );
 
   // Alias browser to chrome for common Firefox pattern
@@ -862,7 +804,6 @@ function buildPolyfill({ isBackground = false, isOtherPage = false } = {}) {
     __globals: __globalsStorage,
   };
 
-  // Store context info for debugging
   __globalsStorage.contextId = contextId;
   __globalsStorage.contextType = contextType;
   __globalsStorage.module = undefined;

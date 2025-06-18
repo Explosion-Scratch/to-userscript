@@ -3,13 +3,7 @@
   const pendingRequests = new Map(); // requestId -> { resolve, reject, timeout }
   let nextRequestId = 1;
 
-  // Listen for postmessage requests from iframes
   window.addEventListener("message", async (event) => {
-    // // Only handle messages from same origin for security
-    // if (event.origin !== window.location.origin) {
-    //     return;
-    // }
-
     const { type, requestId, method, args } = event.data;
 
     if (type === "abstraction-request") {
@@ -45,7 +39,6 @@
             throw new Error(`Unknown abstraction method: ${method}`);
         }
 
-        // Send success response back to iframe
         event.source.postMessage({
           type: "abstraction-response",
           requestId,
@@ -53,7 +46,6 @@
           result,
         });
       } catch (error) {
-        // Send error response back to iframe
         event.source.postMessage({
           type: "abstraction-response",
           requestId,
@@ -68,6 +60,6 @@
   });
 
   console.log(
-    "[PostMessage Handler] Abstraction layer message handler initialized"
+    "[PostMessage Handler] Abstraction layer message handler initialized",
   );
 })();

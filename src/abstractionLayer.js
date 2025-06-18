@@ -1,4 +1,3 @@
-// This file defines which GM grants are needed and provides the abstraction layer code using the templateManager.
 const templateManager = require("./templateManager");
 
 /**
@@ -34,12 +33,11 @@ function getRequiredGmGrants(target = "userscript") {
     ].filter(Boolean);
   }
 
-  // PostMessage targets don't need GM grants since they delegate to the main context
   if (target === "postmessage" || target === "handle_postmessage") {
     return [];
   }
 
-  return []; // No GM grants needed for vanilla target
+  return [];
 }
 
 module.exports = { getAbstractionLayerCode, getRequiredGmGrants };

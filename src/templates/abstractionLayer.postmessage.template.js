@@ -3,21 +3,17 @@
 let nextRequestId = 1;
 const pendingRequests = new Map(); // requestId -> { resolve, reject, timeout }
 
-// Helper function to send postmessage requests to parent window
 function sendAbstractionRequest(method, args = []) {
   return new Promise((resolve, reject) => {
     const requestId = nextRequestId++;
 
-    // Set up timeout
     const timeout = setTimeout(() => {
       pendingRequests.delete(requestId);
       reject(new Error(`PostMessage request timeout for method: ${method}`));
-    }, 10000); // 10 second timeout
+    }, 10000);
 
-    // Store pending request
     pendingRequests.set(requestId, { resolve, reject, timeout });
 
-    // Send request to parent window
     window.parent.postMessage({
       type: "abstraction-request",
       requestId,
@@ -27,13 +23,7 @@ function sendAbstractionRequest(method, args = []) {
   });
 }
 
-// Listen for responses from parent window
 window.addEventListener("message", (event) => {
-  // Only handle messages from same origin for security
-  // if (event.origin !== window.location.origin) {
-  //     return;
-  // }
-
   const { type, requestId, success, result, error } = event.data;
 
   if (type === "abstraction-response") {
@@ -74,7 +64,6 @@ async function _fetch(url, options) {
 }
 
 function _registerMenuCommand(name, func) {
-  // Menu commands from iframes don't make much sense, but we'll pass it through
   console.warn("_registerMenuCommand called from iframe context:", name);
   return sendAbstractionRequest("_registerMenuCommand", [
     name,

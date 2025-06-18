@@ -3,18 +3,16 @@
 function createEventBus(
   scopeId,
   type = "page", // "page" or "iframe"
-  { allowedOrigin = "*", children = [], parentWindow = null } = {}
+  { allowedOrigin = "*", children = [], parentWindow = null } = {},
 ) {
   if (!scopeId) throw new Error("createEventBus requires a scopeId");
 
   const handlers = {};
 
   function handleIncoming(ev) {
-    // origin check
     if (allowedOrigin !== "*" && ev.origin !== allowedOrigin) return;
 
     const msg = ev.data;
-    // must be our eventBus message, same scope
     if (!msg || msg.__eventBus !== true || msg.scopeId !== scopeId) return;
 
     const { event, payload } = msg;
@@ -28,9 +26,8 @@ function createEventBus(
       return;
     }
 
-    // dispatch to listeners
     (handlers[event] || []).forEach((fn) =>
-      fn(payload, { origin: ev.origin, source: ev.source })
+      fn(payload, { origin: ev.origin, source: ev.source }),
     );
   }
 
@@ -68,7 +65,7 @@ function createEventBus(
     emit(event, payload) {
       // dispatch locally first
       (handlers[event] || []).forEach((fn) =>
-        fn(payload, { origin: location.origin, source: window })
+        fn(payload, { origin: location.origin, source: window }),
       );
 
       // then propagate
@@ -84,18 +81,13 @@ function createEventBus(
   };
 }
 
-// ===================================================================
-// 2) RUNTIME POLYFILL FACTORY WITH PORTS
-// ===================================================================
 function createRuntime(type = "background", bus) {
-  // message-based RPC
   let nextId = 1;
   const pending = {};
   const msgListeners = [];
 
-  // port-based
   let nextPortId = 1;
-  const ports = {}; // all open ports by id
+  const ports = {};
   const onConnectListeners = [];
 
   function parseArgs(args) {
@@ -189,21 +181,11 @@ function createRuntime(type = "background", bus) {
     return promise;
   }
 
-  // ============================
-  // PORT‐BASED CONNECT / DISCONNECT
-  // ============================
-  // When any side calls .connect(), emit a magic event
-  // that the background listens to.  The background then
-  // notifies its onConnect listeners with a Port object.
   bus.on("__PORT_CONNECT__", ({ portId, name }, { source }) => {
-    // Only the background should handle incoming connect requests:
     if (type !== "background") return; //
-    // Both share the same portId, but we keep separate
-    // handler queues and wire them via the bus.
     const backgroundPort = makePort("background", portId, name, source);
     ports[portId] = backgroundPort;
 
-    // notify background listeners
     onConnectListeners.forEach((fn) => fn(backgroundPort));
 
     // send back a CONNECT_ACK so the client can
@@ -325,7 +307,6 @@ function createRuntime(type = "background", bus) {
     onConnectListeners.push(fn);
   }
 
-  // Finally, wire up the returned runtime object:
   return {
     // rpc:
     sendMessage,

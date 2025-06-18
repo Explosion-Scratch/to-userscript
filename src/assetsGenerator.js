@@ -15,7 +15,6 @@ async function validateAssetFile(filePath) {
       throw new Error(`Asset path exists but is not a file: ${filePath}`);
     }
 
-    // Check file size - warn for large files that might cause issues
     const maxSize = 10 * 1024 * 1024; // 10MB limit for assets
     if (stats.size > maxSize) {
       throw new Error(
@@ -57,10 +56,8 @@ async function fileToBase64(filePath) {
       console.warn(`Asset file is empty: ${filePath}`);
       return "";
     }
-    // No locale treatment here - base64 encoded things aren't text
     const base64String = buffer.toString("base64");
 
-    // Validate the base64 conversion worked
     if (!base64String || base64String.length === 0) {
       throw new Error(
         `Base64 conversion resulted in empty string for: ${filePath}`,
@@ -92,9 +89,7 @@ function guessMimeType(p) {
 
   const ext = path.extname(p).replace(".", "").toLowerCase() || "";
 
-  // Enhanced MIME type mapping
   const mimeMap = {
-    // Text formats
     html: "text/html",
     htm: "text/html",
     js: "text/javascript",
@@ -104,7 +99,6 @@ function guessMimeType(p) {
     txt: "text/plain",
     xml: "application/xml",
 
-    // Image formats
     png: "image/png",
     jpg: "image/jpeg",
     jpeg: "image/jpeg",
@@ -114,26 +108,21 @@ function guessMimeType(p) {
     ico: "image/x-icon",
     bmp: "image/bmp",
 
-    // Font formats
     woff: "font/woff",
     woff2: "font/woff2",
     ttf: "font/ttf",
     otf: "font/otf",
     eot: "application/vnd.ms-fontobject",
 
-    // Audio formats
     mp3: "audio/mpeg",
     wav: "audio/wav",
     ogg: "audio/ogg",
 
-    // Video formats
     mp4: "video/mp4",
     webm: "video/webm",
 
-    // Archive formats
     zip: "application/zip",
 
-    // Other common formats
     pdf: "application/pdf",
   };
 
@@ -178,18 +167,16 @@ class AssetGenerator {
     this.assetsMap = {};
     this.locale = locale;
 
-    // Configuration for asset processing
     this.PROCESSABLE_ASSET_TYPES = {
       HTML: [".html", ".htm"],
       CSS: [".css"],
     };
 
     this.IGNORED_INLINE_PATTERNS = [
-      /\.(woff|woff2|ttf|otf|eot)$/i, // Font files
-      /\.(mp4|webm|ogg|mp3|wav)$/i, // Media files (can be large)
+      /\.(woff|woff2|ttf|otf|eot)$/i,
+      /\.(mp4|webm|ogg|mp3|wav)$/i,
     ];
 
-    // Unified regex patterns
     this.REGEX_PATTERNS = {
       HTML_ASSETS: /(src|href)\s*=\s*(?:["']([^"']+)["']|([^\s>]+))/gi,
       CSS_ASSETS: /url\s*\(\s*["']?([^"')]+)["']?\s*\)/gi,
@@ -238,7 +225,6 @@ class AssetGenerator {
 
     let absAssetPath = path.join(currentDir, assetPath);
 
-    // Ensure the resolved path is still within the extension directory
     const relativePath = path.relative(this.extensionRoot, absAssetPath);
     if (relativePath.startsWith("..")) {
       throw new Error(
@@ -463,7 +449,6 @@ class AssetGenerator {
   async processAssetRecursively(content, contentPath, assetType) {
     const normalizedPath = normalizePath(contentPath);
 
-    // Prevent infinite recursion
     if (this.processedFiles.has(normalizedPath)) {
       console.log(`Skipping already processed file: ${normalizedPath}`);
       return content;
@@ -501,7 +486,6 @@ class AssetGenerator {
         const fullPath = path.join(dir, entry.name);
 
         if (entry.isDirectory()) {
-          // Skip common non-resource directories
           if (
             !["node_modules", ".git", ".svn", "_metadata"].includes(entry.name)
           ) {
@@ -528,7 +512,6 @@ class AssetGenerator {
     const files = [];
 
     if (pattern.includes("*")) {
-      // Handle glob patterns by recursively walking directories
       const allFiles = await this.walkDirectory(this.extensionRoot);
 
       for (const filePath of allFiles) {
@@ -540,7 +523,6 @@ class AssetGenerator {
         }
       }
     } else {
-      // Handle exact file paths
       const exactPath = path.resolve(this.extensionRoot, pattern);
       try {
         const stats = await fs.stat(exactPath);
@@ -576,7 +558,6 @@ class AssetGenerator {
       }
     }
 
-    // Remove duplicates
     return [...new Set(matchingFiles)];
   }
 
@@ -594,7 +575,6 @@ class AssetGenerator {
       }
 
       if (pageType === "options") {
-        // Check options_ui.page first (preferred)
         if (
           manifest.options_ui &&
           typeof manifest.options_ui === "object" &&
@@ -610,7 +590,6 @@ class AssetGenerator {
           }
         }
 
-        // Fallback to options_page
         if (manifest.options_page) {
           if (typeof manifest.options_page === "string") {
             return manifest.options_page;
@@ -622,7 +601,6 @@ class AssetGenerator {
           }
         }
       } else if (pageType === "popup") {
-        // Check manifest v3 action.default_popup
         if (
           manifest.action &&
           typeof manifest.action === "object" &&
@@ -638,7 +616,7 @@ class AssetGenerator {
           }
         }
 
-        // Check manifest v2 browser_action.default_popup
+        // Check manifest v2
         if (
           manifest.browser_action &&
           typeof manifest.browser_action === "object" &&
@@ -654,7 +632,6 @@ class AssetGenerator {
           }
         }
 
-        // Check manifest v2 page_action.default_popup
         if (
           manifest.page_action &&
           typeof manifest.page_action === "object" &&
@@ -741,7 +718,6 @@ class AssetGenerator {
         "HTML",
       );
 
-      // Add to assets map
       this.assetsMap[normalizedPageRel] = this.locale(updatedHtml);
 
       console.log(
@@ -753,7 +729,6 @@ class AssetGenerator {
       const errorMsg = `Error processing ${pageType} page: ${error.message}`;
       console.error(errorMsg);
 
-      // Return empty result but don't throw - this allows the conversion to continue
       console.warn(
         `${pageType} page processing failed, continuing without ${pageType} page`,
       );
@@ -776,25 +751,22 @@ class AssetGenerator {
 
       console.log(`Processing web accessible resources...`);
 
-      // Collect all resource patterns
       const resourcePatterns = [];
       for (const resource of webAccessibleResources) {
         if (typeof resource === "string") {
-          // Manifest v2 format
+          // Manifest v2
           resourcePatterns.push(resource);
         } else if (resource && Array.isArray(resource.resources)) {
-          // Manifest v3 format
+          // Manifest v3
           resourcePatterns.push(...resource.resources);
         }
       }
 
-      // Find all matching files
       const matchingFiles = await this.findMatchingFiles(resourcePatterns);
       console.log(
         `Found ${matchingFiles.length} web accessible resource file(s)`,
       );
 
-      // Process each file
       for (const filePath of matchingFiles) {
         try {
           const relativePath = normalizePath(
@@ -805,7 +777,6 @@ class AssetGenerator {
           console.log(`  Processing web accessible resource: ${relativePath}`);
 
           if (ext === ".css") {
-            // For CSS files, apply asset inlining
             const cssContent = await fs.readFile(filePath, "utf-8");
             const processedContent = await this.processAssetRecursively(
               cssContent,
@@ -813,20 +784,17 @@ class AssetGenerator {
               "CSS",
             );
 
-            // Store as text content for CSS
             this.assetsMap[relativePath] = processedContent;
             console.log(
               `    Processed CSS with asset inlining: ${relativePath}`,
             );
           } else if (isTextAsset(ext)) {
-            // For other text assets, read as text
             const textContent = this.locale(
               await fs.readFile(filePath, "utf-8"),
             );
             this.assetsMap[relativePath] = textContent;
             console.log(`    Processed text asset: ${relativePath}`);
           } else {
-            // For binary assets, convert to base64
             const base64Content = await fileToBase64(filePath);
             this.assetsMap[relativePath] = base64Content;
             console.log(`    Processed binary asset: ${relativePath}`);
@@ -845,7 +813,6 @@ class AssetGenerator {
       const errorMsg = `Error processing web accessible resources: ${error.message}`;
       console.error(errorMsg);
 
-      // Don't throw - this allows the conversion to continue
       console.warn(
         "Web accessible resources processing failed, continuing without them",
       );
@@ -860,16 +827,13 @@ class AssetGenerator {
   async generateAssetsMap(manifest) {
     console.log("Generating unified assets map...");
 
-    // Reset assets map
     this.assetsMap = {};
     this.processedFiles.clear();
 
-    // Check if options and popup pages are the same
     const optionsPath = this.getPagePath(manifest, "options");
     const popupPath = this.getPagePath(manifest, "popup");
 
     if (optionsPath && popupPath && optionsPath === popupPath) {
-      // Process the shared page once and use result for both
       console.log(`Options and popup share the same page: ${optionsPath}`);
       const { popupPagePath } = await this.processHtmlPage(manifest, "popup");
       return {
@@ -878,14 +842,11 @@ class AssetGenerator {
         popupPagePath: popupPagePath,
       };
     } else {
-      // Process pages separately
       const { optionsPagePath } = await this.processHtmlPage(
         manifest,
         "options",
       );
       const { popupPagePath } = await this.processHtmlPage(manifest, "popup");
-
-      // Process web accessible resources
       await this.processWebAccessibleResources(manifest);
 
       return {

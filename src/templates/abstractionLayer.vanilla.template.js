@@ -22,7 +22,7 @@ async function _initStorage() {
         const error = new Error(
           `Failed to open IndexedDB: ${
             request.error?.message || "Unknown error"
-          }`
+          }`,
         );
         console.error("IndexedDB initialization error:", error);
         reject(error);
@@ -33,7 +33,6 @@ async function _initStorage() {
         console.log("IndexedDB storage initialized successfully");
         resolve(vanillaStorageDB);
 
-        // Handle unexpected database closure
         vanillaStorageDB.onclose = () => {
           console.warn("IndexedDB connection closed unexpectedly");
           vanillaStorageDB = null;
@@ -48,7 +47,6 @@ async function _initStorage() {
         const db = event.target.result;
 
         try {
-          // Create object store if it doesn't exist
           if (!db.objectStoreNames.contains(STORAGE_STORE_NAME)) {
             const store = db.createObjectStore(STORAGE_STORE_NAME, {
               keyPath: "key",
@@ -58,7 +56,7 @@ async function _initStorage() {
         } catch (storeError) {
           console.error("Error creating object store:", storeError);
           reject(
-            new Error(`Failed to create object store: ${storeError.message}`)
+            new Error(`Failed to create object store: ${storeError.message}`),
           );
         }
       };
@@ -66,7 +64,7 @@ async function _initStorage() {
       request.onblocked = () => {
         console.warn("IndexedDB upgrade blocked by another connection");
         reject(
-          new Error("IndexedDB upgrade blocked. Please close other tabs.")
+          new Error("IndexedDB upgrade blocked. Please close other tabs."),
         );
       };
     } catch (error) {
@@ -129,21 +127,18 @@ function validateStorageValue(value) {
     throw new Error("Storage value cannot be undefined (use null instead)");
   }
 
-  // Check if value is serializable
   try {
     const serialized = JSON.stringify(value);
     if (serialized === undefined) {
       throw new Error("Storage value is not serializable");
     }
 
-    // Check size limit (Chrome extension storage limit is ~10MB per item)
     const sizeInBytes = new Blob([serialized]).size;
-    const maxSize = 10 * 1024 * 1024; // 10MB
     if (sizeInBytes > maxSize) {
       throw new Error(
         `Storage value too large (${Math.round(
-          sizeInBytes / 1024 / 1024
-        )}MB > 10MB)`
+          sizeInBytes / 1024 / 1024,
+        )}MB > 10MB)`,
       );
     }
   } catch (error) {
@@ -166,7 +161,6 @@ async function _storageSet(items) {
       return;
     }
 
-    // Validate all keys and values before attempting to store
     for (const [key, value] of Object.entries(items)) {
       validateStorageKey(key);
       validateStorageValue(value);
@@ -184,8 +178,8 @@ async function _storageSet(items) {
             new Error(
               `Failed to store key '${key}': ${
                 request.error?.message || "Unknown error"
-              }`
-            )
+              }`,
+            ),
           );
       });
       promises.push(promise);
@@ -194,7 +188,7 @@ async function _storageSet(items) {
     await Promise.all(promises);
     console.log(
       `Successfully stored ${keys.length} item(s) to IndexedDB:`,
-      keys
+      keys,
     );
   } catch (error) {
     const errorMsg = `Storage set operation failed: ${error.message}`;
@@ -210,9 +204,7 @@ async function _storageGet(keys) {
     let defaults = {};
     let requestedKeys = [];
 
-    // Parse the keys parameter similar to Chrome extension storage API
     if (keys === null || keys === undefined) {
-      // Get all keys
       const getAllRequest = store.getAll();
       return new Promise((resolve, reject) => {
         getAllRequest.onsuccess = () => {
@@ -227,8 +219,8 @@ async function _storageGet(keys) {
             new Error(
               `Failed to get all storage items: ${
                 getAllRequest.error?.message || "Unknown error"
-              }`
-            )
+              }`,
+            ),
           );
         };
       });
@@ -246,11 +238,10 @@ async function _storageGet(keys) {
       throw new Error(`Invalid keys format for storage get: ${typeof keys}`);
     }
 
-    // Validate all keys
     keyList.forEach((key) => {
       if (typeof key !== "string") {
         throw new Error(
-          `Storage key must be a string, got ${typeof key} at key: ${key}`
+          `Storage key must be a string, got ${typeof key} at key: ${key}`,
         );
       }
     });
@@ -272,8 +263,8 @@ async function _storageGet(keys) {
             new Error(
               `Failed to get storage key '${key}': ${
                 request.error?.message || "Unknown error"
-              }`
-            )
+              }`,
+            ),
           );
         };
       });
@@ -281,7 +272,6 @@ async function _storageGet(keys) {
 
     await Promise.all(promises);
 
-    // Build final result with requested keys only
     const finalResult = {};
     for (const key of requestedKeys) {
       if (results.hasOwnProperty(key)) {
@@ -294,7 +284,7 @@ async function _storageGet(keys) {
     console.log(
       `Retrieved ${
         Object.keys(finalResult).length
-      } item(s) from IndexedDB storage`
+      } item(s) from IndexedDB storage`,
     );
     return finalResult;
   } catch (error) {
@@ -313,7 +303,7 @@ async function _storageRemove(keysToRemove) {
       keyList = keysToRemove;
     } else {
       throw new Error(
-        `Invalid keys format for storage remove: ${typeof keysToRemove}`
+        `Invalid keys format for storage remove: ${typeof keysToRemove}`,
       );
     }
 
@@ -322,7 +312,6 @@ async function _storageRemove(keysToRemove) {
       return;
     }
 
-    // Validate all keys
     keyList.forEach((key) => validateStorageKey(key));
 
     const store = await getStorageStore("readwrite");
@@ -335,8 +324,8 @@ async function _storageRemove(keysToRemove) {
             new Error(
               `Failed to remove storage key '${key}': ${
                 request.error?.message || "Unknown error"
-              }`
-            )
+              }`,
+            ),
           );
         };
       });
@@ -345,7 +334,7 @@ async function _storageRemove(keysToRemove) {
     await Promise.all(promises);
     console.log(
       `Removed ${keyList.length} item(s) from IndexedDB storage:`,
-      keyList
+      keyList,
     );
   } catch (error) {
     const errorMsg = `Storage remove operation failed: ${error.message}`;
@@ -369,8 +358,8 @@ async function _storageClear() {
           new Error(
             `Failed to clear storage: ${
               request.error?.message || "Unknown error"
-            }`
-          )
+            }`,
+          ),
         );
       };
     });
@@ -387,15 +376,12 @@ async function _fetch(url, options = {}) {
       throw new Error(`Invalid URL for fetch: ${url}`);
     }
 
-    // Validate options if provided
     if (options && typeof options !== "object") {
       throw new Error(`Fetch options must be an object, got ${typeof options}`);
     }
 
-    // Use the global fetch directly with error handling
     const response = await fetch(url, options);
 
-    // Enhance response object to be more compatible with Chrome extension expectations
     const enhancedResponse = {
       ...response,
       ok: response.ok,
@@ -403,7 +389,6 @@ async function _fetch(url, options = {}) {
       statusText: response.statusText,
       url: response.url,
       headers: response.headers,
-      // Ensure these methods exist and work properly
       text: () => response.text(),
       json: () => response.json(),
       blob: () => response.blob(),
@@ -413,10 +398,9 @@ async function _fetch(url, options = {}) {
 
     return enhancedResponse;
   } catch (error) {
-    // Provide more detailed error information
     if (error.name === "TypeError" && error.message.includes("fetch")) {
       throw new Error(
-        `Network error or invalid URL: ${url} - ${error.message}`
+        `Network error or invalid URL: ${url} - ${error.message}`,
       );
     } else if (error.name === "AbortError") {
       throw new Error(`Fetch request aborted: ${url}`);
@@ -439,7 +423,6 @@ function _registerMenuCommand(name, func) {
 
   console.log(`Menu command registered (vanilla mode): ${name}`);
 
-  // Store menu commands for potential future use
   if (!window._vanillaMenuCommands) {
     window._vanillaMenuCommands = new Map();
   }
@@ -448,7 +431,7 @@ function _registerMenuCommand(name, func) {
   // Note: In vanilla JS, there's no standard browser equivalent to GM_registerMenuCommand
   // Extensions could implement their own UI for this, but for now we just store it
   console.warn(
-    `Vanilla menu command registration: "${name}" - No standard browser equivalent available`
+    `Vanilla menu command registration: "${name}" - No standard browser equivalent available`,
   );
 }
 

@@ -153,7 +153,7 @@ async function _fetch(url, options = {}) {
                 return Promise.resolve(response.response);
               }
               return Promise.reject(
-                new Error("Requires responseType:'blob' in GM_xmlhttpRequest")
+                new Error("Requires responseType:'blob' in GM_xmlhttpRequest"),
               );
             },
             arrayBuffer: () => {
@@ -162,8 +162,8 @@ async function _fetch(url, options = {}) {
               }
               return Promise.reject(
                 new Error(
-                  "Requires responseType:'arraybuffer' in GM_xmlhttpRequest"
-                )
+                  "Requires responseType:'arraybuffer' in GM_xmlhttpRequest",
+                ),
               );
             },
             clone: function () {
@@ -189,8 +189,8 @@ async function _fetch(url, options = {}) {
             new Error(
               `GM_xmlhttpRequest network error: ${
                 response.statusText || "Unknown Error"
-              }`
-            )
+              }`,
+            ),
           );
         },
         onabort: function () {
@@ -237,6 +237,5 @@ function _openTab(url) {
 }
 
 async function _initStorage() {
-  // No initialization required for GM_* storage.
   return Promise.resolve();
 }

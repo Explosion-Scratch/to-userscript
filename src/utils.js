@@ -25,14 +25,12 @@ function convertMatchPatternToRegExpString(pattern) {
     return "$."; // Matches nothing
   }
 
-  // 1. Scheme
   const schemeMatch = pattern.match(/^(\*|https?|file|ftp):\/\//);
   if (!schemeMatch) return "$."; // Invalid pattern
   const scheme = schemeMatch[1];
   pattern = pattern.substring(schemeMatch[0].length);
   const schemeRegex = scheme === "*" ? "https?|file|ftp" : scheme;
 
-  // 2. Host
   const hostMatch = pattern.match(/^([^\/]+)/);
   if (!hostMatch) return "$."; // Invalid pattern
   const host = hostMatch[1];
@@ -48,7 +46,6 @@ function convertMatchPatternToRegExpString(pattern) {
     hostRegex = escapeRegex(host); // Exact host match
   }
 
-  // 3. Path
   let pathRegex = pattern;
   if (!pathRegex.startsWith("/")) {
     pathRegex = "/" + pathRegex; // Ensure path starts with /
@@ -82,13 +79,13 @@ function convertMatchPatternToRegExp(pattern) {
   }
   try {
     const singleEscapedPattern = convertMatchPatternToRegExpString(
-      pattern
+      pattern,
     ).replace(/\\\\/g, "\\");
     return new RegExp(singleEscapedPattern);
   } catch (error) {
     console.error(
       `Error converting match pattern to RegExp: ${pattern}`,
-      error
+      error,
     );
     return new RegExp("$."); // Matches nothing on error
   }

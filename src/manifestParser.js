@@ -7,7 +7,6 @@ async function parseManifest(manifestPath) {
     const content = await fs.readFile(manifestPath, "utf-8");
     const manifest = JSON.parse(content);
     const locale = await getLocale(manifest, manifestPath);
-    // Basic validation and extraction
     const parsed = {
       manifest_version: manifest.manifest_version,
       name: locale(manifest.name) || "Unnamed Extension",
@@ -26,10 +25,8 @@ async function parseManifest(manifestPath) {
         .replace(/\-+$/, "")
         .replace(/^-+/, "")
         .toLowerCase(),
-      // Add other relevant fields as needed in later phases (background, options_ui, etc.)
     };
 
-    // Validate content_scripts structure minimally for Phase 1
     if (parsed.content_scripts) {
       parsed.content_scripts = parsed.content_scripts.filter(
         (cs) => cs.matches && (cs.js || cs.css),
@@ -40,9 +37,6 @@ async function parseManifest(manifestPath) {
         // Normalize paths here for consistency downstream.
         cs.js = (cs.js || []).map(normalizePath);
         cs.css = (cs.css || []).map(normalizePath);
-
-        // Flag to indicate we're preserving order (useful for debugging)
-        cs._orderPreserved = true;
       });
     }
 
@@ -52,7 +46,7 @@ async function parseManifest(manifestPath) {
       `Error reading or parsing manifest file at ${manifestPath}:`,
       error,
     );
-    return null; // Indicate failure
+    return null;
   }
 }
 
