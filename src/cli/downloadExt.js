@@ -6,9 +6,17 @@
  */
 function getCrxUrl(webstoreUrlOrId) {
   function extractExtensionId(input) {
+    // Try new Chrome Web Store format: /detail/extension-name/extension-id
     var m = input.match(/\/detail\/[^/]+\/([a-z]{32})/i);
     if (m) return m[1];
+
+    // Try old format: /detail/extension-id
+    m = input.match(/\/detail\/([a-z]{32})/i);
+    if (m) return m[1];
+
+    // Direct extension ID
     if (/^[a-z]{32}$/.test(input)) return input;
+
     throw new Error("Invalid Chrome Web Store URL or extension ID");
   }
 
@@ -37,3 +45,5 @@ function getCrxUrl(webstoreUrlOrId) {
 
   return url;
 }
+
+module.exports = { getCrxUrl };

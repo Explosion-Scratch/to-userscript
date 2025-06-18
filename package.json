@@ -4,11 +4,12 @@
   "description": "Converts simple browser extensions to userscripts",
   "main": "src/converter.js",
   "bin": {
-    "ext2us": "src/cli/index.js"
+    "to-userscript": "src/cli/index.js"
   },
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
-    "start": "node src/cli/index.js"
+    "start": "node src/cli/index.js",
+    "cli": "node src/cli/index.js"
   },
   "keywords": [
     "userscript",
@@ -20,7 +21,8 @@
   "author": "",
   "license": "ISC",
   "dependencies": {
-    "chalk": "^5.4.1",
+    "chalk": "^4.1.2",
+    "debug": "^4.3.4",
     "fs-extra": "^11.2.0",
     "node-fetch": "^2.7.0",
     "ora": "^5.4.1",

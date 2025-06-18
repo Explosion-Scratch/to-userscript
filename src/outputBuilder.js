@@ -42,7 +42,7 @@ function prepareCssDataString(cssContents) {
 function structureScriptsAndCssByRunAt(
   parsedManifest,
   jsContents,
-  cssContents,
+  cssContents
 ) {
   const scriptsToRun = {
     "document-start": [],
@@ -133,6 +133,7 @@ async function buildUserScript({
   backgroundJsContents = {}, // background scripts map
   extensionRoot = null,
   locale,
+  target = "userscript", // Build target
 }) {
   console.log("Generating unified assets map...");
   const assetGenerator = new AssetGenerator(extensionRoot, locale);
@@ -150,7 +151,7 @@ async function buildUserScript({
   const contentScriptConfigsForMatchingString = JSON.stringify(
     contentScriptConfigsForMatching,
     null,
-    2,
+    2
   );
 
   const injectedManifestString = JSON.stringify(parsedManifest);
@@ -158,31 +159,31 @@ async function buildUserScript({
   const { scriptsToRun, cssToInject } = structureScriptsAndCssByRunAt(
     parsedManifest,
     jsContents,
-    cssContents,
+    cssContents
   );
 
   const scriptName = parsedManifest.name || "Converted Script";
   const backgroundExecutionString = buildBackgroundExecutionString(
     backgroundJsContents,
-    scriptName,
+    scriptName
   );
 
   const combinedExecutionLogicString =
     scriptAssembler.generateCombinedExecutionLogic(
       scriptsToRun,
       cssToInject,
-      scriptName,
+      scriptName
     );
 
   const polyfillString = await generateBuildPolyfillString(
-    "userscript",
+    target,
     assetsMap,
-    parsedManifest,
+    parsedManifest
   );
   const optionsPolyfillString = await generateBuildPolyfillString(
     "postmessage",
     assetsMap,
-    parsedManifest,
+    parsedManifest
   );
 
   const extensionIcon = extensionRoot
@@ -221,7 +222,7 @@ async function buildUserScript({
     // Use a robust regex for replacement
     const regex = new RegExp(
       placeholder.replace(/[-\/\\^$*+?.()|[\]{}]/g, "\\$&"),
-      "g",
+      "g"
     );
     // Ensure $ signs in the replacement value are properly escaped
     const safeValue =
