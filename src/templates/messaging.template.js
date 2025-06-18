@@ -62,13 +62,28 @@ function createEventBus(
       if (!handlers[event]) return;
       handlers[event] = handlers[event].filter((h) => h !== fn);
     },
-    emit(event, payload) {
+    /**
+     * Emits an event.
+     * @param {string} event - The event name.
+     * @param {any} payload - The event payload.
+     * @param {object} [options] - Emission options.
+     * @param {Window} [options.to] - A specific window to target. If omitted, broadcasts.
+     */
+    emit(event, payload, { to } = {}) {
       // dispatch locally first
       (handlers[event] || []).forEach((fn) =>
         fn(payload, { origin: location.origin, source: window })
       );
 
-      // then propagate
+      // If a specific target window is provided, send only to it.
+      if (to) {
+        if (to && typeof to.postMessage === "function") {
+          emitTo(to, event, payload);
+        }
+        return;
+      }
+
+      // Otherwise, perform the default broadcast behavior.
       if (type === "page") {
         children.forEach((win) => emitTo(win, event, payload));
       } else {
@@ -123,18 +138,20 @@ function createRuntime(type = "background", bus) {
   }
 
   if (type === "background") {
-    bus.on("__REQUEST__", ({ id, message }, _) => {
+    bus.on("__REQUEST__", ({ id, message }, { source }) => {
       let responded = false,
         isAsync = false;
       function sendResponse(resp) {
         if (responded) return;
         responded = true;
-        bus.emit("__RESPONSE__", { id, response: resp });
+        // Target the response directly back to the window that sent the request.
+        bus.emit("__RESPONSE__", { id, response: resp }, { to: source });
       }
       const results = msgListeners
         .map((fn) => {
           try {
-            const ret = fn(message, sendResponse);
+            // msg, sender, sendResponse
+            const ret = fn(message, { id, tab: { id: source } }, sendResponse);
             if (ret === true || (ret && typeof ret.then === "function")) {
               isAsync = true;
               return ret;
@@ -185,7 +202,7 @@ function createRuntime(type = "background", bus) {
   }
 
   bus.on("__PORT_CONNECT__", ({ portId, name }, { source }) => {
-    if (type !== "background") return; //
+    if (type !== "background") return;
     const backgroundPort = makePort("background", portId, name, source);
     ports[portId] = backgroundPort;
 
@@ -197,7 +214,7 @@ function createRuntime(type = "background", bus) {
   });
 
   // Clients handle the ACK and finalize their Port object:
-  bus.on("__PORT_CONNECT_ACK__", ({ portId, name }, { source }) => {
+  bus.on("__PORT_CONNECT_ACK__", ({ portId, name }) => {
     if (type === "background") return; // ignore
     const p = ports[portId];
     if (!p) return;
@@ -209,11 +226,11 @@ function createRuntime(type = "background", bus) {
   bus.on("__PORT_MESSAGE__", ({ portId, msg }, { source }) => {
     const p = ports[portId];
     if (!p) return;
-    p._receive(msg);
+    p._receive(msg, source);
   });
 
   // Any port disconnect:
-  bus.on("__PORT_DISCONNECT__", ({ portId }, { source }) => {
+  bus.on("__PORT_DISCONNECT__", ({ portId }) => {
     const p = ports[portId];
     if (!p) return;
     p._disconnect();
@@ -246,8 +263,10 @@ function createRuntime(type = "background", bus) {
       }
     }
 
-    function _receive(msg) {
-      onMessageHandlers.forEach((fn) => fn(msg));
+    function _receive(msg, source) {
+      onMessageHandlers.forEach((fn) =>
+        fn(msg, { id: portId, tab: { id: source } })
+      );
     }
 
     function disconnect() {
@@ -264,6 +283,9 @@ function createRuntime(type = "background", bus) {
 
     return {
       name,
+      sender: {
+        id: portId,
+      },
       onMessage: {
         addListener(fn) {
           onMessageHandlers.push(fn);
@@ -284,6 +306,8 @@ function createRuntime(type = "background", bus) {
       disconnect,
       _ready, // internal
       _drainBuffer, // internal
+      _receive, // internal
+      _disconnect, // internal
     };
   }
 
@@ -294,7 +318,7 @@ function createRuntime(type = "background", bus) {
     const name = connectInfo.name || "";
     const portId = nextPortId++;
     // create the client side port
-    // remoteWindow is left undefined here; bus.emit will pick up via { to: page/iframe }
+    // remoteWindow is left undefined here; bus.emit will propagate upwards
     const clientPort = makePort("client", portId, name, null);
     ports[portId] = clientPort;
 

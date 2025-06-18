@@ -11,7 +11,16 @@ function buildPolyfill({ isBackground = false, isOtherPage = false } = {}) {
     .substring(2, 15)}`;
 
   const IS_IFRAME = "{{IS_IFRAME}}" === "true";
-  const BUS = createEventBus("{{SCRIPT_ID}}", IS_IFRAME ? "iframe" : "page");
+  const BUS = (function () {
+    if (globalThis.__BUS) {
+      return globalThis.__BUS;
+    }
+    globalThis.__BUS = createEventBus(
+      "{{SCRIPT_ID}}",
+      IS_IFRAME ? "iframe" : "page"
+    );
+    return globalThis.__BUS;
+  })();
   const RUNTIME = createRuntime(isBackground ? "background" : "tab", BUS);
   const createNoopListeners = () => ({
     addListener: (callback) => {
