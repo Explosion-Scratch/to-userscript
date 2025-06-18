@@ -26,7 +26,7 @@ const doit = () => {
           TTP_default = trustedTypes.defaultPolicy;
           log(
             `Created custom passthrough policy, in case the default policy is too restrictive: Use Policy '${TTPName}' in var 'TTP':`,
-            TTP,
+            TTP
           );
         } else {
           TTP_default = TTP = window.trustedTypes.createPolicy("default", TTP);

@@ -2,6 +2,7 @@ const fs = require("fs");
 const path = require("path");
 const debug = require("debug")("to-userscript:metadata");
 const { getIcon } = require("./getIcon");
+const { minify_sync } = require("terser");
 
 function generateMetadata(
   parsedManifest,
@@ -19,9 +20,7 @@ function generateMetadata(
   // Simple namespace generation, improve later
   lines.push(`// @namespace   ${_id}`);
   lines.push(`// @author      Converter Script`); // Placeholder
-  lines.push(
-    `// @require     data:text/javascript;base64,${fs.readFileSync(path.resolve(".", "src", "templates", "trustedTypes.template.js")).toString("base64")}`
-  );
+
   const matches = new Set();
   const MATCH_REPLACEMENTS = {
     "<all_urls>": "*://*/*",
@@ -72,8 +71,22 @@ function generateMetadata(
     });
   }
   lines.push(`// @run-at      ${earliestRunAt}`);
-
   lines.push("// ==/UserScript==");
+  lines.push("");
+  lines.push(
+    minify_sync(
+      fs.readFileSync(
+        path.resolve(".", "src", "templates", "trustedTypes.template.js"),
+        "utf-8"
+      ),
+      {
+        compress: true,
+        mangle: {
+          toplevel: true,
+        },
+      }
+    ).code
+  );
   lines.push("");
 
   return lines.join("\n");
