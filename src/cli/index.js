@@ -27,7 +27,7 @@ async function main() {
               type: "string",
             })
             .option("minify", {
-              describe: "Minify the JavaScript output",
+              describe: "Minify the JavaScript output using terser",
               type: "boolean",
               default: false,
             })
@@ -35,6 +35,17 @@ async function main() {
               describe: "Build target type",
               choices: ["userscript", "vanilla"],
               default: "userscript",
+            })
+            .option("locale", {
+              alias: "l",
+              describe:
+                "Preferred locale for extension name/description (e.g., 'en', 'fr', 'de')",
+              type: "string",
+            })
+            .option("ignore-assets", {
+              describe:
+                "Asset file extensions to ignore during inlining (comma-separated, e.g., 'mp4,webm,ttf')",
+              type: "string",
             })
             .option("force", {
               alias: "f",
@@ -80,12 +91,16 @@ async function main() {
           "Convert from Chrome Web Store with minification",
         ],
         [
-          "$0 convert ./extension.xpi --target vanilla -o extension.js",
-          "Convert XPI to vanilla JS",
+          "$0 convert ./extension.xpi --target vanilla -o extension.js --locale fr",
+          "Convert XPI to vanilla JS with French locale",
         ],
         [
-          "$0 convert ./my-extension/ -o my-script.user.js --keep-temp",
-          "Convert local directory with debug files",
+          "$0 convert ./my-extension/ -o my-script.user.js --ignore-assets mp4,webm,ttf",
+          "Convert local directory ignoring video and font assets",
+        ],
+        [
+          "$0 convert ./extension/ --locale en --minify --keep-temp",
+          "Convert with English locale, minification, and debug files",
         ],
       ])
       .demandCommand(1, "You must specify a command")

@@ -1,17 +1,26 @@
 const { normalizePath } = require("./utils");
 const fs = require("fs").promises;
-const { getLocale } = require("./locales");
+const {
+  getLocale,
+  getLocalizedName,
+  getLocalizedDescription,
+} = require("./locales");
 
-async function parseManifest(manifestPath) {
+async function parseManifest(manifestPath, preferredLocale = null) {
   try {
     const content = await fs.readFile(manifestPath, "utf-8");
     const manifest = JSON.parse(content);
-    const locale = await getLocale(manifest, manifestPath);
+    const locale = await getLocale(manifest, manifestPath, preferredLocale);
+
+    // Use localization functions for name and description
+    const localizedName = getLocalizedName(manifest, locale);
+    const localizedDescription = getLocalizedDescription(manifest, locale);
+
     const parsed = {
       manifest_version: manifest.manifest_version,
-      name: locale(manifest.name) || "Unnamed Extension",
+      name: localizedName,
       version: manifest.version || "0.0.0",
-      description: locale(manifest.description) || "",
+      description: localizedDescription,
       permissions: manifest.permissions || [],
       content_scripts: manifest.content_scripts || [],
       options_ui: manifest.options_ui || {},
@@ -20,7 +29,8 @@ async function parseManifest(manifestPath) {
       action: manifest.action || {},
       icons: manifest.icons || {},
       web_accessible_resources: manifest.web_accessible_resources || [],
-      _id: locale(manifest.name)
+      background: manifest.background || {},
+      _id: localizedName
         ?.replace(/[^a-z0-9]+/gi, "-")
         .replace(/\-+$/, "")
         .replace(/^-+/, "")
@@ -29,7 +39,7 @@ async function parseManifest(manifestPath) {
 
     if (parsed.content_scripts) {
       parsed.content_scripts = parsed.content_scripts.filter(
-        (cs) => cs.matches && (cs.js || cs.css),
+        (cs) => cs.matches && (cs.js || cs.css)
       );
       parsed.content_scripts.forEach((cs) => {
         // Preserve the exact ordering of scripts and styles - this is critical
@@ -44,7 +54,7 @@ async function parseManifest(manifestPath) {
   } catch (error) {
     console.error(
       `Error reading or parsing manifest file at ${manifestPath}:`,
-      error,
+      error
     );
     return null;
   }

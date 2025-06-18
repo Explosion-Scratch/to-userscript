@@ -9,6 +9,7 @@ const { getRequiredGmGrants } = require("./abstractionLayer");
 const { generateMetadata } = require("./metadataGenerator");
 const { buildUserScript } = require("./outputBuilder");
 const { normalizePath } = require("./utils");
+const { getLocalizedName, getLocalizedDescription } = require("./locales");
 
 /**
  * Converts a browser extension to a userscript or vanilla JS file.
@@ -18,6 +19,8 @@ const { normalizePath } = require("./utils");
  * @param {string} config.inputDir - Absolute path to the extension directory
  * @param {string} config.outputFile - Absolute path for the output file
  * @param {string} [config.target='userscript'] - Build target ('userscript' or 'vanilla')
+ * @param {string} [config.locale] - Preferred locale for extension name/description
+ * @param {string} [config.ignoredAssets] - Comma-separated asset extensions to ignore
  * @param {Object} [config.logger=console] - Logger object with log, warn, error methods
  * @returns {Promise<Object>} Result object with success status and details
  */
@@ -26,6 +29,8 @@ async function convertExtension(config) {
     inputDir,
     outputFile,
     target = "userscript",
+    locale: preferredLocale,
+    ignoredAssets,
     logger = console,
   } = config;
 
@@ -52,6 +57,14 @@ async function convertExtension(config) {
     logger.log(`Input directory: ${normalizedInputDir}`);
     logger.log(`Output file: ${normalizedOutputFile}`);
 
+    if (preferredLocale) {
+      logger.log(`Preferred locale: ${preferredLocale}`);
+    }
+
+    if (ignoredAssets) {
+      logger.log(`Ignored asset extensions: ${ignoredAssets}`);
+    }
+
     // Verify input directory exists and is accessible
     try {
       const stats = await fs.stat(normalizedInputDir);
@@ -67,9 +80,9 @@ async function convertExtension(config) {
       );
     }
 
-    // Parse manifest
+    // Parse manifest with preferred locale
     logger.log(`Parsing manifest: ${manifestPath}`);
-    const manifestResult = await parseManifest(manifestPath);
+    const manifestResult = await parseManifest(manifestPath, preferredLocale);
     if (!manifestResult) {
       throw new Error("Failed to parse manifest.json");
     }
@@ -80,9 +93,17 @@ async function convertExtension(config) {
       throw new Error("Manifest parsing returned null");
     }
 
-    logger.log(
-      `Manifest parsed: ${parsedManifest.name} v${parsedManifest.version}`
+    const localizedName = getLocalizedName(parsedManifest, locale);
+    const localizedDescription = getLocalizedDescription(
+      parsedManifest,
+      locale
     );
+
+    logger.log(`Manifest parsed: ${localizedName} v${parsedManifest.version}`);
+
+    if (localizedDescription) {
+      logger.log(`Description: ${localizedDescription}`);
+    }
 
     // Validate content scripts
     const contentScriptConfigs = parsedManifest.content_scripts || [];
@@ -148,7 +169,8 @@ async function convertExtension(config) {
       backgroundJsContents,
       extensionRoot: normalizedInputDir,
       locale,
-      target, // Pass target to buildUserScript for future vanilla support
+      target,
+      ignoredAssets, // Pass ignored assets to buildUserScript
     });
 
     // Ensure output directory exists
@@ -169,9 +191,9 @@ async function convertExtension(config) {
       outputFile: normalizedOutputFile,
       target,
       extension: {
-        name: parsedManifest.name,
+        name: localizedName,
         version: parsedManifest.version,
-        description: parsedManifest.description,
+        description: localizedDescription,
       },
       stats: {
         jsFiles: Object.keys(jsContents).length,

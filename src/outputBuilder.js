@@ -134,9 +134,14 @@ async function buildUserScript({
   extensionRoot = null,
   locale,
   target = "userscript", // Build target
+  ignoredAssets = null, // Ignored asset extensions
 }) {
   console.log("Generating unified assets map...");
-  const assetGenerator = new AssetGenerator(extensionRoot, locale);
+  const assetGenerator = new AssetGenerator(
+    extensionRoot,
+    locale,
+    ignoredAssets
+  );
   const { assetsMap, optionsPagePath, popupPagePath } =
     await assetGenerator.generateAssetsMap(parsedManifest);
 

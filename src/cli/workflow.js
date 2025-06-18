@@ -203,6 +203,8 @@ async function run(config) {
       inputDir,
       outputFile: outputPath,
       target: config.target,
+      locale: config.locale,
+      ignoredAssets: config.ignoreAssets,
       logger: config.verbose
         ? console
         : { log: () => {}, error: console.error, warn: console.warn },
@@ -226,10 +228,19 @@ async function run(config) {
 
     console.log(
       chalk.blue("📦 Extension:"),
-      chalk.bold(manifest.name || "Unknown")
+      chalk.bold(result.extension.name || "Unknown")
     );
-    console.log(chalk.blue("📋 Version:"), manifest.version || "Unknown");
+    console.log(
+      chalk.blue("📋 Version:"),
+      result.extension.version || "Unknown"
+    );
+    if (result.extension.description) {
+      console.log(chalk.blue("📝 Description:"), result.extension.description);
+    }
     console.log(chalk.blue("🎯 Target:"), config.target);
+    if (config.locale) {
+      console.log(chalk.blue("🌐 Locale:"), config.locale);
+    }
     console.log(chalk.blue("📄 Output:"), outputPath);
     console.log(chalk.blue("📊 Size:"), `${sizeKB} KB`);
 

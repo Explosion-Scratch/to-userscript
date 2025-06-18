@@ -18,7 +18,7 @@ async function validateAssetFile(filePath) {
     const maxSize = 10 * 1024 * 1024; // 10MB limit for assets
     if (stats.size > maxSize) {
       throw new Error(
-        `Asset file is too large (${Math.round(stats.size / 1024 / 1024)}MB > 10MB): ${filePath}`,
+        `Asset file is too large (${Math.round(stats.size / 1024 / 1024)}MB > 10MB): ${filePath}`
       );
     }
 
@@ -30,7 +30,7 @@ async function validateAssetFile(filePath) {
       throw new Error(`Asset file is not readable: ${filePath}`);
     } else {
       throw new Error(
-        `Asset file validation failed: ${filePath} - ${error.message}`,
+        `Asset file validation failed: ${filePath} - ${error.message}`
       );
     }
   }
@@ -45,7 +45,7 @@ async function fileToBase64(filePath) {
   try {
     if (!filePath || typeof filePath !== "string") {
       throw new Error(
-        `Invalid file path provided for base64 conversion: ${filePath}`,
+        `Invalid file path provided for base64 conversion: ${filePath}`
       );
     }
 
@@ -60,12 +60,12 @@ async function fileToBase64(filePath) {
 
     if (!base64String || base64String.length === 0) {
       throw new Error(
-        `Base64 conversion resulted in empty string for: ${filePath}`,
+        `Base64 conversion resulted in empty string for: ${filePath}`
       );
     }
 
     console.log(
-      `Successfully converted asset to base64: ${path.relative(process.cwd(), filePath)} (${Math.round(buffer.length / 1024)}KB -> ${Math.round(base64String.length / 1024)}KB)`,
+      `Successfully converted asset to base64: ${path.relative(process.cwd(), filePath)} (${Math.round(buffer.length / 1024)}KB -> ${Math.round(base64String.length / 1024)}KB)`
     );
 
     return base64String;
@@ -130,7 +130,7 @@ function guessMimeType(p) {
 
   if (mimeType === "application/octet-stream" && ext) {
     console.warn(
-      `Unknown file extension for MIME type detection: .${ext} (file: ${p})`,
+      `Unknown file extension for MIME type detection: .${ext} (file: ${p})`
     );
   }
 
@@ -161,7 +161,7 @@ function isTextAsset(ext) {
  * Unified Asset Generator class that handles all asset processing
  */
 class AssetGenerator {
-  constructor(extensionRoot, locale) {
+  constructor(extensionRoot, locale, ignoredAssetExtensions = null) {
     this.extensionRoot = extensionRoot;
     this.processedFiles = new Set();
     this.assetsMap = {};
@@ -172,10 +172,35 @@ class AssetGenerator {
       CSS: [".css"],
     };
 
-    this.IGNORED_INLINE_PATTERNS = [
+    // Default ignored patterns
+    const defaultIgnoredPatterns = [
       /\.(woff|woff2|ttf|otf|eot)$/i,
       /\.(mp4|webm|ogg|mp3|wav)$/i,
     ];
+
+    // Parse custom ignored extensions if provided
+    if (ignoredAssetExtensions && typeof ignoredAssetExtensions === "string") {
+      const customExtensions = ignoredAssetExtensions
+        .split(",")
+        .map((ext) => ext.trim().toLowerCase())
+        .filter((ext) => ext.length > 0)
+        .map((ext) => (ext.startsWith(".") ? ext : "." + ext));
+
+      if (customExtensions.length > 0) {
+        console.log(
+          `Using custom ignored asset extensions: ${customExtensions.join(", ")}`
+        );
+        const customPattern = new RegExp(
+          `\\.(${customExtensions.map((ext) => ext.replace(".", "")).join("|")})$`,
+          "i"
+        );
+        this.IGNORED_INLINE_PATTERNS = [customPattern];
+      } else {
+        this.IGNORED_INLINE_PATTERNS = defaultIgnoredPatterns;
+      }
+    } else {
+      this.IGNORED_INLINE_PATTERNS = defaultIgnoredPatterns;
+    }
 
     this.REGEX_PATTERNS = {
       HTML_ASSETS: /(src|href)\s*=\s*(?:["']([^"']+)["']|([^\s>]+))/gi,
@@ -191,7 +216,7 @@ class AssetGenerator {
    */
   shouldIgnoreAsset(assetPath) {
     return this.IGNORED_INLINE_PATTERNS.some((pattern) =>
-      pattern.test(assetPath),
+      pattern.test(assetPath)
     );
   }
 
@@ -203,7 +228,7 @@ class AssetGenerator {
   getAssetType(filePath) {
     const ext = path.extname(filePath).toLowerCase();
     for (const [type, extensions] of Object.entries(
-      this.PROCESSABLE_ASSET_TYPES,
+      this.PROCESSABLE_ASSET_TYPES
     )) {
       if (extensions.includes(ext)) {
         return type;
@@ -228,7 +253,7 @@ class AssetGenerator {
     const relativePath = path.relative(this.extensionRoot, absAssetPath);
     if (relativePath.startsWith("..")) {
       throw new Error(
-        `Asset path resolves outside extension directory: ${assetPath}`,
+        `Asset path resolves outside extension directory: ${assetPath}`
       );
     }
 
@@ -308,14 +333,14 @@ class AssetGenerator {
 
       const uniqueAssets = [...new Set(assets)];
       console.log(
-        `Extracted ${uniqueAssets.length} unique ${contentType} asset path(s)`,
+        `Extracted ${uniqueAssets.length} unique ${contentType} asset path(s)`
       );
 
       return uniqueAssets;
     } catch (error) {
       console.error(
         `Error extracting ${contentType} asset paths:`,
-        error.message,
+        error.message
       );
       return [];
     }
@@ -336,7 +361,7 @@ class AssetGenerator {
       // Replace CSS url() references
       const cssRegex = new RegExp(
         `url\\s*\\(\\s*["']?${escapedAssetPath}["']?\\s*\\)`,
-        "gi",
+        "gi"
       );
       content = content.replace(cssRegex, `url("${dataUrl}")`);
     }
@@ -344,7 +369,7 @@ class AssetGenerator {
     // Replace HTML src/href references
     const htmlRegex = new RegExp(
       `(src|href)\\s*=\\s*["']${escapedAssetPath}["']`,
-      "gi",
+      "gi"
     );
     content = content.replace(htmlRegex, (match) => {
       return match.replace(assetPath, dataUrl);
@@ -371,14 +396,14 @@ class AssetGenerator {
         try {
           if (this.shouldIgnoreAsset(relativePath)) {
             console.log(
-              `Ignoring asset (matches ignore pattern): ${relativePath}`,
+              `Ignoring asset (matches ignore pattern): ${relativePath}`
             );
             continue;
           }
 
           const absAssetPath = await this.validateAssetPath(
             relativePath,
-            currentDir,
+            currentDir
           );
           const assetType = this.getAssetType(absAssetPath);
 
@@ -388,11 +413,11 @@ class AssetGenerator {
             const processedContent = await this.processAssetRecursively(
               assetContent,
               absAssetPath,
-              assetType,
+              assetType
             );
 
             const base64 = Buffer.from(processedContent, "utf-8").toString(
-              "base64",
+              "base64"
             );
             const mime = guessMimeType(relativePath);
             const dataUrl = `data:${mime};base64,${base64}`;
@@ -401,11 +426,11 @@ class AssetGenerator {
               updatedContent,
               relativePath,
               dataUrl,
-              assetType,
+              assetType
             );
             successCount++;
             console.log(
-              `Successfully inlined and processed ${assetType}: ${relativePath}`,
+              `Successfully inlined and processed ${assetType}: ${relativePath}`
             );
           } else {
             // Handle binary assets (images, etc.)
@@ -417,20 +442,20 @@ class AssetGenerator {
               updatedContent,
               relativePath,
               dataUrl,
-              "BINARY",
+              "BINARY"
             );
             successCount++;
             console.log(`Successfully inlined binary asset: ${relativePath}`);
           }
         } catch (assetError) {
           console.error(
-            `Failed to inline asset ${relativePath}: ${assetError.message}`,
+            `Failed to inline asset ${relativePath}: ${assetError.message}`
           );
         }
       }
 
       console.log(
-        `Asset inlining complete: ${successCount}/${assetPaths.length} successful`,
+        `Asset inlining complete: ${successCount}/${assetPaths.length} successful`
       );
       return updatedContent;
     } catch (error) {
@@ -467,7 +492,7 @@ class AssetGenerator {
     return await this.inlineAssets(
       content,
       assetPaths,
-      path.dirname(contentPath),
+      path.dirname(contentPath)
     );
   }
 
@@ -516,7 +541,7 @@ class AssetGenerator {
 
       for (const filePath of allFiles) {
         const relativePath = normalizePath(
-          path.relative(this.extensionRoot, filePath),
+          path.relative(this.extensionRoot, filePath)
         );
         if (matchGlobPattern(pattern, relativePath)) {
           files.push(filePath);
@@ -553,7 +578,7 @@ class AssetGenerator {
         matchingFiles.push(...files);
       } catch (error) {
         console.error(
-          `Error finding files for pattern ${pattern}: ${error.message}`,
+          `Error finding files for pattern ${pattern}: ${error.message}`
         );
       }
     }
@@ -585,7 +610,7 @@ class AssetGenerator {
           } else {
             console.warn(
               "options_ui.page exists but is not a string:",
-              typeof manifest.options_ui.page,
+              typeof manifest.options_ui.page
             );
           }
         }
@@ -596,7 +621,7 @@ class AssetGenerator {
           } else {
             console.warn(
               "options_page exists but is not a string:",
-              typeof manifest.options_page,
+              typeof manifest.options_page
             );
           }
         }
@@ -611,7 +636,7 @@ class AssetGenerator {
           } else {
             console.warn(
               "action.default_popup exists but is not a string:",
-              typeof manifest.action.default_popup,
+              typeof manifest.action.default_popup
             );
           }
         }
@@ -627,7 +652,7 @@ class AssetGenerator {
           } else {
             console.warn(
               "browser_action.default_popup exists but is not a string:",
-              typeof manifest.browser_action.default_popup,
+              typeof manifest.browser_action.default_popup
             );
           }
         }
@@ -642,7 +667,7 @@ class AssetGenerator {
           } else {
             console.warn(
               "page_action.default_popup exists but is not a string:",
-              typeof manifest.page_action.default_popup,
+              typeof manifest.page_action.default_popup
             );
           }
         }
@@ -652,7 +677,7 @@ class AssetGenerator {
     } catch (error) {
       console.error(
         `Error extracting ${pageType} page path from manifest:`,
-        error.message,
+        error.message
       );
       return null;
     }
@@ -681,7 +706,7 @@ class AssetGenerator {
       const relativePath = path.relative(this.extensionRoot, pageFullPath);
       if (relativePath.startsWith("..")) {
         throw new Error(
-          `${pageType} page path resolves outside extension directory: ${pageRel}`,
+          `${pageType} page path resolves outside extension directory: ${pageRel}`
         );
       }
 
@@ -690,7 +715,7 @@ class AssetGenerator {
         const stats = await fs.stat(pageFullPath);
         if (!stats.isFile()) {
           throw new Error(
-            `${pageType} page path exists but is not a file: ${pageRel}`,
+            `${pageType} page path exists but is not a file: ${pageRel}`
           );
         }
         await fs.access(pageFullPath, fs.constants.R_OK);
@@ -701,7 +726,7 @@ class AssetGenerator {
           throw new Error(`${pageType} page file is not readable: ${pageRel}`);
         } else {
           throw new Error(
-            `${pageType} page file validation failed: ${pageRel} - ${fileError.message}`,
+            `${pageType} page file validation failed: ${pageRel} - ${fileError.message}`
           );
         }
       }
@@ -715,13 +740,13 @@ class AssetGenerator {
       const updatedHtml = await this.processAssetRecursively(
         htmlContent,
         pageFullPath,
-        "HTML",
+        "HTML"
       );
 
       this.assetsMap[normalizedPageRel] = this.locale(updatedHtml);
 
       console.log(
-        `Successfully processed ${pageType} page: ${normalizedPageRel} (${Math.round(updatedHtml.length / 1024)}KB)`,
+        `Successfully processed ${pageType} page: ${normalizedPageRel} (${Math.round(updatedHtml.length / 1024)}KB)`
       );
 
       return { [`${pageType}PagePath`]: normalizedPageRel };
@@ -730,7 +755,7 @@ class AssetGenerator {
       console.error(errorMsg);
 
       console.warn(
-        `${pageType} page processing failed, continuing without ${pageType} page`,
+        `${pageType} page processing failed, continuing without ${pageType} page`
       );
       return { [`${pageType}PagePath`]: null };
     }
@@ -764,13 +789,13 @@ class AssetGenerator {
 
       const matchingFiles = await this.findMatchingFiles(resourcePatterns);
       console.log(
-        `Found ${matchingFiles.length} web accessible resource file(s)`,
+        `Found ${matchingFiles.length} web accessible resource file(s)`
       );
 
       for (const filePath of matchingFiles) {
         try {
           const relativePath = normalizePath(
-            path.relative(this.extensionRoot, filePath),
+            path.relative(this.extensionRoot, filePath)
           );
           const ext = path.extname(filePath).toLowerCase();
 
@@ -781,16 +806,16 @@ class AssetGenerator {
             const processedContent = await this.processAssetRecursively(
               cssContent,
               filePath,
-              "CSS",
+              "CSS"
             );
 
             this.assetsMap[relativePath] = processedContent;
             console.log(
-              `    Processed CSS with asset inlining: ${relativePath}`,
+              `    Processed CSS with asset inlining: ${relativePath}`
             );
           } else if (isTextAsset(ext)) {
             const textContent = this.locale(
-              await fs.readFile(filePath, "utf-8"),
+              await fs.readFile(filePath, "utf-8")
             );
             this.assetsMap[relativePath] = textContent;
             console.log(`    Processed text asset: ${relativePath}`);
@@ -801,20 +826,20 @@ class AssetGenerator {
           }
         } catch (fileError) {
           console.error(
-            `    Failed to process web accessible resource ${filePath}: ${fileError.message}`,
+            `    Failed to process web accessible resource ${filePath}: ${fileError.message}`
           );
         }
       }
 
       console.log(
-        `Successfully processed ${Object.keys(this.assetsMap).length} web accessible resource(s)`,
+        `Successfully processed ${Object.keys(this.assetsMap).length} web accessible resource(s)`
       );
     } catch (error) {
       const errorMsg = `Error processing web accessible resources: ${error.message}`;
       console.error(errorMsg);
 
       console.warn(
-        "Web accessible resources processing failed, continuing without them",
+        "Web accessible resources processing failed, continuing without them"
       );
     }
   }
@@ -844,7 +869,7 @@ class AssetGenerator {
     } else {
       const { optionsPagePath } = await this.processHtmlPage(
         manifest,
-        "options",
+        "options"
       );
       const { popupPagePath } = await this.processHtmlPage(manifest, "popup");
       await this.processWebAccessibleResources(manifest);

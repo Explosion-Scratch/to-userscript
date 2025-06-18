@@ -1,13 +1,16 @@
 const fs = require("fs").promises;
 const debug = require("debug")("to-userscript:cli:minify");
 
-// Note: Using a simple minifier since terser isn't in dependencies
-// In a full implementation, you'd add terser to package.json and use it here
+let terser = null;
+try {
+  terser = require("terser");
+} catch (error) {
+  debug("Terser not available, falling back to simple minification");
+}
 
 function simpleMinify(code) {
-  debug("Applying simple minification");
+  debug("Applying simple minification fallback");
 
-  // This is a very basic minifier - in production you'd use terser
   return (
     code
       // Remove single-line comments (but preserve URLs and important comments)
@@ -23,6 +26,69 @@ function simpleMinify(code) {
       // Remove leading/trailing whitespace
       .trim()
   );
+}
+
+async function terserMinify(code) {
+  if (!terser) {
+    debug("Terser not available, using simple minification");
+    return simpleMinify(code);
+  }
+
+  debug("Applying terser minification");
+
+  try {
+    const result = await terser.minify(code, {
+      compress: {
+        dead_code: true,
+        drop_debugger: true,
+        conditionals: true,
+        evaluate: true,
+        booleans: true,
+        loops: true,
+        unused: true,
+        hoist_funs: true,
+        keep_fargs: false,
+        hoist_vars: false,
+        if_return: true,
+        join_vars: true,
+        side_effects: false,
+        warnings: false,
+        global_defs: {},
+      },
+      mangle: {
+        toplevel: false,
+        keep_fnames: false,
+        reserved: ["GM_", "GM", "unsafeWindow", "cloneInto", "exportFunction"],
+      },
+      format: {
+        comments: function (node, comment) {
+          // Keep @license, @preserve, and important comments
+          const text = comment.value;
+          return /@license|@preserve|@grant|@match|@include|@exclude|@name|@namespace|@version|@description|@author|@homepage|@homepageURL|@website|@source|@icon|@iconURL|@defaulticon|@icon64|@icon64URL|@run-at|@noframes|@unwrap|@connect|@require|@resource|@supportURL|@updateURL|@downloadURL|@contributionURL|@contributionAmount|@compatible|@incompatible/.test(
+            text
+          );
+        },
+        beautify: false,
+        preamble: "",
+      },
+      sourceMap: false,
+      toplevel: false,
+      parse: {},
+      rename: {},
+    });
+
+    if (result.error) {
+      throw new Error(`Terser error: ${result.error}`);
+    }
+
+    return result.code;
+  } catch (error) {
+    debug(
+      "Terser minification failed, falling back to simple: %s",
+      error.message
+    );
+    return simpleMinify(code);
+  }
 }
 
 async function minifyScript(filePath) {
@@ -50,7 +116,7 @@ async function minifyScript(filePath) {
     }
 
     // Minify the script code (excluding metadata)
-    const minifiedCode = simpleMinify(scriptCode);
+    const minifiedCode = await terserMinify(scriptCode);
     debug("Minified code size: %d bytes", minifiedCode.length);
 
     // Combine metadata and minified code
@@ -104,7 +170,7 @@ async function minifyScriptContent(content) {
     }
 
     // Minify the script code
-    const minifiedCode = simpleMinify(scriptCode);
+    const minifiedCode = await terserMinify(scriptCode);
     debug("Minified code size: %d bytes", minifiedCode.length);
 
     // Combine metadata and minified code
@@ -141,4 +207,5 @@ module.exports = {
   minifyScript,
   minifyScriptContent,
   simpleMinify,
+  terserMinify,
 };
