@@ -1,257 +1,178 @@
-# Browser Extension to Userscript Converter - Architecture
+Of course. Here is a detailed `architecture.md` file describing the project's architecture based on the provided source code.
 
-## Project Overview
+---
 
-The Browser Extension to Userscript Converter is a tool that automatically converts simple to moderately complex browser extensions into functional userscripts or standalone vanilla JavaScript code. The core principle is **zero modification** requirement for the original extension's JavaScript code by providing a comprehensive polyfill environment.
+# Architecture Document: `to-userscript`
 
-### Build Targets
+This document provides a detailed overview of the architecture for the `to-userscript` converter. It is intended for developers looking to understand the project's structure, data flow, and core design principles.
 
-1. **Userscript Target**: Generates `.user.js` files for userscript managers (Tampermonkey, Greasemonkey, Violentmonkey) leveraging `GM_*` functions
-2. **Vanilla JS Target**: Generates standalone `.js` files using standard browser APIs (IndexedDB, fetch, window.open) with significant limitations
-3. **PostMessage Target**: For iframe-based communication (used internally for options pages)
+## 1. High-Level Overview
 
-## Core Architecture
+The `to-userscript` project is a Node.js command-line tool designed to convert a standard WebExtension into a single, self-contained userscript (`.user.js`) or a vanilla JavaScript file. Its primary goal is to emulate the WebExtension environment (APIs, resources, execution lifecycle) within the constraints of a userscript engine like Tampermonkey or Greasemonkey.
 
-### I. Converter Tool (Node.js CLI)
+The tool achieves this by:
+1.  **Parsing** the extension's `manifest.json`.
+2.  **Reading** all specified JavaScript and CSS files.
+3.  **Inlining** all local assets (images, fonts, HTML, CSS) as Data URLs to make the script self-contained.
+4.  **Polyfilling** common WebExtension APIs (`chrome.storage`, `chrome.runtime`, `chrome.i18n`, etc.).
+5.  **Orchestrating** the execution of content scripts and injection of styles according to the manifest's `run_at` rules.
+6.  **Generating** a single output file with a proper userscript metadata block.
 
-The converter is a command-line tool that processes extension directories and generates userscripts.
+## 2. Core Concepts & Design Patterns
 
-#### Key Components
+The project is built around several key architectural concepts:
 
-1. **Entry Point (`converter.js`)**
-   - Parses command-line arguments (input extension path, output file path)
-   - Orchestrates the conversion process
-   - Currently only supports userscript target (Phase 1)
+### 2.1. Abstraction Layer (Adapter Pattern)
 
-2. **Manifest Parser (`manifestParser.js`)**
-   - Parses `manifest.json` into structured JavaScript objects
-   - Extracts: name, version, description, content_scripts, background scripts, options_ui, permissions, icons
-   - Validates and normalizes file paths
+The most critical part of the polyfill is the abstraction layer. It provides a common internal interface for core functionalities that have different implementations depending on the target environment.
 
-3. **Resource Processor (`resourceProcessor.js`)**
-   - Reads JavaScript, CSS, and HTML files
-   - Handles content scripts and background scripts
-   - Processes resources maintaining execution order
-   - Uses script blacklist for known problematic files
+-   **Interface**: `_storageSet`, `_storageGet`, `_fetch`, `_openTab`, etc.
+-   **Implementations**:
+    -   **`userscript` target**: Maps to Greasemonkey functions (`GM_setValue`, `GM_xmlhttpRequest`, etc.). This is defined in `templates/abstractionLayer.userscript.template.js`.
+    -   **`vanilla` target**: Maps to browser-native APIs like IndexedDB for storage and `fetch`. This is defined in `templates/abstractionLayer.vanilla.template.js`.
+    -   **`postmessage` target**: For code running inside an `iframe` (like an options or popup page). It forwards all API calls to the parent window via `postMessage`. This is defined in `templates/abstractionLayer.postmessage.template.js`.
+    -   **`handle_postmessage`**: The counterpart to the above, it runs in the main userscript context to listen for and handle API requests from iframes.
 
-4. **Options Generator (`optionsGenerator.js`)**
-   - Processes options page HTML and inlines local assets
-   - Extracts asset paths for external resource detection
-   - Creates asset map entries for runtime access
+This design decouples the WebExtension API polyfill from the underlying execution environment, making the system extensible.
 
-5. **Assets Generator (`assetsGenerator.js`)**
-   - Creates EXTENSION_ASSETS_MAP with base64-encoded assets
-   - Generates runtime.getURL override logic
-   - Handles both text and binary assets appropriately
+### 2.2. WebExtension API Polyfill
 
-6. **Template Manager (`templateManager.js`)**
-   - Manages template files for different targets and components
-   - Caches templates to avoid repeated file reads
-   - Supports target-specific templates (userscript, vanilla, postmessage)
+The tool constructs a `chrome` and `browser` object that mimics the real WebExtension APIs.
 
-7. **Abstraction Layer (`abstractionLayer.js`)**
-   - Provides target-specific implementations for storage, fetch, UI operations
-   - Maps high-level operations to GM_* functions (userscript) or native APIs (vanilla)
-   - Handles PostMessage delegation for iframe contexts
+-   **Source**: `templates/polyfill.template.js`
+-   **Functionality**: It provides stubs and working implementations for APIs like `runtime`, `storage`, `i18n`, `tabs`, `contextMenus`, and `notifications`.
+-   **Dependency**: It relies on the **Abstraction Layer** to perform its tasks. For example, `chrome.storage.local.set()` calls `_storageSet()`.
+-   **Context Isolation**: The polyfill uses a `with` block and proxies to create a sandboxed global scope for the extension's scripts. This ensures that `window`, `chrome`, etc., refer to the polyfilled versions, minimizing conflicts with the host page.
 
-8. **Polyfill System**
-   - **buildPolyfillString.js**: Generates unified polyfill code
-   - **polyfill.js**: Template management for polyfill functions
-   - **enhancedPolyfill.template.js**: Main polyfill implementation with chrome.* APIs
+### 2.3. Asset Inlining and Management
 
-9. **Message Bus System**
-   - Unified internal event system for extension messaging
-   - Supports multiple contexts (background, content, options)
-   - PostMessage-based communication for iframe isolation
+A key feature is making the script self-contained. `assetsGenerator.js` is the engine for this.
 
-10. **Script Assembler (`scriptAssembler.js`)**
-    - Generates combined execution logic respecting run_at timing
-    - Handles CSS injection and JS execution by phases
-    - Creates proper execution context with polyfill integration
+1.  **Recursive Processing**: It starts with top-level files (like options/popup HTML) and recursively scans them for asset references (`src`, `href`, `url()`).
+2.  **Asset Conversion**:
+    -   **Binary assets** (images, fonts) are read and converted to Base64 Data URLs.
+    -   **Text assets** (CSS, HTML) are read, and their contents are also recursively scanned for more assets before being inlined.
+3.  **Asset Map**: All processed assets are stored in a large JavaScript object `EXTENSION_ASSETS_MAP`, which is injected into the final script.
+4.  **`runtime.getURL` Polyfill**: The polyfilled `chrome.runtime.getURL` function does not return a relative path. Instead, it looks up the requested path in the `EXTENSION_ASSETS_MAP` and generates a `blob:` or `data:` URL from the in-memory content. This allows the extension's code to access its resources as if they were files.
 
-11. **Output Builder (`outputBuilder.js`)**
-    - Assembles final userscript from all components
-    - Integrates metadata, polyfill, scripts, and orchestration logic
-    - Handles template replacements and code generation
+### 2.4. Execution Orchestration
 
-12. **Metadata Generator (`metadataGenerator.js`)**
-    - Generates userscript metadata block from manifest data
-    - Determines required @grant directives based on abstraction layer usage
-    - Processes icons and match patterns
+The generated userscript doesn't just dump all the code into the page. It follows the execution logic defined in the manifest.
 
-### II. Generated Script Architecture
+-   **Source**: `templates/orchestration.template.js` and `scriptAssembler.js`.
+-   **Lifecycle**: The orchestration logic is the `main` function of the generated script.
+-   **Matching**: It first checks if the current page URL matches any of the `content_scripts` patterns from the manifest.
+-   **Phased Execution**: If there's a match, it executes code in the order defined by `run_at`:
+    1.  `document-start`
+    2.  `document-end`
+    3.  `document-idle`
+-   **Assembly**: `scriptAssembler.js` is responsible for taking all the individual script contents and generating a single `executeAllScripts` function string, which neatly orders the code and CSS injections for each phase.
 
-The output userscript follows this structure:
+### 2.5. Inter-Context Communication (Message Bus)
 
-```javascript
+Since UI pages (options, popup) are rendered in sandboxed `iframe`s, a message bus is required to emulate `chrome.runtime.sendMessage` and other cross-context communication.
+
+-   **Source**: `templates/messaging.template.js`
+-   **Mechanism**: It uses `window.postMessage` to send events between the main userscript context and any iframe contexts.
+-   **`createEventBus`**: Sets up the low-level `on`/`emit` listeners.
+-   **`createRuntime`**: Builds a `chrome.runtime`-like object on top of the event bus, handling request/response logic for `sendMessage`.
+
+## 3. Architectural Flow & Module Breakdown
+
+The project has two main workflows, driven by the CLI commands `convert` and `download`.
+
+### 3.1. `convert` Workflow
+
+This is the primary workflow for converting an extension.
+
+**`cli/workflow.js -> run()`** acts as the main conductor.
+
+1.  **Source Analysis (`determineSourceType`)**: Determines if the source is a URL, local archive (`.crx`, `.xpi`, `.zip`), or a directory.
+2.  **Preparation (Download/Unpack)**:
+    -   If the source is a URL (e.g., Chrome/Firefox store), `cli/download.js` is used to fetch the extension archive. It contains specific logic (`getCrxUrl`, `getFirefoxAddonUrl`) to find the direct download link.
+    -   If the source is an archive, `cli/unpack.js` is used to extract its contents into a temporary directory. It can handle `.zip`, `.xpi`, and CRXv2/v3 formats.
+3.  **Core Conversion (`convert.js -> convertExtension()`)**: This is the pure, library-level conversion function.
+    -   **Manifest Parsing (`manifestParser.js`)**: Reads `manifest.json`, applies localization from `_locales` using `locales.js`, and normalizes the structure.
+    -   **Resource Processing (`resourceProcessor.js`)**: Reads all JS and CSS files listed in `content_scripts` and `background` into memory maps, keyed by their relative paths.
+    -   **Output Building (`outputBuilder.js`)**: This is the assembler. It orchestrates the creation of the final script.
+        -   It initializes `assetsGenerator.js` to process all assets and create the `EXTENSION_ASSETS_MAP`.
+        -   It calls `metadataGenerator.js` to create the `// ==UserScript==` block, including resolving the best icon with `getIcon.js`.
+        -   It calls `buildPolyfillString.js` which combines the abstraction layer and polyfill templates.
+        -   It calls `scriptAssembler.js` to create the ordered script execution logic.
+        -   It injects all these generated parts into the master `orchestration.template.js`.
+4.  **Post-processing (`cli/minify.js`)**: Optionally, the final script is minified with `terser` or beautified with `prettier`.
+5.  **File Output**: The final string is written to the specified output file.
+
+### 3.2. File-by-File Module Responsibilities
+
+#### `src/cli/` - Command-Line Interface Layer
+
+-   `index.js`: The CLI entry point. Uses `yargs` to define commands (`convert`, `download`, `require`) and their options. Delegates execution to `workflow.js`.
+-   `workflow.js`: The high-level orchestrator for CLI commands. It manages temporary directories, spinners, and the step-by-step flow of downloading, unpacking, and converting. It separates CLI concerns from the core conversion logic.
+-   `download.js`: Handles downloading files from URLs. It includes a progress bar and logic to determine the downloadable URL from store pages.
+-   `downloadExt.js`: A helper specifically for constructing the direct download URL for a Chrome Web Store extension.
+-   `unpack.js`: Extracts extension archives (`.crx`, `.xpi`, `.zip`) using `yauzl`. Contains logic to handle the CRX header.
+-   `minify.js`: A wrapper around `terser` and `prettier` to provide minification and beautification, correctly preserving the userscript metadata block.
+-   `require.js`: Logic for the `require` command, which generates a metadata block that `@require`s another userscript.
+
+#### `src/` - Core Logic Layer
+
+-   `convert.js`: A high-level library function that encapsulates the entire conversion process. It's the main entry point for using the converter programmatically.
+-   `manifestParser.js`: Responsible for reading, parsing, and normalizing `manifest.json`. It integrates with `locales.js` to provide localized names and descriptions.
+-   `resourceProcessor.js`: Reads the content of all JS and CSS files specified in the manifest.
+-   `assetsGenerator.js`: The powerful asset inlining engine. Recursively finds and converts all referenced assets to be self-contained within the script.
+-   `scriptAssembler.js`: Organizes the JS and CSS from content scripts into an `executeAllScripts` function, respecting the `run_at` order.
+-   `outputBuilder.js`: The master assembler. It takes the output from all other core modules and uses templates to build the final script string.
+-   `buildPolyfillString.js`: Specifically responsible for constructing the complete polyfill code by combining the messaging, abstraction layer, and assets helper templates.
+-   `abstractionLayer.js`: Selects the correct abstraction layer code based on the target and determines the necessary `@grant` permissions for userscripts.
+-   `locales.js`: Handles loading `_locales/` directories and replacing `__MSG_...__` placeholders.
+-   `getIcon.js`: Finds the most appropriate icon from the manifest and converts it to a Data URL.
+-   `templateManager.js`: A simple manager to read and cache the `.template.js` files.
+-   `utils.js`: A collection of utility functions used across the project (e.g., `normalizePath`, `convertMatchPatternToRegExp`).
+
+#### `src/templates/` - Generated Code Blueprint Layer
+
+These files are not executed by the tool itself; they are the source code for the *generated* userscript.
+
+-   `orchestration.template.js`: The main runtime logic of the final script. It contains the logic to check URL matches, trigger phased execution, and handle UI (popup/options modals).
+-   `polyfill.template.js`: The core `chrome.*` API polyfill.
+-   `abstractionLayer.*.template.js`: The different backends for the polyfill (Greasemonkey, Vanilla JS, PostMessage).
+-   `messaging.template.js`: The `postMessage`-based event bus for communication between the main script and iframes.
+-   `trustedTypes.template.js`: A small script injected via `@require` to bypass Trusted Types security policies on some websites.
+
+## 4. The Generated Userscript Architecture
+
+The final output file has its own internal architecture, composed from the templates:
+
+```
 // ==UserScript==
-// @name, @match, @grant, @connect, etc.
+// ... Metadata Block ...
 // ==/UserScript==
 
-(function() {
+(function() { // IIFE for scope isolation
     'use strict';
-    
-    // 1. Message Bus Implementation
-    // 2. Abstraction Layer Functions (_storageSet, _fetch, etc.)
-    // 3. Asset Helper Functions (EXTENSION_ASSETS_MAP, runtime.getURL override)
-    // 4. buildPolyfill Function Definition
-    // 5. Background Scripts Auto-Execution
-    // 6. Main Orchestration Logic
-    //    - URL matching
-    //    - Polyfill context creation
-    //    - Combined script execution (CSS + JS by run_at timing)
-    //    - Options page handling
-    
+
+    // 1. UNIFIED POLYFILL is defined here
+    //    - messaging.template.js -> createEventBus, createRuntime
+    //    - abstractionLayer.*.template.js -> _storageSet, _fetch, etc.
+    //    - assetsGenerator code -> EXTENSION_ASSETS_MAP, _createAssetUrl
+    //    - polyfill.template.js -> buildPolyfill() which creates chrome.*
+
+    // 2. BACKGROUND SCRIPT ENVIRONMENT is defined and executed
+    //    - Runs all background scripts inside the polyfill's scope.
+    //    - This happens immediately on script start.
+
+    // 3. ORCHESTRATION LOGIC is defined and executed
+    //    - Checks if location.href matches a content_script pattern.
+    //    - If it matches:
+    //        - Calls `executeAllScripts()`.
+    //        - This function injects CSS and runs JS in phases:
+    //          - document-start
+    //          - document-end
+    //          - document-idle
+    //    - Registers GM_registerMenuCommand for options/popup pages.
+    //    - Options/Popup pages are rendered in a modal with an iframe.
+    //    - The iframe's content is populated with the inlined HTML and
+    //      a specialized 'postmessage' version of the polyfill.
 })();
 ```
-
-### III. Polyfill Strategy
-
-The polyfill system provides chrome.* and browser.* API compatibility:
-
-#### Core APIs Implemented
-- **chrome.runtime**: sendMessage, onMessage, getManifest, getURL, connect, onConnect
-- **chrome.storage**: local.get/set/remove/clear with change events, sync (mapped to local), managed (empty)
-- **chrome.tabs**: query (current tab only), create (with options page detection), sendMessage
-- **Message Bus**: Internal event system for cross-context communication
-- **Port System**: runtime.connect/onConnect implementation
-
-#### Context Awareness
-- **Background Context**: `buildPolyfill({ isBackground: true })`
-- **Content Script Context**: `buildPolyfill({ isBackground: false })`
-- **Options Page Context**: `buildPolyfill({ isOtherPage: true })` (in iframe)
-
-#### Abstraction Layer Targets
-
-1. **Userscript Target**
-   - Uses GM_setValue, GM_getValue, GM_xmlhttpRequest, GM_openInTab, etc.
-   - Full cross-origin request capability via @connect
-   - Menu command registration for options page
-
-2. **Vanilla Target** (Phase 2)
-   - IndexedDB for storage (no sync capability)
-   - Standard fetch (CORS limitations)
-   - window.open for new tabs (popup blocker issues)
-   - No menu command equivalent
-
-3. **PostMessage Target**
-   - For iframe contexts (options pages)
-   - Delegates operations to parent window
-   - Maintains API compatibility within iframe
-
-### IV. Options Page Handling
-
-Options pages are processed and displayed in an iframe modal:
-
-1. **Processing**: HTML is read, local assets are inlined as data URLs
-2. **Modal Creation**: Styled modal with iframe using `srcdoc`
-3. **Polyfill Injection**: Complete polyfill environment injected into iframe
-4. **Communication**: PostMessage-based abstraction layer for parent communication
-5. **Trigger**: GM_registerMenuCommand for userscript target
-
-### V. Asset Management
-
-Assets are handled through EXTENSION_ASSETS_MAP:
-
-- **Text Assets**: Stored as plain text (HTML, JS, CSS, JSON, SVG)
-- **Binary Assets**: Base64-encoded (images, fonts, etc.)
-- **Runtime Access**: chrome.runtime.getURL creates Blob URLs from map data
-- **Options Integration**: Options page HTML stored with inlined sub-assets
-
-### VI. Current Implementation Status
-
-#### Phase 1 Complete (Basic Userscript Conversion)
-- ✅ Manifest parsing for basic extensions
-- ✅ Content script processing with proper ordering
-- ✅ Background script auto-execution
-- ✅ Basic chrome.* API polyfill
-- ✅ Userscript metadata generation
-- ✅ Options page iframe modal system
-- ✅ Asset handling with runtime.getURL
-- ✅ Message bus for internal communication
-- ✅ GM_* abstraction layer
-- ✅ Icon embedding in userscript metadata
-
-#### Phase 2 Planned (Expanded Functionality)
-- 🔄 Vanilla JS target implementation
-- 🔄 IndexedDB storage backend
-- 🔄 Enhanced API coverage
-- 🔄 Dynamic content script registration
-- 🔄 Improved cross-origin handling
-
-#### Phase 3 Planned (Advanced Features)
-- ⏳ Comprehensive API coverage
-- ⏳ MV3 basic support exploration
-- ⏳ Enhanced resource management
-- ⏳ Security improvements
-
-#### Phase 4 Planned (Production Ready)
-- ⏳ GUI interface
-- ⏳ Comprehensive testing
-- ⏳ Performance optimization
-- ⏳ Documentation and examples
-
-## Key Design Decisions
-
-### Zero Code Modification
-Original extension code runs unmodified within polyfilled environment. This is achieved through:
-- Complete chrome.* API simulation
-- Proper context isolation and management
-- Abstraction layer hiding implementation details
-
-### Template-Based Code Generation
-Templates allow clean separation of concerns and target-specific implementations:
-- `abstractionLayer.{target}.template.js` for different backends
-- `messageBus.{target}.template.js` for communication strategies
-- `orchestration.template.js` for main execution logic
-
-### Unified Polyfill Architecture
-Single polyfill function generates context-aware API objects:
-- Eliminates code duplication
-- Provides consistent API surface
-- Enables proper message bus integration
-
-### Progressive Enhancement
-System designed for incremental capability addition:
-- Phase-based development allows working system at each stage
-- Template system accommodates new targets easily
-- Abstraction layer isolates implementation complexity
-
-## Limitations and Challenges
-
-### Userscript Target Limitations
-- Depends on userscript manager capabilities
-- GM API async wrapper complexity
-- @connect domain detection accuracy
-
-### Vanilla JS Target Limitations
-- CORS restrictions (major blocker)
-- No privileged action equivalents
-- Storage lacks sync capability
-- Manual injection/loading required
-- Limited utility for most extensions
-
-### General Limitations
-- Incomplete API coverage (by design for complexity management)
-- MV3 service worker lifecycle challenges
-- Performance overhead from polyfill layer
-- Security implications of broad grants
-- Resource handling complexity
-
-### Technical Challenges
-- Maintaining async consistency across polyfills
-- Proper script execution timing
-- Cross-context message delivery
-- Asset URL resolution in different environments
-- Options page script execution within iframe context
-
-## Future Considerations
-
-- Browser-specific namespace support enhancement
-- Basic MV3 compatibility exploration
-- Enhanced error handling and validation
-- Performance optimization and code splitting
-- Comprehensive testing infrastructure
-- User-friendly GUI wrapper
-- Plugin system for custom handlers
-- Advanced security model
