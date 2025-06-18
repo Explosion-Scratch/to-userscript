@@ -235,4 +235,5 @@ module.exports = {
   downloadExtension,
   getDownloadableUrl,
   downloadFile,
+  guessFileExtension,
 };

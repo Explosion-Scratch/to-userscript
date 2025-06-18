@@ -132,10 +132,9 @@ async function convertExtension(config) {
     );
 
     // Process background scripts
-    const backgroundScriptsList =
-      parsedManifest.background && parsedManifest.background.scripts
-        ? parsedManifest.background.scripts
-        : [];
+    const backgroundScriptsList = parsedManifest.background?.service_worker
+      ? [parsedManifest.background.service_worker]
+      : parsedManifest.background?.scripts || [];
 
     const backgroundJsContents = await readBackgroundScripts(
       normalizedInputDir,

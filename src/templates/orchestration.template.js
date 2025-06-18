@@ -7,7 +7,8 @@ const POPUP_PAGE_PATH = {{POPUP_PAGE_PATH}};
 const EXTENSION_ICON = {{EXTENSION_ICON}};
 const extensionCssData = {{EXTENSION_CSS_DATA}};
 
-const LOCALE_KEYS = {{LOCALE}}
+const LOCALE_KEYS = {{LOCALE}};
+const USED_LOCALE = {{USED_LOCALE}};
 
 const convertMatchPatternToRegExp = {{CONVERT_MATCH_PATTERN_TO_REGEXP_FUNCTION}};
 const convertMatchPatternToRegExpString = {{CONVERT_MATCH_PATTERN_FUNCTION_STRING}};
@@ -515,7 +516,15 @@ function generateCompletePolyfillForIframe() {
     const polyfillString = {{UNIFIED_POLYFILL_FOR_IFRAME}}
     let newMap = JSON.parse(JSON.stringify(EXTENSION_ASSETS_MAP));
     delete newMap[OPTIONS_PAGE_PATH];
+    const PASS_ON = {
+        LOCALE_KEYS,
+        INJECTED_MANIFEST,
+        USED_LOCALE,
+        EXTENSION_ICON,
+    }
     return `
+        ${Object.entries(PASS_ON).map(i => `const ${i[0]} = ${JSON.stringify(i[1])};`).join('\n')}
+
         ${polyfillString.replaceAll("{{EXTENSION_ASSETS_MAP}}", `atob("${btoa(EXTENSION_ASSETS_MAP)}")`)}
 
         // Initialize the polyfill context for options page
@@ -541,7 +550,7 @@ async function main() {
         }
     }
 
-    console.log(`[${SCRIPT_NAME}] Starting background scripts...`);
+    console.log(`[${SCRIPT_NAME}] Starting content scripts...`);
 
     const currentUrl = window.location.href;
     let shouldRunAnyScript = false;

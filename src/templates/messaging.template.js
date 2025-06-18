@@ -3,7 +3,7 @@
 function createEventBus(
   scopeId,
   type = "page", // "page" or "iframe"
-  { allowedOrigin = "*", children = [], parentWindow = null } = {},
+  { allowedOrigin = "*", children = [], parentWindow = null } = {}
 ) {
   if (!scopeId) throw new Error("createEventBus requires a scopeId");
 
@@ -27,7 +27,7 @@ function createEventBus(
     }
 
     (handlers[event] || []).forEach((fn) =>
-      fn(payload, { origin: ev.origin, source: ev.source }),
+      fn(payload, { origin: ev.origin, source: ev.source })
     );
   }
 
@@ -65,7 +65,7 @@ function createEventBus(
     emit(event, payload) {
       // dispatch locally first
       (handlers[event] || []).forEach((fn) =>
-        fn(payload, { origin: location.origin, source: window }),
+        fn(payload, { origin: location.origin, source: window })
       );
 
       // then propagate
@@ -95,6 +95,9 @@ function createRuntime(type = "background", bus) {
     const arr = [...args];
     if (arr.length === 0) {
       throw new Error("sendMessage requires at least one argument");
+    }
+    if (arr.length === 1) {
+      return { message: arr[0] };
     }
     // last object could be options
     if (

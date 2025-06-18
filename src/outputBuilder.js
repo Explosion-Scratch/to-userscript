@@ -105,12 +105,12 @@ function buildBackgroundExecutionString(backgroundJsContents = {}, scriptName) {
   }));
   const getContent = (str) => str.trim().replace(/^['"]use strict['"];?/, "");
   return `
-(function(){
+const START_BACKGROUND_SCRIPT = (function(){
+  const backgroundPolyfill = buildPolyfill({ isBackground: true });
   const scriptName = ${JSON.stringify(scriptName)};
   const debug = ${JSON.stringify(`[${scriptName}]`)};
   console.log(debug + ' Executing background scripts...');
 
-  const backgroundPolyfill = buildPolyfill({ isBackground: true });
 
   with(backgroundPolyfill){
 ${sanitizedScripts
@@ -119,7 +119,13 @@ ${sanitizedScripts
   }
 
   console.log(debug + ' Background scripts execution complete.');
-})();
+});
+
+console.log("START_BACKGROUND_SCRIPT", START_BACKGROUND_SCRIPT);
+setTimeout(() => {
+  START_BACKGROUND_SCRIPT();
+}, 100);
+// End background script environment
 `;
 }
 
@@ -221,6 +227,7 @@ async function buildUserScript({
       : "null",
     "{{UNIFIED_POLYFILL_FOR_IFRAME}}": JSON.stringify(optionsPolyfillString),
     "{{LOCALE}}": JSON.stringify(locale?.__data || {}),
+    "{{USED_LOCALE}}": JSON.stringify(locale?.__locale || "en"),
   };
 
   let orchestrationLogic = orchestrationTemplate;

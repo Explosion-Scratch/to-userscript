@@ -8,6 +8,7 @@ const unpack = require("./unpack");
 const minify = require("./minify");
 const debug = require("debug")("to-userscript:cli:workflow");
 const { getLocale, getLocalizedName } = require("../locales");
+const fetch = require("node-fetch");
 
 async function determineSourceType(source) {
   if (!source || typeof source !== "string") {
@@ -112,6 +113,102 @@ async function createTempDirectory(customTempDir) {
       }
     });
   });
+}
+
+async function runDownload(config) {
+  const spinner = ora();
+
+  try {
+    debug("Starting download with config: %o", config);
+
+    // Source Analysis
+    spinner.start("Analyzing source...");
+    const sourceInfo = await determineSourceType(config.source);
+    debug("Source type determined: %o", sourceInfo);
+
+    // URL Resolution
+    spinner.text = "Resolving download URL...";
+    const downloadUrl = await download.getDownloadableUrl(sourceInfo);
+    debug("Download URL resolved: %s", downloadUrl);
+
+    // Output Path Determination
+    spinner.text = "Determining output path...";
+    let outputPath;
+
+    if (config.output) {
+      const outputStat = await fs.stat(config.output).catch(() => null);
+      if (outputStat && outputStat.isDirectory()) {
+        // Output is a directory, generate filename
+        const headResponse = await fetch(downloadUrl, {
+          method: "HEAD",
+          headers: {
+            "User-Agent":
+              "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36",
+          },
+        }).catch(() => null);
+
+        const contentType = headResponse?.headers.get("content-type") || "";
+        const extension = download.guessFileExtension(downloadUrl, contentType);
+        const filename = `extension-${Date.now()}${extension}`;
+        outputPath = path.join(config.output, filename);
+      } else if (config.output.endsWith("/") || config.output.endsWith("\\")) {
+        // Treat as directory path
+        await fs.mkdir(config.output, { recursive: true });
+        const headResponse = await fetch(downloadUrl, {
+          method: "HEAD",
+          headers: {
+            "User-Agent":
+              "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36",
+          },
+        }).catch(() => null);
+
+        const contentType = headResponse?.headers.get("content-type") || "";
+        const extension = download.guessFileExtension(downloadUrl, contentType);
+        const filename = `extension-${Date.now()}${extension}`;
+        outputPath = path.join(config.output, filename);
+      } else {
+        // Treat as full file path
+        outputPath = path.resolve(config.output);
+      }
+    } else {
+      // No output specified, use current working directory
+      const headResponse = await fetch(downloadUrl, {
+        method: "HEAD",
+        headers: {
+          "User-Agent":
+            "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36",
+        },
+      }).catch(() => null);
+
+      const contentType = headResponse?.headers.get("content-type") || "";
+      const extension = download.guessFileExtension(downloadUrl, contentType);
+      const filename = `extension-${Date.now()}${extension}`;
+      outputPath = path.join(process.cwd(), filename);
+    }
+
+    debug("Output path determined: %s", outputPath);
+
+    // Overwrite Check
+    await checkOutputFile(outputPath, config.force);
+
+    // File Download
+    spinner.stop();
+    await download.downloadFile(downloadUrl, outputPath);
+
+    // Completion
+    console.log(chalk.green("Download complete!"));
+    console.log(chalk.blue("📄 Downloaded:"), outputPath);
+
+    const stats = await fs.stat(outputPath);
+    const sizeKB = Math.round(stats.size / 1024);
+    console.log(chalk.blue("📊 Size:"), `${sizeKB} KB`);
+
+    return { success: true, outputFile: outputPath };
+  } catch (error) {
+    spinner.fail(chalk.red("Download failed"));
+    debug("Download error: %o", error);
+    throw error;
+  }
 }
 
 async function run(config) {
@@ -286,4 +383,4 @@ async function run(config) {
   }
 }
 
-module.exports = { run };
+module.exports = { run, runDownload };

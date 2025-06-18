@@ -16,14 +16,14 @@ const abstractionLayer = require("./abstractionLayer");
 async function generateBuildPolyfillString(
   target = "userscript",
   assetsMap = {},
-  manifest = {},
+  manifest = {}
 ) {
   const abstractionLayerCode =
     await abstractionLayer.getAbstractionLayerCode(target);
 
   const assetsHelperFunctions = generateAssetsHelperFunctions(
     assetsMap,
-    target === "postmessage",
+    target === "postmessage"
   );
 
   const messagingTemplate = await templateManager.getMessagingTemplate();

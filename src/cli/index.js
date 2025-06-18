@@ -80,6 +80,69 @@ async function main() {
           }
         }
       )
+      .command(
+        "download <source>",
+        "Download an extension archive from a URL",
+        (yargs) => {
+          return yargs
+            .positional("source", {
+              describe: "Extension source URL (Chrome/Firefox store or direct)",
+              type: "string",
+              demandOption: true,
+            })
+            .option("output", {
+              alias: "o",
+              describe:
+                "Output path for the downloaded file. If a directory is provided, a filename will be generated.",
+              type: "string",
+            })
+            .option("force", {
+              alias: "f",
+              describe: "Overwrite output file if it exists",
+              type: "boolean",
+              default: false,
+            });
+        },
+        async (argv) => {
+          try {
+            await workflow.runDownload(argv);
+          } catch (error) {
+            console.error(chalk.red("Download failed:"), error.message);
+            if (process.env.DEBUG) {
+              console.error(error.stack);
+            }
+            process.exit(1);
+          }
+        }
+      )
+      .command(
+        "require <userscript>",
+        "Generate a metadata block with a @require pointing to the file",
+        (yargs) => {
+          return yargs.positional("userscript", {
+            describe: "Path to the .user.js file to reference",
+            type: "string",
+            demandOption: true,
+            normalize: true,
+          });
+        },
+        async (argv) => {
+          try {
+            const { generateRequireBlock } = require("./require");
+            const requireBlock = await generateRequireBlock(argv.userscript);
+            process.stdout.write(requireBlock);
+          } catch (error) {
+            console.error(
+              chalk.red("Failed to generate require block:"),
+              error.message
+            );
+            if (process.env.DEBUG) {
+              console.error(error.stack);
+            }
+            process.exit(1);
+          }
+        }
+      )
       .option("verbose", {
         alias: "v",
         describe: "Enable verbose logging",
@@ -106,6 +169,14 @@ async function main() {
         [
           "$0 convert ./extension/ --locale en --minify --keep-temp",
           "Convert with English locale, minification, and debug files",
+        ],
+        [
+          '$0 download "https://addons.mozilla.org/..." -o my-addon.xpi',
+          "Download an extension from the Firefox store",
+        ],
+        [
+          "$0 require ./path/to/my-script.user.js",
+          "Outputs a metadata block that @requires my-script.user.js",
         ],
       ])
       .demandCommand(1, "You must specify a command")

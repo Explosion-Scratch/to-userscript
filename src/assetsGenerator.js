@@ -805,6 +805,17 @@ class AssetGenerator {
       debug("Found %d web accessible resource file(s)", matchingFiles.length);
 
       for (const filePath of matchingFiles) {
+        // --- FIX STARTS HERE ---
+        const normalizedFilePath = normalizePath(filePath);
+        if (this.processedFiles.has(normalizedFilePath)) {
+          debug(
+            "  Skipping web accessible resource (already processed): %s",
+            path.relative(this.extensionRoot, filePath)
+          );
+          continue; // Don't re-process a file that's already been handled
+        }
+        // --- FIX ENDS HERE ---
+
         try {
           const relativePath = normalizePath(
             path.relative(this.extensionRoot, filePath)
@@ -828,10 +839,14 @@ class AssetGenerator {
               await fs.readFile(filePath, "utf-8")
             );
             this.assetsMap[relativePath] = textContent;
+            // Mark it as processed even if it didn't need inlining itself
+            this.processedFiles.add(normalizedFilePath);
             debug("    Processed text asset: %s", relativePath);
           } else {
             const base64Content = await fileToBase64(filePath);
             this.assetsMap[relativePath] = base64Content;
+            // Mark it as processed
+            this.processedFiles.add(normalizedFilePath);
             debug("    Processed binary asset: %s", relativePath);
           }
         } catch (fileError) {
