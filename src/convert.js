@@ -1,5 +1,6 @@
 const fs = require("fs").promises;
 const path = require("path");
+const debug = require("debug")("to-userscript:convert");
 const { parseManifest } = require("./manifestParser");
 const {
   readScriptsAndStyles,
@@ -21,7 +22,6 @@ const { getLocalizedName, getLocalizedDescription } = require("./locales");
  * @param {string} [config.target='userscript'] - Build target ('userscript' or 'vanilla')
  * @param {string} [config.locale] - Preferred locale for extension name/description
  * @param {string} [config.ignoredAssets] - Comma-separated asset extensions to ignore
- * @param {Object} [config.logger=console] - Logger object with log, warn, error methods
  * @returns {Promise<Object>} Result object with success status and details
  */
 async function convertExtension(config) {
@@ -31,7 +31,6 @@ async function convertExtension(config) {
     target = "userscript",
     locale: preferredLocale,
     ignoredAssets,
-    logger = console,
   } = config;
 
   // Validate configuration
@@ -53,16 +52,16 @@ async function convertExtension(config) {
   const manifestPath = path.join(normalizedInputDir, "manifest.json");
 
   try {
-    logger.log(`Starting conversion: ${target} target`);
-    logger.log(`Input directory: ${normalizedInputDir}`);
-    logger.log(`Output file: ${normalizedOutputFile}`);
+    debug("Starting conversion: %s target", target);
+    debug("Input directory: %s", normalizedInputDir);
+    debug("Output file: %s", normalizedOutputFile);
 
     if (preferredLocale) {
-      logger.log(`Preferred locale: ${preferredLocale}`);
+      debug("Preferred locale: %s", preferredLocale);
     }
 
     if (ignoredAssets) {
-      logger.log(`Ignored asset extensions: ${ignoredAssets}`);
+      debug("Ignored asset extensions: %s", ignoredAssets);
     }
 
     // Verify input directory exists and is accessible
@@ -81,7 +80,7 @@ async function convertExtension(config) {
     }
 
     // Parse manifest with preferred locale
-    logger.log(`Parsing manifest: ${manifestPath}`);
+    debug("Parsing manifest: %s", manifestPath);
     const manifestResult = await parseManifest(manifestPath, preferredLocale);
     if (!manifestResult) {
       throw new Error("Failed to parse manifest.json");
@@ -99,22 +98,22 @@ async function convertExtension(config) {
       locale
     );
 
-    logger.log(`Manifest parsed: ${localizedName} v${parsedManifest.version}`);
+    debug("Manifest parsed: %s v%s", localizedName, parsedManifest.version);
 
     if (localizedDescription) {
-      logger.log(`Description: ${localizedDescription}`);
+      debug("Description: %s", localizedDescription);
     }
 
     // Validate content scripts
     const contentScriptConfigs = parsedManifest.content_scripts || [];
     if (contentScriptConfigs.length === 0) {
-      logger.warn(
+      debug(
         "Warning: No content scripts found in manifest. Output might be empty or non-functional."
       );
     }
 
     // Process resources
-    logger.log("Processing content scripts and styles...");
+    debug("Processing content scripts and styles...");
     const resourceResult = await readScriptsAndStyles(
       normalizedInputDir,
       contentScriptConfigs
@@ -126,8 +125,10 @@ async function convertExtension(config) {
 
     const { jsContents, cssContents } = resourceResult;
 
-    logger.log(
-      `Processed ${Object.keys(jsContents).length} JS file(s) and ${Object.keys(cssContents).length} CSS file(s)`
+    debug(
+      "Processed %d JS file(s) and %d CSS file(s)",
+      Object.keys(jsContents).length,
+      Object.keys(cssContents).length
     );
 
     // Process background scripts
@@ -142,15 +143,16 @@ async function convertExtension(config) {
     );
 
     if (backgroundScriptsList.length > 0) {
-      logger.log(
-        `Processed ${Object.keys(backgroundJsContents).length} background script(s)`
+      debug(
+        "Processed %d background script(s)",
+        Object.keys(backgroundJsContents).length
       );
     }
 
     // Generate metadata (for userscript target)
     let metadataBlock = "";
     if (target === "userscript") {
-      logger.log("Generating userscript metadata...");
+      debug("Generating userscript metadata...");
       const requiredGmGrants = getRequiredGmGrants(target);
       metadataBlock = generateMetadata(
         parsedManifest,
@@ -160,7 +162,7 @@ async function convertExtension(config) {
     }
 
     // Build final script
-    logger.log("Building final script...");
+    debug("Building final script...");
     const finalScriptContent = await buildUserScript({
       metadataBlock,
       jsContents,
@@ -178,13 +180,13 @@ async function convertExtension(config) {
     await fs.mkdir(outputDir, { recursive: true });
 
     // Write output file
-    logger.log(`Writing output to: ${normalizedOutputFile}`);
+    debug("Writing output to: %s", normalizedOutputFile);
     await fs.writeFile(normalizedOutputFile, finalScriptContent, "utf-8");
 
     // Get file stats for response
     const outputStats = await fs.stat(normalizedOutputFile);
 
-    logger.log("Conversion completed successfully!");
+    debug("Conversion completed successfully!");
 
     return {
       success: true,
@@ -204,7 +206,7 @@ async function convertExtension(config) {
       warnings: [], // Could be populated with non-fatal issues
     };
   } catch (error) {
-    logger.error(`Conversion failed: ${error.message}`);
+    debug("Conversion failed: %s", error.message);
 
     // Re-throw with additional context but preserve original error
     const enhancedError = new Error(

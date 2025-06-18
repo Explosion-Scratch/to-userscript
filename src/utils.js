@@ -1,4 +1,5 @@
 const path = require("path");
+const debug = require("debug")("to-userscript:utils");
 
 /**
  * Escapes characters in a string that have special meaning in regular expressions.
@@ -79,13 +80,14 @@ function convertMatchPatternToRegExp(pattern) {
   }
   try {
     const singleEscapedPattern = convertMatchPatternToRegExpString(
-      pattern,
+      pattern
     ).replace(/\\\\/g, "\\");
     return new RegExp(singleEscapedPattern);
   } catch (error) {
-    console.error(
-      `Error converting match pattern to RegExp: ${pattern}`,
-      error,
+    debug(
+      "Error converting match pattern to RegExp: %s, Error: %s",
+      pattern,
+      error.message
     );
     return new RegExp("$."); // Matches nothing on error
   }
@@ -153,7 +155,7 @@ const scriptBlacklist = {
 
     onPaid: {
       addListener: (callback) => {
-        console.log("Dummy onPaid listener added");
+        debug("Dummy onPaid listener added");
         // Simulate a user paying after 2 seconds
         setTimeout(() => {
           const dummyUser = {
@@ -182,7 +184,7 @@ const scriptBlacklist = {
     },
 
     openLoginPage() {
-      console.log("Dummy login page opened");
+      debug("Dummy login page opened");
       }
     });
 
@@ -221,7 +223,7 @@ function matchGlobPattern(pattern, path) {
     const regex = new RegExp(regexPattern);
     return regex.test(path);
   } catch (e) {
-    console.error(`Invalid glob pattern: ${pattern}`, e);
+    debug("Invalid glob pattern: %s, Error: %s", pattern, e.message);
     return false;
   }
 }

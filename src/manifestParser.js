@@ -1,5 +1,6 @@
 const { normalizePath } = require("./utils");
 const fs = require("fs").promises;
+const debug = require("debug")("to-userscript:manifest");
 const {
   getLocale,
   getLocalizedName,
@@ -52,9 +53,10 @@ async function parseManifest(manifestPath, preferredLocale = null) {
 
     return { parsedManifest: parsed, locale };
   } catch (error) {
-    console.error(
-      `Error reading or parsing manifest file at ${manifestPath}:`,
-      error
+    debug(
+      "Error reading or parsing manifest file at %s: %s",
+      manifestPath,
+      error.message
     );
     return null;
   }

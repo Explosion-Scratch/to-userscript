@@ -4,6 +4,7 @@ const {
   convertMatchPatternToRegExpString,
   replaceComments,
 } = require("./utils");
+const debug = require("debug")("to-userscript:output");
 const templateManager = require("./templateManager");
 const scriptAssembler = require("./scriptAssembler");
 const { generateBuildPolyfillString } = require("./buildPolyfillString");
@@ -107,7 +108,8 @@ function buildBackgroundExecutionString(backgroundJsContents = {}, scriptName) {
   return `
 (function(){
   const scriptName = ${JSON.stringify(scriptName)};
-  console.log('[' + scriptName + '] Executing background scripts...');
+  const debug = ${JSON.stringify(`[${scriptName}]`)};
+  console.log(debug + ' Executing background scripts...');
 
   const backgroundPolyfill = buildPolyfill({ isBackground: true });
 
@@ -117,7 +119,7 @@ ${sanitizedScripts
   .join("\n\n")}
   }
 
-  console.log('[' + scriptName + '] Background scripts execution complete.');
+  console.log(debug + ' Background scripts execution complete.');
 })();
 `;
 }
@@ -136,7 +138,7 @@ async function buildUserScript({
   target = "userscript", // Build target
   ignoredAssets = null, // Ignored asset extensions
 }) {
-  console.log("Generating unified assets map...");
+  debug("Generating unified assets map...");
   const assetGenerator = new AssetGenerator(
     extensionRoot,
     locale,

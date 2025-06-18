@@ -7,38 +7,41 @@ const download = require("./download");
 const unpack = require("./unpack");
 const minify = require("./minify");
 const debug = require("debug")("to-userscript:cli:workflow");
+const { getLocale, getLocalizedName } = require("../locales");
 
 async function determineSourceType(source) {
-  debug("Determining source type for: %s", source);
+  if (!source || typeof source !== "string") {
+    throw new Error("Source must be a non-empty string");
+  }
 
-  // Check if it's a URL
-  if (source.match(/^https?:\/\//)) {
-    if (
-      source.includes("chrome.google.com/webstore") ||
-      source.includes("chromewebstore.google.com")
-    ) {
+  const urlRegex = /^https?:\/\//;
+  const chromeStoreRegex =
+    /chromewebstore\.google\.com\/detail\/([^\/]+)\/([a-z]{32})/;
+  const firefoxStoreRegex = /addons\.mozilla\.org.*\/addon\/([^\/]+)/;
+
+  if (urlRegex.test(source)) {
+    if (chromeStoreRegex.test(source)) {
       return { type: "chrome-store", url: source };
-    } else if (source.includes("addons.mozilla.org")) {
+    } else if (firefoxStoreRegex.test(source)) {
       return { type: "firefox-store", url: source };
     } else {
       return { type: "url", url: source };
     }
   }
 
-  // Check if it's a file
   try {
     const stats = await fs.stat(source);
-    if (stats.isFile()) {
+    if (stats.isDirectory()) {
+      return { type: "directory", path: path.resolve(source) };
+    } else if (stats.isFile()) {
       const ext = path.extname(source).toLowerCase();
       if ([".crx", ".xpi", ".zip"].includes(ext)) {
         return { type: "archive", path: path.resolve(source) };
       } else {
         throw new Error(
-          `Unsupported file extension: ${ext}. Supported: .crx, .xpi, .zip`
+          `Unsupported file type: ${ext}. Supported types: .crx, .xpi, .zip`
         );
       }
-    } else if (stats.isDirectory()) {
-      return { type: "directory", path: path.resolve(source) };
     }
   } catch (error) {
     if (error.code === "ENOENT") {
@@ -47,16 +50,16 @@ async function determineSourceType(source) {
     throw error;
   }
 
-  throw new Error(`Unable to determine source type for: ${source}`);
+  throw new Error(`Unable to determine source type: ${source}`);
 }
 
-async function generateOutputPath(config, manifest) {
+async function generateOutputPath(config, manifest, localizedName = null) {
   if (config.output) {
     return path.resolve(config.output);
   }
 
-  // Generate default output name
-  const name = manifest?.name || "converted-extension";
+  // Use localized name if available, otherwise fall back to raw manifest name
+  const name = localizedName || manifest?.name || "converted-extension";
   const version = manifest?.version || "1.0.0";
   const target = config.target || "userscript";
 
@@ -188,8 +191,14 @@ async function run(config) {
       throw new Error(`Failed to parse manifest.json: ${error.message}`);
     }
 
+    const locale = await getLocale(manifest, manifestPath, config.locale);
     // Generate output path
-    const outputPath = await generateOutputPath(config, manifest);
+    const localizedName = getLocalizedName(manifest, locale);
+    const outputPath = await generateOutputPath(
+      config,
+      manifest,
+      localizedName
+    );
     debug("Output path: %s", outputPath);
 
     // Check if output file exists
@@ -205,9 +214,6 @@ async function run(config) {
       target: config.target,
       locale: config.locale,
       ignoredAssets: config.ignoreAssets,
-      logger: config.verbose
-        ? console
-        : { log: () => {}, error: console.error, warn: console.warn },
     };
 
     const result = await convertExtension(convertConfig);

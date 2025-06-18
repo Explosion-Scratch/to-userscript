@@ -3,6 +3,7 @@ const fs = require("fs").promises;
 const path = require("path");
 const yargs = require("yargs/yargs");
 const { hideBin } = require("yargs/helpers");
+const debug = require("debug")("to-userscript:converter");
 const manifestParser = require("./manifestParser");
 const resourceProcessor = require("./resourceProcessor");
 const abstractionLayer = require("./abstractionLayer");
@@ -31,31 +32,35 @@ async function main() {
   const outputFile = utils.normalizePath(path.resolve(argv.outputFile));
   const manifestPath = path.join(inputDir, "manifest.json");
   try {
-    console.log(`Parsing manifest: ${manifestPath}`);
+    debug("Parsing manifest: %s", manifestPath);
     const { parsedManifest, locale } =
       await manifestParser.parseManifest(manifestPath);
     if (!parsedManifest) {
       throw new Error("Failed to parse manifest.");
     }
-    console.log(
-      `Manifest parsed: ${parsedManifest.name} v${parsedManifest.version}`,
+    debug(
+      "Manifest parsed: %s v%s",
+      parsedManifest.name,
+      parsedManifest.version
     );
 
     const contentScriptConfigs = parsedManifest.content_scripts || [];
     if (contentScriptConfigs.length === 0) {
-      console.warn(
-        "Warning: No content scripts found in manifest. Output might be empty or non-functional.",
+      debug(
+        "Warning: No content scripts found in manifest. Output might be empty or non-functional."
       );
     }
 
-    console.log("Processing resources...");
+    debug("Processing resources...");
     const { jsContents, cssContents } =
       await resourceProcessor.readScriptsAndStyles(
         inputDir,
-        contentScriptConfigs,
+        contentScriptConfigs
       );
-    console.log(
-      `Processed ${Object.keys(jsContents).length} JS file(s) and ${Object.keys(cssContents).length} CSS file(s).`,
+    debug(
+      "Processed %d JS file(s) and %d CSS file(s).",
+      Object.keys(jsContents).length,
+      Object.keys(cssContents).length
     );
 
     const backgroundScriptsList =
@@ -64,21 +69,21 @@ async function main() {
         : [];
     const backgroundJsContents = await resourceProcessor.readBackgroundScripts(
       inputDir,
-      backgroundScriptsList,
+      backgroundScriptsList
     );
 
     const target = "userscript";
-    console.log(`Generating for target: ${target}`);
+    debug("Generating for target: %s", target);
 
-    console.log("Generating metadata...");
+    debug("Generating metadata...");
     const requiredGmGrants = abstractionLayer.getRequiredGmGrants(target);
     const metadataBlock = metadataGenerator.generateMetadata(
       parsedManifest,
       requiredGmGrants,
-      inputDir,
+      inputDir
     );
 
-    console.log("Building final script...");
+    debug("Building final script...");
     const finalScriptContent = await outputBuilder.buildUserScript({
       metadataBlock,
       jsContents,
@@ -89,9 +94,9 @@ async function main() {
       locale,
     });
 
-    console.log(`Writing output to: ${path.resolve(outputFile)}`);
+    debug("Writing output to: %s", path.resolve(outputFile));
     await fs.writeFile(outputFile, finalScriptContent);
-    console.log("Conversion complete!");
+    debug("Conversion complete!");
   } catch (error) {
     console.error("Error during conversion:", error);
     process.exit(1);

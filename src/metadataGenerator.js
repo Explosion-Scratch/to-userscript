@@ -1,11 +1,12 @@
 const fs = require("fs");
 const path = require("path");
+const debug = require("debug")("to-userscript:metadata");
 const { getIcon } = require("./getIcon");
 
 function generateMetadata(
   parsedManifest,
   requiredGmGrants = [],
-  extensionRoot = null,
+  extensionRoot = null
 ) {
   const { name, version, description, content_scripts, _id } = parsedManifest;
 
@@ -19,7 +20,7 @@ function generateMetadata(
   lines.push(`// @namespace   ${_id}`);
   lines.push(`// @author      Converter Script`); // Placeholder
   lines.push(
-    `// @require     data:text/javascript;base64,${fs.readFileSync(path.resolve(".", "src", "templates", "trustedTypes.template.js")).toString("base64")}`,
+    `// @require     data:text/javascript;base64,${fs.readFileSync(path.resolve(".", "src", "templates", "trustedTypes.template.js")).toString("base64")}`
   );
   const matches = new Set();
   const MATCH_REPLACEMENTS = {
@@ -29,14 +30,14 @@ function generateMetadata(
     content_scripts.forEach((cs) => {
       if (cs.matches) {
         cs.matches.forEach((match) =>
-          matches.add(MATCH_REPLACEMENTS[match] || match),
+          matches.add(MATCH_REPLACEMENTS[match] || match)
         );
       }
     });
   }
   if (matches.size === 0) {
-    console.warn(
-      "No @match patterns found in manifest content_scripts. Adding '// @match *://*/*' as a fallback. Review this carefully!",
+    debug(
+      "No @match patterns found in manifest content_scripts. Adding '// @match *://*/*' as a fallback."
     );
     lines.push("// @match       *://*/*");
   } else {

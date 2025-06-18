@@ -1,5 +1,6 @@
 const fs = require("fs");
 const path = require("path");
+const debug = require("debug")("to-userscript:icon");
 
 function getMimeTypeFromExt(ext) {
   switch (ext.toLowerCase()) {
@@ -49,10 +50,10 @@ function getIcon(manifest, extensionRoot) {
     const ext = path.extname(iconPath).substring(1);
     const mime = getMimeTypeFromExt(ext);
     const dataUri = `data:${mime};base64,${data.toString("base64")}`;
-    console.log(`Selected icon: ${iconRel} (size ${bestSize})`);
+    debug("Selected icon: %s (size %s)", iconRel, bestSize);
     return dataUri;
   } catch (e) {
-    console.warn("Failed to read icon file:", e);
+    debug("Failed to read icon file: %s", e.message);
     return null;
   }
 }

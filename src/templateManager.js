@@ -1,5 +1,6 @@
 const fs = require("fs").promises;
 const path = require("path");
+const debug = require("debug")("to-userscript:templates");
 
 // Cache templates to avoid repeated file reads
 const templateCache = {};
@@ -14,7 +15,7 @@ async function validateTemplatePath(templatePath) {
     const stats = await fs.stat(templatePath);
     if (!stats.isFile()) {
       throw new Error(
-        `Template path exists but is not a file: ${templatePath}`,
+        `Template path exists but is not a file: ${templatePath}`
       );
     }
     await fs.access(templatePath, fs.constants.R_OK);
@@ -26,7 +27,7 @@ async function validateTemplatePath(templatePath) {
       throw new Error(`Template file is not readable: ${templatePath}`);
     } else {
       throw new Error(
-        `Template path validation failed: ${templatePath} - ${error.message}`,
+        `Template path validation failed: ${templatePath} - ${error.message}`
       );
     }
   }
@@ -62,13 +63,15 @@ async function resolveTemplatePath(templateName, target = null) {
       const basePath = path.join(templatesDir, baseFileName);
       try {
         await validateTemplatePath(basePath);
-        console.warn(
-          `Target-specific template not found: ${templateFileName}, using base template: ${baseFileName}`,
+        debug(
+          "Target-specific template not found: %s, using base template: %s",
+          templateFileName,
+          baseFileName
         );
         return { path: basePath, fileName: baseFileName };
       } catch (baseError) {
         throw new Error(
-          `Template resolution failed for '${templateName}' with target '${target}': ${error.message}. Base template also failed: ${baseError.message}`,
+          `Template resolution failed for '${templateName}' with target '${target}': ${error.message}. Base template also failed: ${baseError.message}`
         );
       }
     }
@@ -93,7 +96,7 @@ async function getTemplate(templateName, target = null) {
       return templateCache[cacheKey];
     }
 
-    console.log(`  Reading template: ${templateFileName}`);
+    debug("Reading template: %s", templateFileName);
     const content = await fs.readFile(templatePath, "utf-8");
 
     if (!content || content.trim().length === 0) {
@@ -104,7 +107,12 @@ async function getTemplate(templateName, target = null) {
     return content;
   } catch (error) {
     const errorMsg = `Failed to load template '${templateName}'${target ? ` with target '${target}'` : ""}: ${error.message}`;
-    console.error(errorMsg);
+    debug(
+      "Failed to load template '%s'%s: %s",
+      templateName,
+      target ? ` with target '${target}'` : "",
+      error.message
+    );
     throw new Error(errorMsg);
   }
 }

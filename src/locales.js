@@ -1,5 +1,6 @@
 const path = require("path");
 const fs = require("fs").promises;
+const debug = require("debug")("to-userscript:locales");
 
 async function getLocale(manifest, manifestPath, preferredLocale = null) {
   try {
@@ -29,16 +30,20 @@ async function getLocale(manifest, manifestPath, preferredLocale = null) {
         );
         try {
           locale = JSON.parse(await fs.readFile(fallbackPath, "utf8"));
-          console.warn(
-            `Locale '${preferredLocale}' not found, using fallback '${fallbackLocale}'`
+          debug(
+            "Locale '%s' not found, using fallback '%s'",
+            preferredLocale,
+            fallbackLocale
           );
         } catch (fallbackError) {
-          console.warn(
-            `No locale files found for '${preferredLocale}' or '${fallbackLocale}', using raw text`
+          debug(
+            "No locale files found for '%s' or '%s', using raw text",
+            preferredLocale,
+            fallbackLocale
           );
         }
       } else {
-        console.warn(`No locale file found for '${LOCALE}', using raw text`);
+        debug("No locale file found for '%s', using raw text", LOCALE);
       }
     }
 
@@ -54,7 +59,7 @@ async function getLocale(manifest, manifestPath, preferredLocale = null) {
     processString.__locale = LOCALE;
     return processString;
   } catch (e) {
-    console.warn(`Error loading locale: ${e.message}`);
+    debug("Error loading locale: %s", e.message);
     return (str) => str;
   }
 }
@@ -116,7 +121,7 @@ async function getAvailableLocales(manifestPath) {
 
     return locales.sort();
   } catch (error) {
-    console.warn(`Error listing available locales: ${error.message}`);
+    debug("Error listing available locales: %s", error.message);
     return [];
   }
 }
