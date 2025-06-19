@@ -656,6 +656,23 @@ function buildPolyfill({ isBackground = false, isOtherPage = false } = {}) {
         );
         return chrome.runtime.sendMessage(message);
       },
+      onActivated: createNoopListeners(),
+      onUpdated: createNoopListeners(),
+      onRemoved: createNoopListeners(),
+      onReplaced: createNoopListeners(),
+      onCreated: createNoopListeners(),
+      onMoved: createNoopListeners(),
+      onDetached: createNoopListeners(),
+      onAttached: createNoopListeners(),
+    },
+    windows: {
+      onFocusChanged: createNoopListeners(),
+      onCreated: createNoopListeners(),
+      onRemoved: createNoopListeners(),
+      onFocused: createNoopListeners(),
+      onFocus: createNoopListeners(),
+      onBlur: createNoopListeners(),
+      onFocused: createNoopListeners(),
     },
     notifications: {
       create: async (notificationId, options) => {

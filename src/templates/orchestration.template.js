@@ -487,6 +487,7 @@ function generateCompletePolyfillForIframe() {
         ALL_PERMISSIONS,
         ORIGIN_PERMISSIONS,
         EXTENSION_PERMISSIONS,
+        SCRIPT_NAME,
         _base64ToBlob,
         _getMimeTypeFromPath,
         _isTextAsset,
