@@ -47,7 +47,7 @@ function buildPolyfill({ isBackground = false, isOtherPage = false } = {}) {
       sendMessage: (...args) => _messagingHandler.sendMessage(...args),
     },
     permissions: {
-      // TODO: Remove origin permission means exclude from origin in startup
+      // TODO: Remove origin permission means exclude from origin in startup (when checking for content scripts)
       request: (permissions, callback) => {
         _log("permissions.request", permissions, callback);
         if (Array.isArray(permissions)) {

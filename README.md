@@ -222,6 +222,7 @@ Some websites have strict CSP rules that can prevent converted userscripts from 
 
 - [ ] `chrome.tabs.insertCSS`
 - [ ] `chrome.tabs.reload`
+- [ ] `chrome.tabs.onActivated`
 - [ ] `chrome.scripting.insertCSS`
 - [ ] `chrome.scripting.executeScript`
 - [ ] `chrome.identity`:
@@ -231,7 +232,19 @@ Some websites have strict CSP rules that can prevent converted userscripts from 
 - [ ] `chrome.runtime.onMessageExternal`: Shim
 - [ ] `chrome.runtime.sendMessageExternal`: Shim
 - [ ] `chrome.webNavigation`
-- [ ] `chrome.permissions`: Listeners working
+- [-] `chrome.permissions`:
+  - Get listeners working
+  - Removing permission for an origin should persist this change and not match the script on it
+- [-] `chrome.storage`: Proper listeners
+- [ ] `chrome.action`
+  - `onClicked.addListener`: Add menu item for click
+
+## General tasks
+
+- API bindings: `import makeUserscript from 'to-userscript';`
+  - Vite plugin
+  - Take dir and output
+- Create reusable listener logic for supporting callbacks/promises
 
 ## Contributing
 
