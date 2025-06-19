@@ -155,7 +155,7 @@ const scriptBlacklist = {
 
     onPaid: {
       addListener: (callback) => {
-        debug("Dummy onPaid listener added");
+        console.log("Dummy onPaid listener added");
         // Simulate a user paying after 2 seconds
         setTimeout(() => {
           const dummyUser = {
@@ -184,7 +184,7 @@ const scriptBlacklist = {
     },
 
     openLoginPage() {
-      debug("Dummy login page opened");
+      console.log("Dummy login page opened");
       }
     });
 

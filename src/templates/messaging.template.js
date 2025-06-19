@@ -190,9 +190,10 @@ function createRuntime(type = "background", bus) {
   }
 
   function sendMessage(...args) {
-    if (type === "background") {
-      throw new Error("Background cannot sendMessage to itself");
-    }
+    // Background should be able to send message to itself
+    // if (type === "background") {
+    //   throw new Error("Background cannot sendMessage to itself");
+    // }
     const { target, message, callback } = parseArgs(args);
     const id = nextId++;
     const promise = new Promise((resolve) => {

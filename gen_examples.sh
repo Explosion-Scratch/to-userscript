@@ -7,3 +7,4 @@ bun src/cli/index.js convert extensions/web-search-navigator -o examples/web-sea
 bun src/cli/index.js convert extensions/json-formatter -o examples/json-formatter.js --force
 bun src/cli/index.js convert extensions/return-dislikes -o examples/return-dislikes.js --force
 bun src/cli/index.js convert extensions/material-design-fileicons -o examples/material-design-fileicons.js --force
+bun src/cli/index.js convert extensions/ublacklist -o examples/ublacklist.js --force

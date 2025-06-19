@@ -38,6 +38,8 @@ function buildPolyfill({ isBackground = false, isOtherPage = false } = {}) {
     });
   }
 
+  let REQ_PERMS = [];
+
   // --- Chrome polyfill
   let chrome = {
     extension: {
@@ -45,7 +47,12 @@ function buildPolyfill({ isBackground = false, isOtherPage = false } = {}) {
       sendMessage: (...args) => _messagingHandler.sendMessage(...args),
     },
     permissions: {
+      // TODO: Remove origin permission means exclude from origin in startup
       request: (permissions, callback) => {
+        console.log("permissions.request", permissions, callback);
+        if (Array.isArray(permissions)) {
+          REQ_PERMS = [...REQ_PERMS, ...permissions];
+        }
         if (typeof callback === "function") {
           callback(permissions);
         }
@@ -57,14 +64,28 @@ function buildPolyfill({ isBackground = false, isOtherPage = false } = {}) {
         }
         return Promise.resolve(true);
       },
+      getAll: () => {
+        return Promise.resolve({
+          permissions: EXTENSION_PERMISSIONS,
+          origins: ORIGIN_PERMISSIONS,
+        });
+      },
+      onAdded: createNoopListeners(),
+      onRemoved: createNoopListeners(),
     },
     i18n: {
       getUILanguage: () => {
         return USED_LOCALE || "en";
       },
-      getMessage: (key) => {
+      getMessage: (key, substitutions = []) => {
+        if (typeof substitutions === "string") {
+          substitutions = [substitutions];
+        }
         if (typeof LOCALE_KEYS !== "undefined" && LOCALE_KEYS[key]) {
-          return LOCALE_KEYS[key].message;
+          return LOCALE_KEYS[key].message?.replace(
+            /\$(\d+)/g,
+            (match, p1) => substitutions[p1 - 1] || match
+          );
         }
         return key;
       },
@@ -82,10 +103,18 @@ function buildPolyfill({ isBackground = false, isOtherPage = false } = {}) {
       ...RUNTIME,
       onInstalled: createNoopListeners(),
       onStartup: createNoopListeners(),
+      // TODO: Postmessage to parent to open options page or call openOptionsPage
       openOptionsPage: () => {
-        const url = chrome.runtime.getURL(OPTIONS_PAGE_PATH);
-        console.log("openOptionsPage", _openTab, url);
-        _openTab(url);
+        // const url = chrome.runtime.getURL(OPTIONS_PAGE_PATH);
+        // console.log("openOptionsPage", _openTab, url, EXTENSION_ASSETS_MAP);
+        // _openTab(url);
+        if (typeof openOptionsPage === "function") {
+          openOptionsPage();
+        } else if (window.parent) {
+          window.parent.postMessage({ type: "openOptionsPage" }, "*");
+        } else {
+          console.warn("openOptionsPage not available.");
+        }
       },
       getManifest: () => {
         // The manifest object will be injected into the scope where buildPolyfill is called
@@ -431,7 +460,7 @@ function buildPolyfill({ isBackground = false, isOtherPage = false } = {}) {
         return [
           {
             id: dummyId,
-            url: window.location.href,
+            url: CURRENT_LOCATION,
             active: true,
             windowId: 1,
             status: "complete",
@@ -771,61 +800,91 @@ function buildPolyfill({ isBackground = false, isOtherPage = false } = {}) {
   };
   const proxyHandler = {
     get(target, key, receiver) {
-      return __globalsStorage[key] || Reflect.get(target, key, receiver);
+      try {
+        return __globalsStorage[key] || Reflect.get(target, key, receiver);
+      } catch (e) {
+        console.error("Error getting", key, e);
+        return undefined;
+      }
     },
     set(target, key, value, receiver) {
-      tc(() => console.log(`[${contextType}] Setting ${key} to ${value}`));
-      set(key, value);
-      return Reflect.set(target, key, value, receiver);
+      try {
+        tc(() => console.log(`[${contextType}] Setting ${key} to ${value}`));
+        set(key, value);
+        return Reflect.set(target, key, value, receiver);
+      } catch (e) {
+        console.error("Error setting", key, value, e);
+        return false;
+      }
     },
     has(target, key) {
-      return key in __globalsStorage || key in target;
+      try {
+        return key in __globalsStorage || key in target;
+      } catch (e) {
+        console.error("Error has", key, e);
+        return false;
+      }
     },
     getOwnPropertyDescriptor(target, key) {
-      if (key in __globalsStorage) {
+      try {
+        if (key in __globalsStorage) {
+          return {
+            configurable: true,
+            enumerable: true,
+            writable: true,
+            value: __globalsStorage[key],
+          };
+        }
+        // fall back to the real globalThis
+        const desc = Reflect.getOwnPropertyDescriptor(target, key);
+        // ensure it's configurable so the with‑scope binding logic can override it
+        if (desc && !desc.configurable) {
+          desc.configurable = true;
+        }
+        return desc;
+      } catch (e) {
+        console.error("Error getOwnPropertyDescriptor", key, e);
         return {
           configurable: true,
           enumerable: true,
           writable: true,
-          value: __globalsStorage[key],
+          value: undefined,
         };
       }
-      // fall back to the real globalThis
-      const desc = Reflect.getOwnPropertyDescriptor(target, key);
-      // ensure it's configurable so the with‑scope binding logic can override it
-      if (desc && !desc.configurable) {
-        desc.configurable = true;
-      }
-      return desc;
     },
 
     defineProperty(target, key, descriptor) {
-      // Normalize descriptor to avoid mixed accessor & data attributes
-      const hasAccessor = "get" in descriptor || "set" in descriptor;
+      try {
+        // Normalize descriptor to avoid mixed accessor & data attributes
+        const hasAccessor = "get" in descriptor || "set" in descriptor;
 
-      if (hasAccessor) {
-        // Build a clean descriptor without value/writable when accessors present
-        const normalized = {
-          configurable:
-            "configurable" in descriptor ? descriptor.configurable : true,
-          enumerable:
-            "enumerable" in descriptor ? descriptor.enumerable : false,
-        };
-        if ("get" in descriptor) normalized.get = descriptor.get;
-        if ("set" in descriptor) normalized.set = descriptor.set;
+        if (hasAccessor) {
+          // Build a clean descriptor without value/writable when accessors present
+          const normalized = {
+            configurable:
+              "configurable" in descriptor ? descriptor.configurable : true,
+            enumerable:
+              "enumerable" in descriptor ? descriptor.enumerable : false,
+          };
+          if ("get" in descriptor) normalized.get = descriptor.get;
+          if ("set" in descriptor) normalized.set = descriptor.set;
 
-        // Store accessor references for inspection but avoid breaking invariants
-        set(key, {
-          get: descriptor.get,
-          set: descriptor.set,
-        });
+          // Store accessor references for inspection but avoid breaking invariants
+          set(key, {
+            get: descriptor.get,
+            set: descriptor.set,
+          });
 
-        return Reflect.defineProperty(target, key, normalized);
+          return Reflect.defineProperty(target, key, normalized);
+        }
+
+        // Data descriptor path
+        set(key, descriptor.value);
+        return Reflect.defineProperty(target, key, descriptor);
+      } catch (e) {
+        console.error("Error defineProperty", key, descriptor, e);
+        return false;
       }
-
-      // Data descriptor path
-      set(key, descriptor.value);
-      return Reflect.defineProperty(target, key, descriptor);
     },
   };
 

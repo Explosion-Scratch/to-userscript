@@ -23,6 +23,7 @@ async function parseManifest(manifestPath, preferredLocale = null) {
       version: manifest.version || "0.0.0",
       description: localizedDescription,
       permissions: manifest.permissions || [],
+      optional_permissions: manifest.optional_permissions || [],
       content_scripts: manifest.content_scripts || [],
       options_ui: manifest.options_ui || {},
       browser_action: manifest.browser_action || {},

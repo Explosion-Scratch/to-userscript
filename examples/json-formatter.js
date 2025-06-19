@@ -213,9 +213,10 @@ const e=!0,t=e=>e,s="passthrough";let o,c={createHTML:t,createScript:t,createScr
 		  }
 		
 		  function sendMessage(...args) {
-		    if (type === "background") {
-		      throw new Error("Background cannot sendMessage to itself");
-		    }
+		    // Background should be able to send message to itself
+		    // if (type === "background") {
+		    //   throw new Error("Background cannot sendMessage to itself");
+		    // }
 		    const { target, message, callback } = parseArgs(args);
 		    const id = nextId++;
 		    const promise = new Promise((resolve) => {
@@ -718,110 +719,9 @@ const e=!0,t=e=>e,s="passthrough";let o,c={createHTML:t,createScript:t,createScr
 			}
 			
 			
-// #endregion
-// #region Extension Assets Map Helper Functions ---
 			const EXTENSION_ASSETS_MAP = {
 			  "options/options.html": "<!DOCTYPE html>\n<html>\n  <head>\n    <meta charset=\"utf-8\" />\n    <title>Options - JSON Formatter</title>\n    <style>\n      body {\n        margin: 18px;\n        font-family: system-ui, sans-serif;\n      }\n\n      fieldset {\n        padding: 20px;\n        border-radius: 8px;\n        border: 1px solid currentColor;\n      }\n\n      legend {\n        font-weight: 600;\n        padding: 0 5px;\n      }\n\n      label {\n        display: flex;\n        gap: 10px;\n        align-items: center;\n        height: 24px;\n      }\n\n      label > input {\n        position: relative;\n        top: -2px;\n      }\n\n      @media (prefers-color-scheme: dark) {\n        body {\n          background: #292a2d;\n          color: #e8eaed;\n        }\n      }\n    </style>\n  </head>\n\n  <body>\n    <fieldset>\n      <legend>Theme</legend>\n\n      <div>\n        <label>\n          <input type=\"radio\" name=\"theme\" value=\"system\" />\n          Automatic (follow OS setting)\n        </label>\n      </div>\n      <div>\n        <label>\n          <input type=\"radio\" name=\"theme\" value=\"force_dark\" />\n          Force dark theme\n        </label>\n      </div>\n      <div>\n        <label>\n          <input type=\"radio\" name=\"theme\" value=\"force_light\" />\n          Force light theme\n        </label>\n      </div>\n    </fieldset>\n\n    <script src=\"options.js\"></script>\n  </body>\n</html>\n"
 			};
-			
-			function _testBlobCSP() {
-			  try {
-			    const code = `console.log("Blob CSP test");`;
-			    const blob = new Blob([code], { type: 'application/javascript' });
-			    const blobUrl = URL.createObjectURL(blob);
-			
-			    const script = document.createElement('script');
-			    script.src = blobUrl;
-			
-			    let blocked = false;
-			    script.onerror = () => {
-			      blocked = true;
-			    };
-			
-			    document.head.appendChild(script);
-			
-			    return new Promise((resolve) => {
-			      setTimeout(() => {
-			        resolve(!blocked);
-			        document.head.removeChild(script);
-			        URL.revokeObjectURL(blobUrl);
-			      }, 100);
-			    });
-			  } catch (e) {
-			    return Promise.resolve(false);
-			  }
-			}
-			
-			let CAN_USE_BLOB_CSP = false;
-			
-			_testBlobCSP().then((result) => {
-			  CAN_USE_BLOB_CSP = result;
-			});
-			
-			function _base64ToBlob(base64, mimeType = 'application/octet-stream') {
-			  const binary = atob(base64);
-			  const len = binary.length;
-			  const bytes = new Uint8Array(len);
-			  for (let i = 0; i < len; i++) bytes[i] = binary.charCodeAt(i);
-			  return new Blob([bytes], { type: mimeType });
-			}
-			
-			function _getMimeTypeFromPath(p) {
-			  const ext = (p.split('.').pop() || '').toLowerCase();
-			  const map = {
-			    html: 'text/html',
-			    htm: 'text/html',
-			    js: 'text/javascript',
-			    css: 'text/css',
-			    json: 'application/json',
-			    png: 'image/png',
-			    jpg: 'image/jpeg',
-			    jpeg: 'image/jpeg',
-			    gif: 'image/gif',
-			    svg: 'image/svg+xml',
-			    webp: 'image/webp',
-			    ico: 'image/x-icon',
-			    woff: 'font/woff',
-			    woff2: 'font/woff2',
-			    ttf: 'font/ttf',
-			    otf: 'font/otf',
-			    eot: 'application/vnd.ms-fontobject'
-			  };
-			  return map[ext] || 'application/octet-stream';
-			}
-			
-			function _isTextAsset(ext) {
-			  return ['html','htm','js','css','json','svg','txt','xml'].includes(ext);
-			}
-			
-			function _createAssetUrl(path = '') {
-			  if (path.startsWith('/')) path = path.slice(1);
-			  const assetData = EXTENSION_ASSETS_MAP[path];
-			  if (typeof assetData === 'undefined') {
-			    console.warn('[runtime.getURL] Asset not found for', path);
-			    return path;
-			  }
-			
-			  const mime = _getMimeTypeFromPath(path);
-			  const ext = (path.split('.').pop() || '').toLowerCase();
-			
-			  if (CAN_USE_BLOB_CSP) {
-			    let blob;
-			    if (_isTextAsset(ext)) {
-			      blob = new Blob([assetData], { type: mime });
-			    } else {
-			      blob = _base64ToBlob(assetData, mime);
-			    }
-			
-			    return URL.createObjectURL(blob);
-			  } else {
-			    if (_isTextAsset(ext)) {
-			      return `data:${mime};base64,${btoa(assetData)}`;
-			    } else {
-			      return `data:${mime};base64,${assetData}`;
-			    }
-			  }
-			}
 			
 // #endregion
 // #endregion
@@ -865,6 +765,8 @@ const e=!0,t=e=>e,s="passthrough";let o,c={createHTML:t,createScript:t,createScr
 		    });
 		  }
 		
+		  let REQ_PERMS = [];
+		
   // #region Chrome polyfill
 			  let chrome = {
 			    extension: {
@@ -872,7 +774,12 @@ const e=!0,t=e=>e,s="passthrough";let o,c={createHTML:t,createScript:t,createScr
 			      sendMessage: (...args) => _messagingHandler.sendMessage(...args),
 			    },
 			    permissions: {
+			      // TODO: Remove origin permission means exclude from origin in startup
 			      request: (permissions, callback) => {
+			        console.log("permissions.request", permissions, callback);
+			        if (Array.isArray(permissions)) {
+			          REQ_PERMS = [...REQ_PERMS, ...permissions];
+			        }
 			        if (typeof callback === "function") {
 			          callback(permissions);
 			        }
@@ -884,14 +791,28 @@ const e=!0,t=e=>e,s="passthrough";let o,c={createHTML:t,createScript:t,createScr
 			        }
 			        return Promise.resolve(true);
 			      },
+			      getAll: () => {
+			        return Promise.resolve({
+			          permissions: EXTENSION_PERMISSIONS,
+			          origins: ORIGIN_PERMISSIONS,
+			        });
+			      },
+			      onAdded: createNoopListeners(),
+			      onRemoved: createNoopListeners(),
 			    },
 			    i18n: {
 			      getUILanguage: () => {
 			        return USED_LOCALE || "en";
 			      },
-			      getMessage: (key) => {
+			      getMessage: (key, substitutions = []) => {
+			        if (typeof substitutions === "string") {
+			          substitutions = [substitutions];
+			        }
 			        if (typeof LOCALE_KEYS !== "undefined" && LOCALE_KEYS[key]) {
-			          return LOCALE_KEYS[key].message;
+			          return LOCALE_KEYS[key].message?.replace(
+			            /\$(\d+)/g,
+			            (match, p1) => substitutions[p1 - 1] || match
+			          );
 			        }
 			        return key;
 			      },
@@ -909,10 +830,18 @@ const e=!0,t=e=>e,s="passthrough";let o,c={createHTML:t,createScript:t,createScr
 			      ...RUNTIME,
 			      onInstalled: createNoopListeners(),
 			      onStartup: createNoopListeners(),
+			      // TODO: Postmessage to parent to open options page or call openOptionsPage
 			      openOptionsPage: () => {
-			        const url = chrome.runtime.getURL(OPTIONS_PAGE_PATH);
-			        console.log("openOptionsPage", _openTab, url);
-			        _openTab(url);
+			        // const url = chrome.runtime.getURL(OPTIONS_PAGE_PATH);
+			        // console.log("openOptionsPage", _openTab, url, EXTENSION_ASSETS_MAP);
+			        // _openTab(url);
+			        if (typeof openOptionsPage === "function") {
+			          openOptionsPage();
+			        } else if (window.parent) {
+			          window.parent.postMessage({ type: "openOptionsPage" }, "*");
+			        } else {
+			          console.warn("openOptionsPage not available.");
+			        }
 			      },
 			      getManifest: () => {
 			        // The manifest object will be injected into the scope where buildPolyfill is called
@@ -1258,7 +1187,7 @@ const e=!0,t=e=>e,s="passthrough";let o,c={createHTML:t,createScript:t,createScr
 			        return [
 			          {
 			            id: dummyId,
-			            url: window.location.href,
+			            url: CURRENT_LOCATION,
 			            active: true,
 			            windowId: 1,
 			            status: "complete",
@@ -1598,61 +1527,91 @@ const e=!0,t=e=>e,s="passthrough";let o,c={createHTML:t,createScript:t,createScr
 			  };
 			  const proxyHandler = {
 			    get(target, key, receiver) {
-			      return __globalsStorage[key] || Reflect.get(target, key, receiver);
+			      try {
+			        return __globalsStorage[key] || Reflect.get(target, key, receiver);
+			      } catch (e) {
+			        console.error("Error getting", key, e);
+			        return undefined;
+			      }
 			    },
 			    set(target, key, value, receiver) {
-			      tc(() => console.log(`[${contextType}] Setting ${key} to ${value}`));
-			      set(key, value);
-			      return Reflect.set(target, key, value, receiver);
+			      try {
+			        tc(() => console.log(`[${contextType}] Setting ${key} to ${value}`));
+			        set(key, value);
+			        return Reflect.set(target, key, value, receiver);
+			      } catch (e) {
+			        console.error("Error setting", key, value, e);
+			        return false;
+			      }
 			    },
 			    has(target, key) {
-			      return key in __globalsStorage || key in target;
+			      try {
+			        return key in __globalsStorage || key in target;
+			      } catch (e) {
+			        console.error("Error has", key, e);
+			        return false;
+			      }
 			    },
 			    getOwnPropertyDescriptor(target, key) {
-			      if (key in __globalsStorage) {
+			      try {
+			        if (key in __globalsStorage) {
+			          return {
+			            configurable: true,
+			            enumerable: true,
+			            writable: true,
+			            value: __globalsStorage[key],
+			          };
+			        }
+			        // fall back to the real globalThis
+			        const desc = Reflect.getOwnPropertyDescriptor(target, key);
+			        // ensure it's configurable so the with‑scope binding logic can override it
+			        if (desc && !desc.configurable) {
+			          desc.configurable = true;
+			        }
+			        return desc;
+			      } catch (e) {
+			        console.error("Error getOwnPropertyDescriptor", key, e);
 			        return {
 			          configurable: true,
 			          enumerable: true,
 			          writable: true,
-			          value: __globalsStorage[key],
+			          value: undefined,
 			        };
 			      }
-			      // fall back to the real globalThis
-			      const desc = Reflect.getOwnPropertyDescriptor(target, key);
-			      // ensure it's configurable so the with‑scope binding logic can override it
-			      if (desc && !desc.configurable) {
-			        desc.configurable = true;
-			      }
-			      return desc;
 			    },
 			
 			    defineProperty(target, key, descriptor) {
-			      // Normalize descriptor to avoid mixed accessor & data attributes
-			      const hasAccessor = "get" in descriptor || "set" in descriptor;
+			      try {
+			        // Normalize descriptor to avoid mixed accessor & data attributes
+			        const hasAccessor = "get" in descriptor || "set" in descriptor;
 			
-			      if (hasAccessor) {
-			        // Build a clean descriptor without value/writable when accessors present
-			        const normalized = {
-			          configurable:
-			            "configurable" in descriptor ? descriptor.configurable : true,
-			          enumerable:
-			            "enumerable" in descriptor ? descriptor.enumerable : false,
-			        };
-			        if ("get" in descriptor) normalized.get = descriptor.get;
-			        if ("set" in descriptor) normalized.set = descriptor.set;
+			        if (hasAccessor) {
+			          // Build a clean descriptor without value/writable when accessors present
+			          const normalized = {
+			            configurable:
+			              "configurable" in descriptor ? descriptor.configurable : true,
+			            enumerable:
+			              "enumerable" in descriptor ? descriptor.enumerable : false,
+			          };
+			          if ("get" in descriptor) normalized.get = descriptor.get;
+			          if ("set" in descriptor) normalized.set = descriptor.set;
 			
-			        // Store accessor references for inspection but avoid breaking invariants
-			        set(key, {
-			          get: descriptor.get,
-			          set: descriptor.set,
-			        });
+			          // Store accessor references for inspection but avoid breaking invariants
+			          set(key, {
+			            get: descriptor.get,
+			            set: descriptor.set,
+			          });
 			
-			        return Reflect.defineProperty(target, key, normalized);
+			          return Reflect.defineProperty(target, key, normalized);
+			        }
+			
+			        // Data descriptor path
+			        set(key, descriptor.value);
+			        return Reflect.defineProperty(target, key, descriptor);
+			      } catch (e) {
+			        console.error("Error defineProperty", key, descriptor, e);
+			        return false;
 			      }
-			
-			      // Data descriptor path
-			      set(key, descriptor.value);
-			      return Reflect.defineProperty(target, key, descriptor);
 			    },
 			  };
 			
@@ -1706,7 +1665,7 @@ const e=!0,t=e=>e,s="passthrough";let o,c={createHTML:t,createScript:t,createScr
     // #region Orchestration Logic
 	const SCRIPT_NAME = "JSON Formatter";
 	
-	const INJECTED_MANIFEST = {"manifest_version":3,"name":"JSON Formatter","version":"0.7.3","description":"Makes JSON easy to read. Open source.","permissions":["storage"],"content_scripts":[{"matches":["<all_urls>"],"js":["content.js"],"run_at":"document_end","css":[]}],"options_ui":{"page":"options/options.html","open_in_tab":false},"browser_action":{},"page_action":{},"action":{},"icons":{"32":"icons/32.png","128":"icons/128.png"},"web_accessible_resources":[],"background":{},"_id":"json-formatter"};
+	const INJECTED_MANIFEST = {"manifest_version":3,"name":"JSON Formatter","version":"0.7.3","description":"Makes JSON easy to read. Open source.","permissions":["storage"],"optional_permissions":[],"content_scripts":[{"matches":["<all_urls>"],"js":["content.js"],"run_at":"document_end","css":[]}],"options_ui":{"page":"options/options.html","open_in_tab":false},"browser_action":{},"page_action":{},"action":{},"icons":{"32":"icons/32.png","128":"icons/128.png"},"web_accessible_resources":[],"background":{},"_id":"json-formatter"};
 	const CONTENT_SCRIPT_CONFIGS_FOR_MATCHING = [
 	  {
 	    "matches": [
@@ -1721,6 +1680,7 @@ const e=!0,t=e=>e,s="passthrough";let o,c={createHTML:t,createScript:t,createScr
 	
 	const LOCALE_KEYS = {};
 	const USED_LOCALE = "en";
+	const CURRENT_LOCATION = window.location.href;
 	
 	const convertMatchPatternToRegExp = function convertMatchPatternToRegExp(pattern) {
 	    if (pattern === "<all_urls>")
@@ -1766,6 +1726,120 @@ const e=!0,t=e=>e,s="passthrough";let o,c={createHTML:t,createScript:t,createScr
 	      pathRegex = pathRegex + "(?:[?#]|$)";
 	    return `^${schemeRegex}:\\/\\/${hostRegex}${pathRegex}`;
 	  };
+	const ALL_PERMISSIONS = [
+	    ...(INJECTED_MANIFEST.permissions || []),
+	    ...(INJECTED_MANIFEST.optional_permissions || []),
+	    ...(INJECTED_MANIFEST.host_permissions || []),
+	    ...(INJECTED_MANIFEST.content_scripts?.map(cs => cs.matches || [])?.flat() || []),
+	  ];
+	
+	const isOrigin = (perm) => {
+	    if (perm.startsWith("*://") || perm.startsWith("http://") || perm.startsWith("https://")) {
+	        return true;
+	    }
+	    return false;
+	};
+	const ORIGIN_PERMISSIONS = ALL_PERMISSIONS.filter(isOrigin);
+	const EXTENSION_PERMISSIONS = ALL_PERMISSIONS.filter(perm => !isOrigin(perm));
+	
+	function _testBlobCSP() {
+	  try {
+	    const code = `console.log("Blob CSP test");`;
+	    const blob = new Blob([code], { type: 'application/javascript' });
+	    const blobUrl = URL.createObjectURL(blob);
+	
+	    const script = document.createElement('script');
+	    script.src = blobUrl;
+	
+	    let blocked = false;
+	    script.onerror = () => {
+	      blocked = true;
+	    };
+	
+	    document.head.appendChild(script);
+	
+	    return new Promise((resolve) => {
+	      setTimeout(() => {
+	        resolve(!blocked);
+	        document.head.removeChild(script);
+	        URL.revokeObjectURL(blobUrl);
+	      }, 100);
+	    });
+	  } catch (e) {
+	    return Promise.resolve(false);
+	  }
+	}
+	
+	let CAN_USE_BLOB_CSP = false;
+	
+	_testBlobCSP().then((result) => {
+	  CAN_USE_BLOB_CSP = result;
+	});
+	
+	function _base64ToBlob(base64, mimeType = 'application/octet-stream') {
+	  const binary = atob(base64);
+	  const len = binary.length;
+	  const bytes = new Uint8Array(len);
+	  for (let i = 0; i < len; i++) bytes[i] = binary.charCodeAt(i);
+	  return new Blob([bytes], { type: mimeType });
+	}
+	
+	function _getMimeTypeFromPath(p) {
+	  const ext = (p.split('.').pop() || '').toLowerCase();
+	  const map = {
+	    html: 'text/html',
+	    htm: 'text/html',
+	    js: 'text/javascript',
+	    css: 'text/css',
+	    json: 'application/json',
+	    png: 'image/png',
+	    jpg: 'image/jpeg',
+	    jpeg: 'image/jpeg',
+	    gif: 'image/gif',
+	    svg: 'image/svg+xml',
+	    webp: 'image/webp',
+	    ico: 'image/x-icon',
+	    woff: 'font/woff',
+	    woff2: 'font/woff2',
+	    ttf: 'font/ttf',
+	    otf: 'font/otf',
+	    eot: 'application/vnd.ms-fontobject'
+	  };
+	  return map[ext] || 'application/octet-stream';
+	}
+	
+	function _isTextAsset(ext) {
+	  return ['html','htm','js','css','json','svg','txt','xml'].includes(ext);
+	}
+	
+	function _createAssetUrl(path = '') {
+	  if (path.startsWith('/')) path = path.slice(1);
+	  const assetData = EXTENSION_ASSETS_MAP[path];
+	  if (typeof assetData === 'undefined') {
+	    console.warn('[runtime.getURL] Asset not found for', path);
+	    return path;
+	  }
+	
+	  const mime = _getMimeTypeFromPath(path);
+	  const ext = (path.split('.').pop() || '').toLowerCase();
+	
+	  if (CAN_USE_BLOB_CSP) {
+	    let blob;
+	    if (_isTextAsset(ext)) {
+	      blob = new Blob([assetData], { type: mime });
+	    } else {
+	      blob = _base64ToBlob(assetData, mime);
+	    }
+	
+	    return URL.createObjectURL(blob);
+	  } else {
+	    if (_isTextAsset(ext)) {
+	      return `data:${mime};base64,${btoa(assetData)}`;
+	    } else {
+	      return `data:${mime};base64,${assetData}`;
+	    }
+	  }
+	}
 	
 	function _matchGlobPattern(pattern, path) {
 	  if (!pattern || !path) return false;
@@ -2209,394 +2283,239 @@ const e=!0,t=e=>e,s="passthrough";let o,c={createHTML:t,createScript:t,createScr
 			  }));
 			}
 			
+			
+  // #endregion
+// #region Event Listener No changes needed here ---
+			window.addEventListener("message", (event) => {
+			    if (event.data.type === "openOptionsPage") {
+			        openOptionsPage();
+			    }
+			    if (event.data.type === "openPopupPage") {
+			        openPopupPage();
+			    }
+			    if (event.data.type === "closeOptionsPage") {
+			        closeOptionsModal();
+			    }
+			    if (event.data.type === "closePopupPage") {
+			        closePopupModal();
+			    }
+			});
+			
+			
+// #endregion
+// #region Refactored Modal Closing Functions Promise-based ---
+			
 			function closeOptionsModal() {
-			    const DURATION = 100;
-			    const backdrop = document.getElementById('extension-options-backdrop');
-			    const modal = document.getElementById('extension-options-modal');
+			    return new Promise(resolve => {
+			        const DURATION = 100;
+			        const backdrop = document.getElementById('extension-options-backdrop');
+			        const modal = document.getElementById('extension-options-modal');
 			
-			    if (!backdrop || !modal) return;
-			
-			    modal.style.animation = `modalCloseAnimation ${DURATION / 1000}s ease-out forwards`;
-			    backdrop.style.animation = `backdropFadeOut ${DURATION / 1000}s ease-out forwards`;
-			
-			    setTimeout(() => {
-			        if (confirm('Close options and reload the page?')) {
-			            window.location.reload();
-			        } else {
-			            backdrop.remove();
+			        if (!backdrop || !modal) {
+			            return resolve();
 			        }
-			    }, DURATION);
+			
+			        modal.style.animation = `modalCloseAnimation ${DURATION / 1000}s ease-out forwards`;
+			        backdrop.style.animation = `backdropFadeOut ${DURATION / 1000}s ease-out forwards`;
+			
+			        setTimeout(() => {
+			            if (confirm('Close options and reload the page?')) {
+			                window.location.reload(); // Note: This will stop further execution
+			            } else {
+			                backdrop.remove();
+			            }
+			            resolve();
+			        }, DURATION);
+			    });
 			}
 			
 			function closePopupModal() {
-			    const DURATION = 100;
-			    const backdrop = document.getElementById('extension-popup-backdrop');
-			    const modal = document.getElementById('extension-popup-modal');
+			    return new Promise(resolve => {
+			        const DURATION = 100;
+			        const backdrop = document.getElementById('extension-popup-backdrop');
+			        const modal = document.getElementById('extension-popup-modal');
 			
-			    if (!backdrop || !modal) return;
+			        if (!backdrop || !modal) {
+			            return resolve();
+			        }
 			
-			    modal.style.animation = `modalCloseAnimation ${DURATION / 1000}s ease-out forwards`;
-			    backdrop.style.animation = `backdropFadeOut ${DURATION / 1000}s ease-out forwards`;
+			        modal.style.animation = `modalCloseAnimation ${DURATION / 1000}s ease-out forwards`;
+			        backdrop.style.animation = `backdropFadeOut ${DURATION / 1000}s ease-out forwards`;
 			
-			    setTimeout(() => {
-			        backdrop.remove();
-			    }, DURATION);
+			        setTimeout(() => {
+			            backdrop.remove();
+			            resolve();
+			        }, DURATION);
+			    });
 			}
 			
-			function openPopupPage() {
+			
+// #endregion
+// #region Simplified Public API Functions ---
+			
+			async function openPopupPage() {
 			    if (!POPUP_PAGE_PATH || typeof EXTENSION_ASSETS_MAP === 'undefined') {
 			        console.warn('No popup page available.');
 			        return;
 			    }
-			    const html = EXTENSION_ASSETS_MAP[POPUP_PAGE_PATH];
-			    if (!html) { console.warn('Popup HTML not found in asset map'); return; }
-			
-			    let backdrop = document.getElementById('extension-popup-backdrop');
-			    let modal, iframe;
-			
-			    if (!backdrop) {
-			        backdrop = document.createElement('div');
-			        backdrop.id = 'extension-popup-backdrop';
-			
-			        modal = document.createElement('div');
-			        modal.id = 'extension-popup-modal';
-			
-			        const extensionName = INJECTED_MANIFEST.name || 'Extension Popup';
-			        const iconSrc = EXTENSION_ICON || 'data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSIyNCIgaGVpZ2h0PSIyNCIgdmlld0JveD0iMCAwIDI0IDI0IiBzdHJva2Utd2lkdGg9IjIiIGZpbGw9Im5vbmUiIHN0cm9rZT0iY3VycmVudENvbG9yIiBzdHJva2UtbGluZWNhcD0icm91bmQiIHN0cm9rZS1saW5lam9pbj0icm91bmQiPjxwYXRoIHN0cm9rZT0ibm9uZSIgZD0iTTAgMGgyNHYyNEgweiIgZmlsbD0ibm9uZSIvPjxwYXRoIGQ9Ik00IDdoM2ExIDEgMCAwIDAgMSAtMXYtMWEyIDIgMCAwIDEgNCAwdjFhMSAxIDAgMCAwIDEgMWgzYTEgMSAwIDAgMSAxIDF2M2ExIDEgMCAwIDAgMSAxaDFhMiAyIDAgMCAxIDAgNGgtMWExIDEgMCAwIDAgLTEgMXYzYTEgMSAwIDAgMSAtMSAxaC0zYTEgMSAwIDAgMSAtMSAtMXYtMWEyIDIgMCAwIDAgLTQgMHYxYTEgMSAwIDAgMSAtMSAxaC0zYTEgMSAwIDAgMSAtMSAtMXYtM2ExIDEgMCAwIDEgMSAtMWgxYTIgMiAwIDAgMCAwIC00aC0xYTEgMSAwIDAgMSAtMSAtMXYtM2ExIDEgMCAwIDEgMSAtMSIgLz48L3N2Zz4=';
-			
-			        backdrop.innerHTML = `
-			            <style>
-			                #extension-popup-backdrop {
-			                    position: fixed;
-			                    top: 0;
-			                    left: 0;
-			                    width: 100vw;
-			                    height: 100vh;
-			                    background: rgba(0, 0, 0, 0.13);
-			                    backdrop-filter: blur(3px);
-			                    z-index: 2147483646;
-			                    display: flex;
-			                    align-items: center;
-			                    justify-content: center;
-			                    animation: backdropFadeIn 0.3s ease-out forwards;
-			                }
-			
-			                #extension-popup-modal {
-			                    width: 400px;
-			                    height: 600px;
-			                    max-width: calc(100vw - 40px);
-			                    max-height: calc(100vh - 40px);
-			                    z-index: 2147483647;
-			                    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
-			                    --background: #ffffff;
-			                    --rad: 10px;
-			                    --border: #666;
-			                    --border-thickness: 2px;
-			                    display: flex;
-			                    flex-direction: column;
-			                    overflow: hidden;
-			                    animation: modalOpenAnimation 0.3s ease-out forwards;
-			                }
-			
-			                #extension-popup-modal .modal-header {
-			                    display: flex;
-			                    justify-content: space-between;
-			                    align-items: flex-end;
-			                    padding: 0 16px;
-			                    position: relative;
-			                    flex-shrink: 0;
-			                }
-			
-			                #extension-popup-modal .tab {
-			                    padding: 12px 16px;
-			                    color: #606266;
-			                    display: flex;
-			                    align-items: center;
-			                    gap: 8px;
-			                    font-size: 14px;
-			                    cursor: pointer;
-			                    border-radius: var(--rad) var(--rad) 0 0;
-			                    transition: background-color 0.2s ease;
-			                    user-select: none;
-			                }
-			
-			                #extension-popup-modal .tab.active, #extension-popup-modal .tab.close-button {
-			                    background-color: var(--background);
-			                    border: var(--border-thickness) solid var(--border);
-			                    border-bottom-color: var(--background);
-			                    margin-bottom: -1px;
-			                    z-index: 1;
-			                    color: #303133;
-			                    font-weight: 500;
-			                }
-			
-			                #extension-popup-modal .tab.close-button {
-			                    padding: 8px;
-			                }
-			
-			                #extension-popup-modal .tab.close-button:hover {
-			                    background-color: #f5f7fa;
-			                }
-			
-			                #extension-popup-modal .tab svg {
-			                    stroke: currentColor;
-			                }
-			
-			                #extension-popup-modal .tab.active svg {
-			                    width: 16px;
-			                    height: 16px;
-			                }
-			
-			                #extension-popup-modal .tab.close-button svg {
-			                    width: 20px;
-			                    height: 20px;
-			                }
-			
-			                #extension-popup-modal .modal-content {
-			                    flex-grow: 1;
-			                    position: relative;
-			                    border-radius: var(--rad);
-			                    overflow: hidden;
-			                    bottom: calc(var(--border-thickness) - 1px);
-			                    border: var(--border-thickness) solid var(--border);
-			                }
-			
-			                #extension-popup-modal .modal-content iframe {
-			                    width: 100%;
-			                    height: 100%;
-			                    border: 0;
-			                    background: white;
-			                }
-			            </style>
-			        `;
-			
-			        modal.innerHTML = `
-			            <div class="modal-header">
-			                <div class="tab active">
-			                    <img src="${iconSrc}" style="width: 16px; height: 16px;" onerror="this.style.display='none'">
-			                    <span>${extensionName}</span>
-			                </div>
-			                <div class="tab close-button">
-			                    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
-			                       <line x1="18" y1="6" x2="6" y2="18"></line>
-			                       <line x1="6" y1="6" x2="18" y2="18"></line>
-			                    </svg>
-			                </div>
-			            </div>
-			            <div class="modal-content">
-			                <iframe></iframe>
-			            </div>
-			        `;
-			
-			        backdrop.appendChild(modal);
-			
-			        backdrop.addEventListener('click', (e) => {
-			            if (e.target === backdrop) {
-			                closePopupModal();
-			            }
-			        });
-			        modal.querySelector('.tab.close-button').addEventListener('click', closePopupModal);
-			        document.body.appendChild(backdrop);
-			        iframe = modal.querySelector('iframe');
-			    } else {
-			        modal = backdrop.querySelector('#extension-popup-modal');
-			        iframe = modal.querySelector('iframe');
-			        if (!iframe) {
-			            iframe = document.createElement('iframe');
-			            modal.querySelector('.modal-content').appendChild(iframe);
-			        }
-			        backdrop.style.display = 'flex';
-			    }
-			
-			    try {
-			        const polyfillString = generateCompletePolyfillForIframe();
-			
-			        const doc = new DOMParser().parseFromString(html, 'text/html');
-			        const script = doc.createElement('script');
-			        script.textContent = polyfillString;
-			        doc.head.insertAdjacentElement("afterbegin", script);
-			        iframe.srcdoc = doc.documentElement.outerHTML;
-			    } catch(e) {
-			        console.error('Error generating complete polyfill for iframe', e);
-			        iframe.srcdoc = html;
-			    }
+			    await openModal({
+			        type: 'popup',
+			        pagePath: POPUP_PAGE_PATH,
+			        defaultTitle: 'Extension Popup',
+			        closeFn: closePopupModal
+			    });
 			}
 			
-			function openOptionsPage() {
+			async function openOptionsPage() {
 			    if (!OPTIONS_PAGE_PATH || typeof EXTENSION_ASSETS_MAP === 'undefined') {
 			        console.warn('No options page available.');
 			        return;
 			    }
-			    const html = EXTENSION_ASSETS_MAP[OPTIONS_PAGE_PATH];
-			    if (!html) { console.warn('Options HTML not found in asset map'); return; }
+			    await openModal({
+			        type: 'options',
+			        pagePath: OPTIONS_PAGE_PATH,
+			        defaultTitle: 'Extension Options',
+			        closeFn: closeOptionsModal
+			    });
+			}
 			
-			    let backdrop = document.getElementById('extension-options-backdrop');
+			
+// #endregion
+// #region Generic Modal Logic Style Injection ---
+			
+			let stylesInjected = false;
+			function injectGlobalStyles() {
+			    if (stylesInjected) return;
+			    stylesInjected = true;
+			
+			    const styles = `
+			        .extension-backdrop {
+			            position: fixed;
+			            top: 0; left: 0;
+			            width: 100vw; height: 100vh;
+			            background: rgba(0, 0, 0, 0.13);
+			            backdrop-filter: blur(3px);
+			            z-index: 2147483646;
+			            display: flex;
+			            align-items: center;
+			            justify-content: center;
+			            animation: backdropFadeIn 0.3s ease-out forwards;
+			        }
+			
+			        .extension-modal {
+			            z-index: 2147483647;
+			            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+			            --background: #ffffff;
+			            --rad: 10px;
+			            --border: #666;
+			            --border-thickness: 2px;
+			            display: flex;
+			            flex-direction: column;
+			            overflow: hidden;
+			            animation: modalOpenAnimation 0.3s ease-out forwards;
+			        }
+			
+			        /* Size specific styles */
+			        .extension-modal.popup-size {
+			            width: 400px; height: 600px;
+			            max-width: calc(100vw - 40px);
+			            max-height: calc(100vh - 40px);
+			        }
+			        .extension-modal.options-size {
+			            width: calc(100vw - 80px); height: calc(100vh - 80px);
+			            max-width: 1200px;
+			            max-height: 800px;
+			        }
+			
+			        /* Common modal components */
+			        .extension-modal .modal-header {
+			            display: flex; justify-content: space-between; align-items: flex-end;
+			            padding: 0 16px; position: relative; flex-shrink: 0;
+			        }
+			        .extension-modal .tab {
+			            padding: 12px 16px; color: #606266;
+			            display: flex; align-items: center; gap: 8px;
+			            font-size: 14px; cursor: pointer;
+			            border-radius: var(--rad) var(--rad) 0 0;
+			            transition: background-color 0.2s ease; user-select: none;
+			        }
+			        .extension-modal .tab.active, .extension-modal .tab.close-button {
+			            background-color: var(--background);
+			            border: var(--border-thickness) solid var(--border);
+			            border-bottom-color: var(--background);
+			            margin-bottom: -1px; z-index: 1;
+			            color: #303133; font-weight: 500;
+			        }
+			        .extension-modal .tab.close-button { padding: 8px; }
+			        .extension-modal .tab.close-button:hover { background-color: #f5f7fa; }
+			        .extension-modal .tab svg { stroke: currentColor; }
+			        .extension-modal .tab.active img { width: 16px; height: 16px; }
+			        .extension-modal .tab.close-button svg { width: 20px; height: 20px; }
+			
+			        .extension-modal .modal-content {
+			            flex-grow: 1; position: relative;
+			            border-radius: var(--rad); overflow: hidden;
+			            bottom: calc(var(--border-thickness) - 1px);
+			            border: var(--border-thickness) solid var(--border);
+			        }
+			        .extension-modal .modal-content iframe {
+			            width: 100%; height: 100%; border: 0; background: white;
+			        }
+			
+			        /* Animations */
+			        @keyframes backdropFadeIn { from { opacity: 0; backdrop-filter: blur(0px); } to { opacity: 1; backdrop-filter: blur(3px); } }
+			        @keyframes backdropFadeOut { from { opacity: 1; backdrop-filter: blur(3px); } to { opacity: 0; backdrop-filter: blur(0px); } }
+			        @keyframes modalOpenAnimation { from { transform: scaleY(0.8); opacity: 0; } to { transform: scaleY(1); opacity: 1; } }
+			        @keyframes modalCloseAnimation { from { transform: scaleY(1); opacity: 1; } to { transform: scaleY(0.8); opacity: 0; } }
+			    `;
+			    const styleSheet = document.createElement("style");
+			    styleSheet.id = "extension-global-styles";
+			    styleSheet.innerText = styles;
+			    document.head.appendChild(styleSheet);
+			}
+			
+			async function openModal(config) {
+			    injectGlobalStyles();
+			
+			    const { type, pagePath, defaultTitle, closeFn } = config;
+			    const html = EXTENSION_ASSETS_MAP[pagePath];
+			    if (!html) {
+			        console.warn(`${defaultTitle} HTML not found in asset map`);
+			        return;
+			    }
+			
+			    const backdropId = `extension-${type}-backdrop`;
+			    const modalId = `extension-${type}-modal`;
+			    const sizeClass = `${type}-size`;
+			
+// #endregion
+    // #region Smoothly close the other modal if it s open ---
+			    const otherType = type === 'popup' ? 'options' : 'popup';
+			    const otherBackdrop = document.getElementById(`extension-${otherType}-backdrop`);
+			    if (otherBackdrop) {
+			        // Await the correct close function
+			        await (otherType === 'popup' ? closePopupModal() : closeOptionsModal());
+			    }
+			
+			    let backdrop = document.getElementById(backdropId);
 			    let modal, iframe;
 			
 			    if (!backdrop) {
 			        backdrop = document.createElement('div');
-			        backdrop.id = 'extension-options-backdrop';
+			        backdrop.id = backdropId;
+			        backdrop.className = 'extension-backdrop';
 			
 			        modal = document.createElement('div');
-			        modal.id = 'extension-options-modal';
+			        modal.id = modalId;
+			        modal.className = `extension-modal ${sizeClass}`;
 			
-			        const extensionName = INJECTED_MANIFEST.name || 'Extension Options';
+			        const extensionName = INJECTED_MANIFEST.name || defaultTitle;
 			        const iconSrc = EXTENSION_ICON || 'data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSIyNCIgaGVpZ2h0PSIyNCIgdmlld0JveD0iMCAwIDI0IDI0IiBzdHJva2Utd2lkdGg9IjIiIGZpbGw9Im5vbmUiIHN0cm9rZT0iY3VycmVudENvbG9yIiBzdHJva2UtbGluZWNhcD0icm91bmQiIHN0cm9rZS1saW5lam9pbj0icm91bmQiPjxwYXRoIHN0cm9rZT0ibm9uZSIgZD0iTTAgMGgyNHYyNEgweiIgZmlsbD0ibm9uZSIvPjxwYXRoIGQ9Ik00IDdoM2ExIDEgMCAwIDAgMSAtMXYtMWEyIDIgMCAwIDEgNCAwdjFhMSAxIDAgMCAwIDEgMWgzYTEgMSAwIDAgMSAxIDF2M2ExIDEgMCAwIDAgMSAxaDFhMiAyIDAgMCAxIDAgNGgtMWExIDEgMCAwIDAgLTEgMXYzYTEgMSAwIDAgMSAtMSAxaC0zYTEgMSAwIDAgMSAtMSAtMXYtMWEyIDIgMCAwIDAgLTQgMHYxYTEgMSAwIDAgMSAtMSAxaC0zYTEgMSAwIDAgMSAtMSAtMXYtM2ExIDEgMCAwIDEgMSAtMWgxYTIgMiAwIDAgMCAwIC00aC0xYTEgMSAwIDAgMSAtMSAtMXYtM2ExIDEgMCAwIDEgMSAtMSIgLz48L3N2Zz4=';
-			
-			        backdrop.innerHTML = `
-			            <style>
-			                #extension-options-backdrop {
-			                    position: fixed;
-			                    top: 0;
-			                    left: 0;
-			                    width: 100vw;
-			                    height: 100vh;
-			                    background: rgba(0, 0, 0, 0.13);
-			                    backdrop-filter: blur(3px);
-			                    z-index: 2147483646;
-			                    display: flex;
-			                    align-items: center;
-			                    justify-content: center;
-			                    animation: backdropFadeIn 0.3s ease-out forwards;
-			                }
-			
-			                @keyframes backdropFadeIn {
-			                    from {
-			                        opacity: 0;
-			                        backdrop-filter: blur(0px);
-			                    }
-			                    to {
-			                        opacity: 1;
-			                        backdrop-filter: blur(3px);
-			                    }
-			                }
-			
-			                @keyframes backdropFadeOut {
-			                    from {
-			                        opacity: 1;
-			                        backdrop-filter: blur(3px);
-			                    }
-			                    to {
-			                        opacity: 0;
-			                        backdrop-filter: blur(0px);
-			                    }
-			                }
-			
-			                @keyframes modalOpenAnimation {
-			                    from {
-			                        transform: scaleY(0.8);
-			                        opacity: 0;
-			                    }
-			                    to {
-			                        transform: scaleY(1);
-			                        opacity: 1;
-			                    }
-			                }
-			
-			                @keyframes modalCloseAnimation {
-			                    from {
-			                        transform: scaleY(1);
-			                        opacity: 1;
-			                    }
-			                    to {
-			                        transform: scaleY(0.8);
-			                        opacity: 0;
-			                    }
-			                }
-			
-			                #extension-options-modal {
-			                    width: calc(100vw - 80px);
-			                    height: calc(100vh - 80px);
-			                    max-width: 1200px;
-			                    max-height: 800px;
-			                    z-index: 2147483647;
-			                    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
-			                    --background: #ffffff;
-			                    --rad: 10px;
-			                    --border: #666;
-			                    --border-thickness: 2px;
-			                    display: flex;
-			                    flex-direction: column;
-			                    overflow: hidden;
-			                    animation: modalOpenAnimation 0.3s ease-out forwards;
-			                }
-			
-			                #extension-options-modal .modal-header {
-			                    display: flex;
-			                    justify-content: space-between;
-			                    align-items: flex-end;
-			                    padding: 0 16px;
-			                    position: relative;
-			                    flex-shrink: 0;
-			                }
-			
-			                #extension-options-modal .tab {
-			                    padding: 12px 16px;
-			                    color: #606266;
-			                    display: flex;
-			                    align-items: center;
-			                    gap: 8px;
-			                    font-size: 14px;
-			                    cursor: pointer;
-			                    border-radius: var(--rad) var(--rad) 0 0;
-			                    transition: background-color 0.2s ease;
-			                    user-select: none;
-			                }
-			
-			                #extension-options-modal .tab.active, #extension-options-modal .tab.close-button {
-			                    background-color: var(--background);
-			                    border: var(--border-thickness) solid var(--border);
-			                    border-bottom-color: var(--background);
-			                    margin-bottom: -1px;
-			                    z-index: 1;
-			                    color: #303133;
-			                    font-weight: 500;
-			                }
-			
-			                #extension-options-modal .tab.close-button {
-			                    padding: 8px;
-			                }
-			
-			                #extension-options-modal .tab.close-button:hover {
-			                    background-color: #f5f7fa;
-			                }
-			
-			                #extension-options-modal .tab svg {
-			                    stroke: currentColor;
-			                }
-			
-			                #extension-options-modal .tab.active svg {
-			                    width: 16px;
-			                    height: 16px;
-			                }
-			
-			                #extension-options-modal .tab.close-button svg {
-			                    width: 20px;
-			                    height: 20px;
-			                }
-			
-			                #extension-options-modal .modal-content {
-			                    flex-grow: 1;
-			                    position: relative;
-			                    border-radius: var(--rad);
-			                    overflow: hidden;
-			                    bottom: calc(var(--border-thickness) - 1px);
-			                    border: var(--border-thickness) solid var(--border);
-			                }
-			
-			                #extension-options-modal .modal-content iframe {
-			                    width: 100%;
-			                    height: 100%;
-			                    border: 0;
-			                    background: white;
-			                }
-			            </style>
-			        `;
 			
 			        modal.innerHTML = `
 			            <div class="modal-header">
 			                <div class="tab active">
-			                    <img src="${iconSrc}" style="width: 16px; height: 16px;" onerror="this.style.display='none'">
+			                    <img src="${iconSrc}" onerror="this.style.display='none'">
 			                    <span>${extensionName}</span>
 			                </div>
 			                <div class="tab close-button">
@@ -2614,51 +2533,70 @@ const e=!0,t=e=>e,s="passthrough";let o,c={createHTML:t,createScript:t,createScr
 			        backdrop.appendChild(modal);
 			
 			        backdrop.addEventListener('click', (e) => {
-			            if (e.target === backdrop) {
-			                closeOptionsModal();
-			            }
+			            if (e.target === backdrop) closeFn();
 			        });
-			        modal.querySelector('.tab.close-button').addEventListener('click', closeOptionsModal);
+			        modal.querySelector('.close-button').addEventListener('click', closeFn);
+			        
 			        document.body.appendChild(backdrop);
 			        iframe = modal.querySelector('iframe');
+			
 			    } else {
-			        modal = backdrop.querySelector('#extension-options-modal');
-			        iframe = modal.querySelector('iframe');
-			        if (!iframe) {
-			            iframe = document.createElement('iframe');
-			            modal.querySelector('.modal-content').appendChild(iframe);
-			        }
+			        // If it already exists, just make sure it's visible
 			        backdrop.style.display = 'flex';
+			        modal = backdrop.querySelector('.extension-modal');
+			        iframe = modal.querySelector('iframe');
 			    }
 			
+			    // Load content into iframe
 			    try {
 			        const polyfillString = generateCompletePolyfillForIframe();
-			
 			        const doc = new DOMParser().parseFromString(html, 'text/html');
 			        const script = doc.createElement('script');
 			        script.textContent = polyfillString;
 			        doc.head.insertAdjacentElement("afterbegin", script);
 			        iframe.srcdoc = doc.documentElement.outerHTML;
-			    } catch(e) {
+			    } catch (e) {
 			        console.error('Error generating complete polyfill for iframe', e);
 			        iframe.srcdoc = html;
 			    }
 			}
 			
 			function generateCompletePolyfillForIframe() {
-			    const polyfillString = "\n// -- Messaging implementation\n\nfunction createEventBus(\n  scopeId,\n  type = \"page\", // \"page\" or \"iframe\"\n  { allowedOrigin = \"*\", children = [], parentWindow = null } = {},\n) {\n  if (!scopeId) throw new Error(\"createEventBus requires a scopeId\");\n\n  const handlers = {};\n\n  function handleIncoming(ev) {\n    if (allowedOrigin !== \"*\" && ev.origin !== allowedOrigin) return;\n\n    const msg = ev.data;\n    if (!msg || msg.__eventBus !== true || msg.scopeId !== scopeId) return;\n\n    const { event, payload } = msg;\n\n    // PAGE: if it's an INIT from an iframe, adopt it\n    if (type === \"page\" && event === \"__INIT__\") {\n      const win = ev.source;\n      if (win && !children.includes(win)) {\n        children.push(win);\n      }\n      return;\n    }\n\n    (handlers[event] || []).forEach((fn) =>\n      fn(payload, { origin: ev.origin, source: ev.source }),\n    );\n  }\n\n  window.addEventListener(\"message\", handleIncoming);\n\n  function emitTo(win, event, payload) {\n    const envelope = {\n      __eventBus: true,\n      scopeId,\n      event,\n      payload,\n    };\n    win.postMessage(envelope, allowedOrigin);\n  }\n\n  // IFRAME: announce to page on startup\n  if (type === \"iframe\") {\n    setTimeout(() => {\n      const pw = parentWindow || window.parent;\n      if (pw && pw.postMessage) {\n        emitTo(pw, \"__INIT__\", null);\n      }\n    }, 0);\n  }\n\n  return {\n    on(event, fn) {\n      handlers[event] = handlers[event] || [];\n      handlers[event].push(fn);\n    },\n    off(event, fn) {\n      if (!handlers[event]) return;\n      handlers[event] = handlers[event].filter((h) => h !== fn);\n    },\n    /**\n     * Emits an event.\n     * @param {string} event - The event name.\n     * @param {any} payload - The event payload.\n     * @param {object} [options] - Emission options.\n     * @param {Window} [options.to] - A specific window to target. If provided, message is ONLY sent to the target.\n     */\n    emit(event, payload, { to } = {}) {\n      // If a specific target window is provided, send only to it and DO NOT dispatch locally.\n      // This prevents a port from receiving its own messages.\n      if (to) {\n        if (to && typeof to.postMessage === \"function\") {\n          emitTo(to, event, payload);\n        }\n        return; // Exit after targeted send.\n      }\n\n      // For broadcast messages (no 'to' target), dispatch locally first.\n      (handlers[event] || []).forEach((fn) =>\n        fn(payload, { origin: location.origin, source: window }),\n      );\n\n      // Then propagate the broadcast to other windows.\n      if (type === \"page\") {\n        children.forEach((win) => emitTo(win, event, payload));\n      } else {\n        const pw = parentWindow || window.parent;\n        if (pw && pw.postMessage) {\n          emitTo(pw, event, payload);\n        }\n      }\n    },\n  };\n}\n\nfunction createRuntime(type = \"background\", bus) {\n  let nextId = 1;\n  const pending = {};\n  const msgListeners = [];\n\n  let nextPortId = 1;\n  const ports = {};\n  const onConnectListeners = [];\n\n  function parseArgs(args) {\n    let target, message, options, callback;\n    const arr = [...args];\n    if (arr.length === 0) {\n      throw new Error(\"sendMessage requires at least one argument\");\n    }\n    if (arr.length === 1) {\n      return { message: arr[0] };\n    }\n    // last object could be options\n    if (\n      arr.length &&\n      typeof arr[arr.length - 1] === \"object\" &&\n      !Array.isArray(arr[arr.length - 1])\n    ) {\n      options = arr.pop();\n    }\n    // last function is callback\n    if (arr.length && typeof arr[arr.length - 1] === \"function\") {\n      callback = arr.pop();\n    }\n    if (\n      arr.length === 2 &&\n      (typeof arr[0] === \"string\" || typeof arr[0] === \"number\")\n    ) {\n      [target, message] = arr;\n    } else {\n      [message] = arr;\n    }\n    return { target, message, options, callback };\n  }\n\n  if (type === \"background\") {\n    bus.on(\"__REQUEST__\", ({ id, message }, { source }) => {\n      let responded = false,\n        isAsync = false;\n      function sendResponse(resp) {\n        if (responded) return;\n        responded = true;\n        // Target the response directly back to the window that sent the request.\n        bus.emit(\"__RESPONSE__\", { id, response: resp }, { to: source });\n      }\n      const results = msgListeners\n        .map((fn) => {\n          try {\n            // msg, sender, sendResponse\n            const ret = fn(message, { id, tab: { id: source } }, sendResponse);\n            if (ret === true || (ret && typeof ret.then === \"function\")) {\n              isAsync = true;\n              return ret;\n            }\n            return ret;\n          } catch (e) {\n            console.error(e);\n          }\n        })\n        .filter((r) => r !== undefined);\n\n      const promises = results.filter((r) => r && typeof r.then === \"function\");\n      if (!isAsync && promises.length === 0) {\n        const out = results.length === 1 ? results[0] : results;\n        sendResponse(out);\n      } else if (promises.length) {\n        Promise.all(promises).then((vals) => {\n          if (!responded) {\n            const out = vals.length === 1 ? vals[0] : vals;\n            sendResponse(out);\n          }\n        });\n      }\n    });\n  }\n\n  if (type !== \"background\") {\n    bus.on(\"__RESPONSE__\", ({ id, response }) => {\n      const entry = pending[id];\n      if (!entry) return;\n      entry.resolve(response);\n      if (entry.callback) entry.callback(response);\n      delete pending[id];\n    });\n  }\n\n  function sendMessage(...args) {\n    if (type === \"background\") {\n      throw new Error(\"Background cannot sendMessage to itself\");\n    }\n    const { target, message, callback } = parseArgs(args);\n    const id = nextId++;\n    const promise = new Promise((resolve) => {\n      pending[id] = { resolve, callback };\n      bus.emit(\"__REQUEST__\", { id, message });\n    });\n    return promise;\n  }\n\n  bus.on(\"__PORT_CONNECT__\", ({ portId, name }, { source }) => {\n    if (type !== \"background\") return;\n    const backgroundPort = makePort(\"background\", portId, name, source);\n    ports[portId] = backgroundPort;\n\n    onConnectListeners.forEach((fn) => fn(backgroundPort));\n\n    // send back a CONNECT_ACK so the client can\n    // start listening on its end:\n    bus.emit(\"__PORT_CONNECT_ACK__\", { portId, name }, { to: source });\n  });\n\n  // Clients handle the ACK and finalize their Port object by learning the remote window.\n  bus.on(\"__PORT_CONNECT_ACK__\", ({ portId, name }, { source }) => {\n    if (type === \"background\") return; // ignore\n    const p = ports[portId];\n    if (!p) return;\n    // Call the port's internal finalize method to complete the handshake\n    if (p._finalize) {\n      p._finalize(source);\n    }\n  });\n\n  // Any port message travels via \"__PORT_MESSAGE__\"\n  bus.on(\"__PORT_MESSAGE__\", (envelope, { source }) => {\n    const { portId } = envelope;\n    const p = ports[portId];\n    if (!p) return;\n    p._receive(envelope, source);\n  });\n\n  // Any port disconnect:\n  bus.on(\"__PORT_DISCONNECT__\", ({ portId }) => {\n    const p = ports[portId];\n    if (!p) return;\n    p._disconnect();\n    delete ports[portId];\n  });\n\n  // Refactored makePort to correctly manage internal state and the connection handshake.\n  function makePort(side, portId, name, remoteWindow) {\n    let onMessageHandlers = [];\n    let onDisconnectHandlers = [];\n    let buffer = [];\n    // Unique instance ID for this port instance\n    const instanceId = Math.random().toString(36).slice(2) + Date.now();\n    // These state variables are part of the closure and are updated by _finalize\n    let _ready = side === \"background\";\n\n    function _drainBuffer() {\n      buffer.forEach((m) => _post(m));\n      buffer = [];\n    }\n\n    function _post(msg) {\n      // Always use the 'to' parameter for port messages, making them directional.\n      // Include senderInstanceId\n      bus.emit(\n        \"__PORT_MESSAGE__\",\n        { portId, msg, senderInstanceId: instanceId },\n        { to: remoteWindow },\n      );\n    }\n\n    function postMessage(msg) {\n      if (!_ready) {\n        buffer.push(msg);\n      } else {\n        _post(msg);\n      }\n    }\n\n    function _receive(envelope, source) {\n      // envelope: { msg, senderInstanceId }\n      if (envelope.senderInstanceId === instanceId) return; // Don't dispatch to self\n      onMessageHandlers.forEach((fn) =>\n        fn(envelope.msg, { id: portId, tab: { id: source } }),\n      );\n    }\n\n    function disconnect() {\n      // Also use the 'to' parameter for disconnect messages\n      bus.emit(\"__PORT_DISCONNECT__\", { portId }, { to: remoteWindow });\n      _disconnect();\n      delete ports[portId];\n    }\n\n    function _disconnect() {\n      onDisconnectHandlers.forEach((fn) => fn());\n      onMessageHandlers = [];\n      onDisconnectHandlers = [];\n    }\n\n    // This function is called on the client port when the ACK is received from background.\n    // It updates the port's state, completing the connection.\n    function _finalize(win) {\n      remoteWindow = win; // <-- This is the crucial part: learn the destination\n      _ready = true;\n      _drainBuffer();\n    }\n\n    return {\n      name,\n      sender: {\n        id: portId,\n      },\n      onMessage: {\n        addListener(fn) {\n          onMessageHandlers.push(fn);\n        },\n        removeListener(fn) {\n          onMessageHandlers = onMessageHandlers.filter((x) => x !== fn);\n        },\n      },\n      onDisconnect: {\n        addListener(fn) {\n          onDisconnectHandlers.push(fn);\n        },\n        removeListener(fn) {\n          onDisconnectHandlers = onDisconnectHandlers.filter((x) => x !== fn);\n        },\n      },\n      postMessage,\n      disconnect,\n      // Internal methods used by the runtime\n      _receive,\n      _disconnect,\n      _finalize, // Expose the finalizer for the ACK handler\n    };\n  }\n\n  function connect(connectInfo = {}) {\n    if (type === \"background\") {\n      throw new Error(\"Background must use onConnect, not connect()\");\n    }\n    const name = connectInfo.name || \"\";\n    const portId = nextPortId++;\n    // create the client side port\n    // remoteWindow is initially null; it will be set by _finalize upon ACK.\n    const clientPort = makePort(\"client\", portId, name, null);\n    ports[portId] = clientPort;\n\n    // fire the connect event across the bus\n    bus.emit(\"__PORT_CONNECT__\", { portId, name });\n    return clientPort;\n  }\n\n  function onConnect(fn) {\n    if (type !== \"background\") {\n      throw new Error(\"connect event only fires in background\");\n    }\n    onConnectListeners.push(fn);\n  }\n\n  return {\n    // rpc:\n    sendMessage,\n    onMessage: {\n      addListener(fn) {\n        msgListeners.push(fn);\n      },\n      removeListener(fn) {\n        const i = msgListeners.indexOf(fn);\n        if (i >= 0) msgListeners.splice(i, 1);\n      },\n    },\n\n    // port API:\n    connect,\n    onConnect: {\n      addListener(fn) {\n        onConnect(fn);\n      },\n      removeListener(fn) {\n        const i = onConnectListeners.indexOf(fn);\n        if (i >= 0) onConnectListeners.splice(i, 1);\n      },\n    },\n  };\n}\n\n\n// --- Abstraction Layer: PostMessage Target\n\nlet nextRequestId = 1;\nconst pendingRequests = new Map(); // requestId -> { resolve, reject, timeout }\n\nfunction sendAbstractionRequest(method, args = []) {\n  return new Promise((resolve, reject) => {\n    const requestId = nextRequestId++;\n\n    const timeout = setTimeout(() => {\n      pendingRequests.delete(requestId);\n      reject(new Error(`PostMessage request timeout for method: ${method}`));\n    }, 10000);\n\n    pendingRequests.set(requestId, { resolve, reject, timeout });\n\n    window.parent.postMessage({\n      type: \"abstraction-request\",\n      requestId,\n      method,\n      args,\n    });\n  });\n}\n\nwindow.addEventListener(\"message\", (event) => {\n  const { type, requestId, success, result, error } = event.data;\n\n  if (type === \"abstraction-response\") {\n    const pending = pendingRequests.get(requestId);\n    if (pending) {\n      clearTimeout(pending.timeout);\n      pendingRequests.delete(requestId);\n\n      if (success) {\n        pending.resolve(result);\n      } else {\n        const err = new Error(error.message);\n        err.stack = error.stack;\n        pending.reject(err);\n      }\n    }\n  }\n});\n\nasync function _storageSet(items) {\n  return sendAbstractionRequest(\"_storageSet\", [items]);\n}\n\nasync function _storageGet(keys) {\n  return sendAbstractionRequest(\"_storageGet\", [keys]);\n}\n\nasync function _storageRemove(keysToRemove) {\n  return sendAbstractionRequest(\"_storageRemove\", [keysToRemove]);\n}\n\nasync function _storageClear() {\n  return sendAbstractionRequest(\"_storageClear\");\n}\n\nasync function _fetch(url, options) {\n  return sendAbstractionRequest(\"_fetch\", [url, options]);\n}\n\nfunction _registerMenuCommand(name, func) {\n  console.warn(\"_registerMenuCommand called from iframe context:\", name);\n  return sendAbstractionRequest(\"_registerMenuCommand\", [\n    name,\n    func.toString(),\n  ]);\n}\n\nfunction _openTab(url) {\n  return sendAbstractionRequest(\"_openTab\", [url]);\n}\n\nasync function _initStorage() {\n  return sendAbstractionRequest(\"_initStorage\");\n}\n\n\n// --- Extension Assets Map & Helper Functions ---\nconst EXTENSION_ASSETS_MAP = {{EXTENSION_ASSETS_MAP}};\n\nfunction _testBlobCSP() {\n  try {\n    const code = `console.log(\"Blob CSP test\");`;\n    const blob = new Blob([code], { type: 'application/javascript' });\n    const blobUrl = URL.createObjectURL(blob);\n\n    const script = document.createElement('script');\n    script.src = blobUrl;\n\n    let blocked = false;\n    script.onerror = () => {\n      blocked = true;\n    };\n\n    document.head.appendChild(script);\n\n    return new Promise((resolve) => {\n      setTimeout(() => {\n        resolve(!blocked);\n        document.head.removeChild(script);\n        URL.revokeObjectURL(blobUrl);\n      }, 100);\n    });\n  } catch (e) {\n    return Promise.resolve(false);\n  }\n}\n\nlet CAN_USE_BLOB_CSP = false;\n\n_testBlobCSP().then((result) => {\n  CAN_USE_BLOB_CSP = result;\n});\n\nfunction _base64ToBlob(base64, mimeType = 'application/octet-stream') {\n  const binary = atob(base64);\n  const len = binary.length;\n  const bytes = new Uint8Array(len);\n  for (let i = 0; i < len; i++) bytes[i] = binary.charCodeAt(i);\n  return new Blob([bytes], { type: mimeType });\n}\n\nfunction _getMimeTypeFromPath(p) {\n  const ext = (p.split('.').pop() || '').toLowerCase();\n  const map = {\n    html: 'text/html',\n    htm: 'text/html',\n    js: 'text/javascript',\n    css: 'text/css',\n    json: 'application/json',\n    png: 'image/png',\n    jpg: 'image/jpeg',\n    jpeg: 'image/jpeg',\n    gif: 'image/gif',\n    svg: 'image/svg+xml',\n    webp: 'image/webp',\n    ico: 'image/x-icon',\n    woff: 'font/woff',\n    woff2: 'font/woff2',\n    ttf: 'font/ttf',\n    otf: 'font/otf',\n    eot: 'application/vnd.ms-fontobject'\n  };\n  return map[ext] || 'application/octet-stream';\n}\n\nfunction _isTextAsset(ext) {\n  return ['html','htm','js','css','json','svg','txt','xml'].includes(ext);\n}\n\nfunction _createAssetUrl(path = '') {\n  if (path.startsWith('/')) path = path.slice(1);\n  const assetData = EXTENSION_ASSETS_MAP[path];\n  if (typeof assetData === 'undefined') {\n    console.warn('[runtime.getURL] Asset not found for', path);\n    return path;\n  }\n\n  const mime = _getMimeTypeFromPath(path);\n  const ext = (path.split('.').pop() || '').toLowerCase();\n\n  if (CAN_USE_BLOB_CSP) {\n    let blob;\n    if (_isTextAsset(ext)) {\n      blob = new Blob([assetData], { type: mime });\n    } else {\n      blob = _base64ToBlob(assetData, mime);\n    }\n\n    return URL.createObjectURL(blob);\n  } else {\n    if (_isTextAsset(ext)) {\n      return `data:${mime};base64,${btoa(assetData)}`;\n    } else {\n      return `data:${mime};base64,${assetData}`;\n    }\n  }\n}\n\n// -- Polyfill Implementation\nfunction buildPolyfill({ isBackground = false, isOtherPage = false } = {}) {\n  // Generate a unique context ID for this polyfill instance\n  const contextType = isBackground\n    ? \"background\"\n    : isOtherPage\n      ? \"options\"\n      : \"content\";\n  const contextId = `${contextType}_${Math.random()\n    .toString(36)\n    .substring(2, 15)}`;\n\n  const IS_IFRAME = \"true\" === \"true\";\n  const BUS = (function () {\n    if (globalThis.__BUS) {\n      return globalThis.__BUS;\n    }\n    globalThis.__BUS = createEventBus(\n      \"json-formatter\",\n      IS_IFRAME ? \"iframe\" : \"page\"\n    );\n    return globalThis.__BUS;\n  })();\n  const RUNTIME = createRuntime(isBackground ? \"background\" : \"tab\", BUS);\n  const createNoopListeners = () => ({\n    addListener: (callback) => {\n      console.log(\"addListener\", callback);\n    },\n    removeListener: (callback) => {\n      console.log(\"removeListener\", callback);\n    },\n  });\n  // TODO: Stub\n  const storageChangeListeners = new Set();\n  function broadcastStorageChange(changes, areaName) {\n    storageChangeListeners.forEach((listener) => {\n      listener(changes, areaName);\n    });\n  }\n\n  // --- Chrome polyfill\n  let chrome = {\n    extension: {\n      isAllowedIncognitoAccess: () => Promise.resolve(true),\n      sendMessage: (...args) => _messagingHandler.sendMessage(...args),\n    },\n    permissions: {\n      request: (permissions, callback) => {\n        if (typeof callback === \"function\") {\n          callback(permissions);\n        }\n        return Promise.resolve(permissions);\n      },\n      contains: (permissions, callback) => {\n        if (typeof callback === \"function\") {\n          callback(true);\n        }\n        return Promise.resolve(true);\n      },\n    },\n    i18n: {\n      getUILanguage: () => {\n        return USED_LOCALE || \"en\";\n      },\n      getMessage: (key) => {\n        if (typeof LOCALE_KEYS !== \"undefined\" && LOCALE_KEYS[key]) {\n          return LOCALE_KEYS[key].message;\n        }\n        return key;\n      },\n    },\n    alarms: {\n      onAlarm: createNoopListeners(),\n      create: () => {\n        console.log(\"alarms.create\", arguments);\n      },\n      get: () => {\n        console.log(\"alarms.get\", arguments);\n      },\n    },\n    runtime: {\n      ...RUNTIME,\n      onInstalled: createNoopListeners(),\n      onStartup: createNoopListeners(),\n      openOptionsPage: () => {\n        const url = chrome.runtime.getURL(OPTIONS_PAGE_PATH);\n        console.log(\"openOptionsPage\", _openTab, url);\n        _openTab(url);\n      },\n      getManifest: () => {\n        // The manifest object will be injected into the scope where buildPolyfill is called\n        if (typeof INJECTED_MANIFEST !== \"undefined\") {\n          return JSON.parse(JSON.stringify(INJECTED_MANIFEST)); // Return deep copy\n        }\n        console.warn(\n          \"INJECTED_MANIFEST not found for chrome.runtime.getManifest\"\n        );\n        return { name: \"Unknown\", version: \"0.0\", manifest_version: 2 };\n      },\n      getURL: (path) => {\n        if (!path) return \"\";\n        if (path.startsWith(\"/\")) {\n          path = path.substring(1);\n        }\n\n        if (typeof _createAssetUrl === \"function\") {\n          return _createAssetUrl(path);\n        }\n\n        console.warn(\n          `chrome.runtime.getURL fallback for '${path}'. Assets may not be available.`\n        );\n        // Attempt a relative path resolution (highly context-dependent and likely wrong)\n        try {\n          if (window.location.protocol.startsWith(\"http\")) {\n            return new URL(path, window.location.href).toString();\n          }\n        } catch (e) {\n          /* ignore error, fallback */\n        }\n        return path;\n      },\n      id: \"polyfilled-extension-\" + Math.random().toString(36).substring(2, 15),\n      lastError: null,\n      getPlatformInfo: async () => {\n        const platform = {\n          os: \"unknown\",\n          arch: \"unknown\",\n          nacl_arch: \"unknown\",\n        };\n\n        if (typeof navigator !== \"undefined\") {\n          const userAgent = navigator.userAgent.toLowerCase();\n          if (userAgent.includes(\"mac\")) platform.os = \"mac\";\n          else if (userAgent.includes(\"win\")) platform.os = \"win\";\n          else if (userAgent.includes(\"linux\")) platform.os = \"linux\";\n          else if (userAgent.includes(\"android\")) platform.os = \"android\";\n          else if (userAgent.includes(\"ios\")) platform.os = \"ios\";\n\n          if (userAgent.includes(\"x86_64\") || userAgent.includes(\"amd64\")) {\n            platform.arch = \"x86-64\";\n          } else if (userAgent.includes(\"i386\") || userAgent.includes(\"i686\")) {\n            platform.arch = \"x86-32\";\n          } else if (userAgent.includes(\"arm\")) {\n            platform.arch = \"arm\";\n          }\n        }\n\n        return platform;\n      },\n      getBrowserInfo: async () => {\n        const info = {\n          name: \"unknown\",\n          version: \"unknown\",\n          buildID: \"unknown\",\n        };\n\n        if (typeof navigator !== \"undefined\") {\n          const userAgent = navigator.userAgent;\n          if (userAgent.includes(\"Chrome\")) {\n            info.name = \"Chrome\";\n            const match = userAgent.match(/Chrome\\/([0-9.]+)/);\n            if (match) info.version = match[1];\n          } else if (userAgent.includes(\"Firefox\")) {\n            info.name = \"Firefox\";\n            const match = userAgent.match(/Firefox\\/([0-9.]+)/);\n            if (match) info.version = match[1];\n          } else if (userAgent.includes(\"Safari\")) {\n            info.name = \"Safari\";\n            const match = userAgent.match(/Version\\/([0-9.]+)/);\n            if (match) info.version = match[1];\n          }\n        }\n\n        return info;\n      },\n    },\n    storage: {\n      local: {\n        get: function (keys, callback) {\n          if (typeof _storageGet !== \"function\")\n            throw new Error(\"_storageGet not defined\");\n\n          const promise = _storageGet(keys);\n\n          if (typeof callback === \"function\") {\n            promise\n              .then((result) => {\n                try {\n                  callback(result);\n                } catch (e) {\n                  console.error(\"Error in storage.get callback:\", e);\n                }\n              })\n              .catch((error) => {\n                console.error(\"Storage.get error:\", error);\n                callback({});\n              });\n            return;\n          }\n\n          return promise;\n        },\n        set: function (items, callback) {\n          if (typeof _storageSet !== \"function\")\n            throw new Error(\"_storageSet not defined\");\n\n          const promise = _storageSet(items).then((result) => {\n            broadcastStorageChange(items, \"local\");\n            return result;\n          });\n\n          if (typeof callback === \"function\") {\n            promise\n              .then((result) => {\n                try {\n                  callback(result);\n                } catch (e) {\n                  console.error(\"Error in storage.set callback:\", e);\n                }\n              })\n              .catch((error) => {\n                console.error(\"Storage.set error:\", error);\n                callback();\n              });\n            return;\n          }\n\n          return promise;\n        },\n        remove: function (keys, callback) {\n          if (typeof _storageRemove !== \"function\")\n            throw new Error(\"_storageRemove not defined\");\n\n          const promise = _storageRemove(keys).then((result) => {\n            const changes = {};\n            const keyList = Array.isArray(keys) ? keys : [keys];\n            keyList.forEach((key) => {\n              changes[key] = { oldValue: undefined, newValue: undefined };\n            });\n            broadcastStorageChange(changes, \"local\");\n            return result;\n          });\n\n          if (typeof callback === \"function\") {\n            promise\n              .then((result) => {\n                try {\n                  callback(result);\n                } catch (e) {\n                  console.error(\"Error in storage.remove callback:\", e);\n                }\n              })\n              .catch((error) => {\n                console.error(\"Storage.remove error:\", error);\n                callback();\n              });\n            return;\n          }\n\n          return promise;\n        },\n        clear: function (callback) {\n          if (typeof _storageClear !== \"function\")\n            throw new Error(\"_storageClear not defined\");\n\n          const promise = _storageClear().then((result) => {\n            broadcastStorageChange({}, \"local\");\n            return result;\n          });\n\n          if (typeof callback === \"function\") {\n            promise\n              .then((result) => {\n                try {\n                  callback(result);\n                } catch (e) {\n                  console.error(\"Error in storage.clear callback:\", e);\n                }\n              })\n              .catch((error) => {\n                console.error(\"Storage.clear error:\", error);\n                callback();\n              });\n            return;\n          }\n\n          return promise;\n        },\n        onChanged: {\n          addListener: (callback) => {\n            storageChangeListeners.add(callback);\n          },\n          removeListener: (callback) => {\n            storageChangeListeners.delete(callback);\n          },\n        },\n      },\n      sync: {\n        get: function (keys, callback) {\n          console.warn(\"chrome.storage.sync polyfill maps to local\");\n          return chrome.storage.local.get(keys, callback);\n        },\n        set: function (items, callback) {\n          console.warn(\"chrome.storage.sync polyfill maps to local\");\n\n          const promise = chrome.storage.local.set(items).then((result) => {\n            broadcastStorageChange(items, \"sync\");\n            return result;\n          });\n\n          if (typeof callback === \"function\") {\n            promise\n              .then((result) => {\n                try {\n                  callback(result);\n                } catch (e) {\n                  console.error(\"Error in storage.sync.set callback:\", e);\n                }\n              })\n              .catch((error) => {\n                console.error(\"Storage.sync.set error:\", error);\n                callback();\n              });\n            return;\n          }\n\n          return promise;\n        },\n        remove: function (keys, callback) {\n          console.warn(\"chrome.storage.sync polyfill maps to local\");\n\n          const promise = chrome.storage.local.remove(keys).then((result) => {\n            const changes = {};\n            const keyList = Array.isArray(keys) ? keys : [keys];\n            keyList.forEach((key) => {\n              changes[key] = { oldValue: undefined, newValue: undefined };\n            });\n            broadcastStorageChange(changes, \"sync\");\n            return result;\n          });\n\n          if (typeof callback === \"function\") {\n            promise\n              .then((result) => {\n                try {\n                  callback(result);\n                } catch (e) {\n                  console.error(\"Error in storage.sync.remove callback:\", e);\n                }\n              })\n              .catch((error) => {\n                console.error(\"Storage.sync.remove error:\", error);\n                callback();\n              });\n            return;\n          }\n\n          return promise;\n        },\n        clear: function (callback) {\n          console.warn(\"chrome.storage.sync polyfill maps to local\");\n\n          const promise = chrome.storage.local.clear().then((result) => {\n            broadcastStorageChange({}, \"sync\");\n            return result;\n          });\n\n          if (typeof callback === \"function\") {\n            promise\n              .then((result) => {\n                try {\n                  callback(result);\n                } catch (e) {\n                  console.error(\"Error in storage.sync.clear callback:\", e);\n                }\n              })\n              .catch((error) => {\n                console.error(\"Storage.sync.clear error:\", error);\n                callback();\n              });\n            return;\n          }\n\n          return promise;\n        },\n        onChanged: {\n          addListener: (callback) => {\n            storageChangeListeners.add(callback);\n          },\n          removeListener: (callback) => {\n            storageChangeListeners.delete(callback);\n          },\n        },\n      },\n      onChanged: {\n        addListener: (callback) => {\n          storageChangeListeners.add(callback);\n        },\n        removeListener: (callback) => {\n          storageChangeListeners.delete(callback);\n        },\n      },\n      managed: {\n        get: function (keys, callback) {\n          console.warn(\"chrome.storage.managed polyfill is read-only empty.\");\n\n          const promise = Promise.resolve({});\n\n          if (typeof callback === \"function\") {\n            promise.then((result) => {\n              try {\n                callback(result);\n              } catch (e) {\n                console.error(\"Error in storage.managed.get callback:\", e);\n              }\n            });\n            return;\n          }\n\n          return promise;\n        },\n      },\n    },\n    tabs: {\n      query: async (queryInfo) => {\n        console.warn(\n          \"chrome.tabs.query polyfill only returns current tab info.\"\n        );\n        const dummyId = Math.floor(Math.random() * 1000) + 1;\n        return [\n          {\n            id: dummyId,\n            url: window.location.href,\n            active: true,\n            windowId: 1,\n            status: \"complete\",\n          },\n        ];\n      },\n      create: async ({ url }) => {\n        console.log(`[Polyfill tabs.create] URL: ${url}`);\n        if (typeof _openTab !== \"function\")\n          throw new Error(\"_openTab not defined\");\n        _openTab(url);\n        const dummyId = Math.floor(Math.random() * 1000) + 1001;\n        return Promise.resolve({\n          id: dummyId,\n          url: url,\n          active: true,\n          windowId: 1,\n        });\n      },\n      sendMessage: async (tabId, message) => {\n        console.warn(\n          `chrome.tabs.sendMessage polyfill (to tab ${tabId}) redirects to runtime.sendMessage (current context).`\n        );\n        return chrome.runtime.sendMessage(message);\n      },\n    },\n    notifications: {\n      create: async (notificationId, options) => {\n        try {\n          let id = notificationId;\n          let notificationOptions = options;\n\n          if (typeof notificationId === \"object\" && notificationId !== null) {\n            notificationOptions = notificationId;\n            id = \"notification_\" + Math.random().toString(36).substring(2, 15);\n          } else if (typeof notificationId === \"string\" && options) {\n            id = notificationId;\n            notificationOptions = options;\n          } else {\n            throw new Error(\"Invalid parameters for notifications.create\");\n          }\n\n          if (!notificationOptions || typeof notificationOptions !== \"object\") {\n            throw new Error(\"Notification options must be an object\");\n          }\n\n          const {\n            title,\n            message,\n            iconUrl,\n            type = \"basic\",\n          } = notificationOptions;\n\n          if (!title || !message) {\n            throw new Error(\"Notification must have title and message\");\n          }\n\n          if (\"Notification\" in window) {\n            if (Notification.permission === \"granted\") {\n              const notification = new Notification(title, {\n                body: message,\n                icon: iconUrl,\n                tag: id,\n              });\n\n              console.log(`[Notifications] Created notification: ${id}`);\n              return id;\n            } else if (Notification.permission === \"default\") {\n              const permission = await Notification.requestPermission();\n              if (permission === \"granted\") {\n                const notification = new Notification(title, {\n                  body: message,\n                  icon: iconUrl,\n                  tag: id,\n                });\n                console.log(\n                  `[Notifications] Created notification after permission: ${id}`\n                );\n                return id;\n              } else {\n                console.warn(\n                  \"[Notifications] Permission denied for notifications\"\n                );\n                return id;\n              }\n            } else {\n              console.warn(\"[Notifications] Notifications are blocked\");\n              return id;\n            }\n          } else {\n            console.warn(\n              \"[Notifications] Native notifications not supported, using console fallback\"\n            );\n            console.log(`[Notification] ${title}: ${message}`);\n            return id;\n          }\n        } catch (error) {\n          console.error(\n            \"[Notifications] Error creating notification:\",\n            error.message\n          );\n          throw error;\n        }\n      },\n      clear: async (notificationId) => {\n        console.log(`[Notifications] Clear notification: ${notificationId}`);\n        // For native notifications, there's no direct way to clear by ID\n        // This is a limitation of the Web Notifications API\n        return true;\n      },\n      getAll: async () => {\n        console.warn(\"[Notifications] getAll not fully supported in polyfill\");\n        return {};\n      },\n      getPermissionLevel: async () => {\n        if (\"Notification\" in window) {\n          const permission = Notification.permission;\n          return { level: permission === \"granted\" ? \"granted\" : \"denied\" };\n        }\n        return { level: \"denied\" };\n      },\n    },\n    contextMenus: {\n      create: (createProperties, callback) => {\n        try {\n          if (!createProperties || typeof createProperties !== \"object\") {\n            throw new Error(\"Context menu create properties must be an object\");\n          }\n\n          const { id, title, contexts = [\"page\"], onclick } = createProperties;\n          const menuId =\n            id || `menu_${Math.random().toString(36).substring(2, 15)}`;\n\n          if (!title || typeof title !== \"string\") {\n            throw new Error(\"Context menu must have a title\");\n          }\n\n          // Store menu items for potential use\n          if (!window._polyfillContextMenus) {\n            window._polyfillContextMenus = new Map();\n          }\n\n          window._polyfillContextMenus.set(menuId, {\n            id: menuId,\n            title,\n            contexts,\n            onclick,\n            enabled: createProperties.enabled !== false,\n          });\n\n          console.log(\n            `[ContextMenus] Created context menu item: ${title} (${menuId})`\n          );\n\n          // Try to register a menu command as fallback\n          if (typeof _registerMenuCommand === \"function\") {\n            try {\n              _registerMenuCommand(\n                title,\n                onclick ||\n                  (() => {\n                    console.log(`Context menu clicked: ${title}`);\n                  })\n              );\n            } catch (e) {\n              console.warn(\n                \"[ContextMenus] Failed to register as menu command:\",\n                e.message\n              );\n            }\n          }\n\n          if (callback && typeof callback === \"function\") {\n            setTimeout(() => callback(), 0);\n          }\n\n          return menuId;\n        } catch (error) {\n          console.error(\n            \"[ContextMenus] Error creating context menu:\",\n            error.message\n          );\n          if (callback && typeof callback === \"function\") {\n            setTimeout(() => callback(), 0);\n          }\n          throw error;\n        }\n      },\n      update: (id, updateProperties, callback) => {\n        try {\n          if (\n            !window._polyfillContextMenus ||\n            !window._polyfillContextMenus.has(id)\n          ) {\n            throw new Error(`Context menu item not found: ${id}`);\n          }\n\n          const menuItem = window._polyfillContextMenus.get(id);\n          Object.assign(menuItem, updateProperties);\n\n          console.log(`[ContextMenus] Updated context menu item: ${id}`);\n\n          if (callback && typeof callback === \"function\") {\n            setTimeout(() => callback(), 0);\n          }\n        } catch (error) {\n          console.error(\n            \"[ContextMenus] Error updating context menu:\",\n            error.message\n          );\n          if (callback && typeof callback === \"function\") {\n            setTimeout(() => callback(), 0);\n          }\n        }\n      },\n      remove: (menuItemId, callback) => {\n        try {\n          if (\n            window._polyfillContextMenus &&\n            window._polyfillContextMenus.has(menuItemId)\n          ) {\n            window._polyfillContextMenus.delete(menuItemId);\n            console.log(\n              `[ContextMenus] Removed context menu item: ${menuItemId}`\n            );\n          } else {\n            console.warn(\n              `[ContextMenus] Context menu item not found for removal: ${menuItemId}`\n            );\n          }\n\n          if (callback && typeof callback === \"function\") {\n            setTimeout(() => callback(), 0);\n          }\n        } catch (error) {\n          console.error(\n            \"[ContextMenus] Error removing context menu:\",\n            error.message\n          );\n          if (callback && typeof callback === \"function\") {\n            setTimeout(() => callback(), 0);\n          }\n        }\n      },\n      removeAll: (callback) => {\n        try {\n          if (window._polyfillContextMenus) {\n            const count = window._polyfillContextMenus.size;\n            window._polyfillContextMenus.clear();\n            console.log(\n              `[ContextMenus] Removed all ${count} context menu items`\n            );\n          }\n\n          if (callback && typeof callback === \"function\") {\n            setTimeout(() => callback(), 0);\n          }\n        } catch (error) {\n          console.error(\n            \"[ContextMenus] Error removing all context menus:\",\n            error.message\n          );\n          if (callback && typeof callback === \"function\") {\n            setTimeout(() => callback(), 0);\n          }\n        }\n      },\n      onClicked: {\n        addListener: (callback) => {\n          if (!window._polyfillContextMenuListeners) {\n            window._polyfillContextMenuListeners = new Set();\n          }\n          window._polyfillContextMenuListeners.add(callback);\n          console.log(\"[ContextMenus] Added click listener\");\n        },\n        removeListener: (callback) => {\n          if (window._polyfillContextMenuListeners) {\n            window._polyfillContextMenuListeners.delete(callback);\n            console.log(\"[ContextMenus] Removed click listener\");\n          }\n        },\n      },\n    },\n  };\n\n  const tc = (fn) => {\n    try {\n      fn();\n    } catch (e) {}\n  };\n  const loggingProxyHandler = (_key) => ({\n    get(target, key, receiver) {\n      tc(() =>\n        console.log(`[${contextType}] [CHROME - ${_key}] Getting ${key}`)\n      );\n      return Reflect.get(target, key, receiver);\n    },\n    set(target, key, value, receiver) {\n      tc(() =>\n        console.log(\n          `[${contextType}] [CHROME - ${_key}] Setting ${key} to ${value}`\n        )\n      );\n      return Reflect.set(target, key, value, receiver);\n    },\n    has(target, key) {\n      tc(() =>\n        console.log(\n          `[${contextType}] [CHROME - ${_key}] Checking if ${key} exists`\n        )\n      );\n      return Reflect.has(target, key);\n    },\n  });\n  chrome = Object.fromEntries(\n    Object.entries(chrome).map(([key, value]) => [\n      key,\n      new Proxy(value, loggingProxyHandler(key)),\n    ])\n  );\n\n  // Alias browser to chrome for common Firefox pattern\n  const browser = new Proxy(chrome, loggingProxyHandler);\n\n  const oldGlobalThis = globalThis;\n  const oldWindow = window;\n  const oldSelf = self;\n  const oldGlobal = globalThis;\n  const __globalsStorage = {};\n\n  const TO_MODIFY = [oldGlobalThis, oldWindow, oldSelf, oldGlobal];\n  const set = (k, v) => {\n    __globalsStorage[k] = v;\n    TO_MODIFY.forEach((target) => {\n      target[k] = v;\n    });\n  };\n  const proxyHandler = {\n    get(target, key, receiver) {\n      return __globalsStorage[key] || Reflect.get(target, key, receiver);\n    },\n    set(target, key, value, receiver) {\n      tc(() => console.log(`[${contextType}] Setting ${key} to ${value}`));\n      set(key, value);\n      return Reflect.set(target, key, value, receiver);\n    },\n    has(target, key) {\n      return key in __globalsStorage || key in target;\n    },\n    getOwnPropertyDescriptor(target, key) {\n      if (key in __globalsStorage) {\n        return {\n          configurable: true,\n          enumerable: true,\n          writable: true,\n          value: __globalsStorage[key],\n        };\n      }\n      // fall back to the real globalThis\n      const desc = Reflect.getOwnPropertyDescriptor(target, key);\n      // ensure it's configurable so the with‑scope binding logic can override it\n      if (desc && !desc.configurable) {\n        desc.configurable = true;\n      }\n      return desc;\n    },\n\n    defineProperty(target, key, descriptor) {\n      // Normalize descriptor to avoid mixed accessor & data attributes\n      const hasAccessor = \"get\" in descriptor || \"set\" in descriptor;\n\n      if (hasAccessor) {\n        // Build a clean descriptor without value/writable when accessors present\n        const normalized = {\n          configurable:\n            \"configurable\" in descriptor ? descriptor.configurable : true,\n          enumerable:\n            \"enumerable\" in descriptor ? descriptor.enumerable : false,\n        };\n        if (\"get\" in descriptor) normalized.get = descriptor.get;\n        if (\"set\" in descriptor) normalized.set = descriptor.set;\n\n        // Store accessor references for inspection but avoid breaking invariants\n        set(key, {\n          get: descriptor.get,\n          set: descriptor.set,\n        });\n\n        return Reflect.defineProperty(target, key, normalized);\n      }\n\n      // Data descriptor path\n      set(key, descriptor.value);\n      return Reflect.defineProperty(target, key, descriptor);\n    },\n  };\n\n  // Create proxies once proxyHandler is defined\n  const proxyWindow = new Proxy(oldWindow, proxyHandler);\n  const proxyGlobalThis = new Proxy(oldGlobalThis, proxyHandler);\n  const proxyGlobal = new Proxy(oldGlobal, proxyHandler);\n  const proxySelf = new Proxy(oldSelf, proxyHandler);\n\n  // Seed storage with core globals so lookups succeed inside `with` blocks\n  Object.assign(__globalsStorage, {\n    chrome,\n    browser,\n    window: proxyWindow,\n    globalThis: proxyGlobalThis,\n    global: proxyGlobal,\n    self: proxySelf,\n  });\n\n  const __globals = {\n    chrome,\n    browser,\n    window: proxyWindow,\n    globalThis: proxyGlobalThis,\n    global: proxyGlobal,\n    self: proxySelf,\n    __globals: __globalsStorage,\n  };\n\n  __globalsStorage.contextId = contextId;\n  __globalsStorage.contextType = contextType;\n  __globalsStorage.module = undefined;\n  __globalsStorage.amd = undefined;\n  __globalsStorage.define = undefined;\n\n  return __globals;\n}\n\n\nif (typeof window !== 'undefined') {\n    window.buildPolyfill = buildPolyfill;\n}\n"
+			    const polyfillString = "\n// -- Messaging implementation\n\nfunction createEventBus(\n  scopeId,\n  type = \"page\", // \"page\" or \"iframe\"\n  { allowedOrigin = \"*\", children = [], parentWindow = null } = {},\n) {\n  if (!scopeId) throw new Error(\"createEventBus requires a scopeId\");\n\n  const handlers = {};\n\n  function handleIncoming(ev) {\n    if (allowedOrigin !== \"*\" && ev.origin !== allowedOrigin) return;\n\n    const msg = ev.data;\n    if (!msg || msg.__eventBus !== true || msg.scopeId !== scopeId) return;\n\n    const { event, payload } = msg;\n\n    // PAGE: if it's an INIT from an iframe, adopt it\n    if (type === \"page\" && event === \"__INIT__\") {\n      const win = ev.source;\n      if (win && !children.includes(win)) {\n        children.push(win);\n      }\n      return;\n    }\n\n    (handlers[event] || []).forEach((fn) =>\n      fn(payload, { origin: ev.origin, source: ev.source }),\n    );\n  }\n\n  window.addEventListener(\"message\", handleIncoming);\n\n  function emitTo(win, event, payload) {\n    const envelope = {\n      __eventBus: true,\n      scopeId,\n      event,\n      payload,\n    };\n    win.postMessage(envelope, allowedOrigin);\n  }\n\n  // IFRAME: announce to page on startup\n  if (type === \"iframe\") {\n    setTimeout(() => {\n      const pw = parentWindow || window.parent;\n      if (pw && pw.postMessage) {\n        emitTo(pw, \"__INIT__\", null);\n      }\n    }, 0);\n  }\n\n  return {\n    on(event, fn) {\n      handlers[event] = handlers[event] || [];\n      handlers[event].push(fn);\n    },\n    off(event, fn) {\n      if (!handlers[event]) return;\n      handlers[event] = handlers[event].filter((h) => h !== fn);\n    },\n    /**\n     * Emits an event.\n     * @param {string} event - The event name.\n     * @param {any} payload - The event payload.\n     * @param {object} [options] - Emission options.\n     * @param {Window} [options.to] - A specific window to target. If provided, message is ONLY sent to the target.\n     */\n    emit(event, payload, { to } = {}) {\n      // If a specific target window is provided, send only to it and DO NOT dispatch locally.\n      // This prevents a port from receiving its own messages.\n      if (to) {\n        if (to && typeof to.postMessage === \"function\") {\n          emitTo(to, event, payload);\n        }\n        return; // Exit after targeted send.\n      }\n\n      // For broadcast messages (no 'to' target), dispatch locally first.\n      (handlers[event] || []).forEach((fn) =>\n        fn(payload, { origin: location.origin, source: window }),\n      );\n\n      // Then propagate the broadcast to other windows.\n      if (type === \"page\") {\n        children.forEach((win) => emitTo(win, event, payload));\n      } else {\n        const pw = parentWindow || window.parent;\n        if (pw && pw.postMessage) {\n          emitTo(pw, event, payload);\n        }\n      }\n    },\n  };\n}\n\nfunction createRuntime(type = \"background\", bus) {\n  let nextId = 1;\n  const pending = {};\n  const msgListeners = [];\n\n  let nextPortId = 1;\n  const ports = {};\n  const onConnectListeners = [];\n\n  function parseArgs(args) {\n    let target, message, options, callback;\n    const arr = [...args];\n    if (arr.length === 0) {\n      throw new Error(\"sendMessage requires at least one argument\");\n    }\n    if (arr.length === 1) {\n      return { message: arr[0] };\n    }\n    // last object could be options\n    if (\n      arr.length &&\n      typeof arr[arr.length - 1] === \"object\" &&\n      !Array.isArray(arr[arr.length - 1])\n    ) {\n      options = arr.pop();\n    }\n    // last function is callback\n    if (arr.length && typeof arr[arr.length - 1] === \"function\") {\n      callback = arr.pop();\n    }\n    if (\n      arr.length === 2 &&\n      (typeof arr[0] === \"string\" || typeof arr[0] === \"number\")\n    ) {\n      [target, message] = arr;\n    } else {\n      [message] = arr;\n    }\n    return { target, message, options, callback };\n  }\n\n  if (type === \"background\") {\n    bus.on(\"__REQUEST__\", ({ id, message }, { source }) => {\n      let responded = false,\n        isAsync = false;\n      function sendResponse(resp) {\n        if (responded) return;\n        responded = true;\n        // Target the response directly back to the window that sent the request.\n        bus.emit(\"__RESPONSE__\", { id, response: resp }, { to: source });\n      }\n      const results = msgListeners\n        .map((fn) => {\n          try {\n            // msg, sender, sendResponse\n            const ret = fn(message, { id, tab: { id: source } }, sendResponse);\n            if (ret === true || (ret && typeof ret.then === \"function\")) {\n              isAsync = true;\n              return ret;\n            }\n            return ret;\n          } catch (e) {\n            console.error(e);\n          }\n        })\n        .filter((r) => r !== undefined);\n\n      const promises = results.filter((r) => r && typeof r.then === \"function\");\n      if (!isAsync && promises.length === 0) {\n        const out = results.length === 1 ? results[0] : results;\n        sendResponse(out);\n      } else if (promises.length) {\n        Promise.all(promises).then((vals) => {\n          if (!responded) {\n            const out = vals.length === 1 ? vals[0] : vals;\n            sendResponse(out);\n          }\n        });\n      }\n    });\n  }\n\n  if (type !== \"background\") {\n    bus.on(\"__RESPONSE__\", ({ id, response }) => {\n      const entry = pending[id];\n      if (!entry) return;\n      entry.resolve(response);\n      if (entry.callback) entry.callback(response);\n      delete pending[id];\n    });\n  }\n\n  function sendMessage(...args) {\n    // Background should be able to send message to itself\n    // if (type === \"background\") {\n    //   throw new Error(\"Background cannot sendMessage to itself\");\n    // }\n    const { target, message, callback } = parseArgs(args);\n    const id = nextId++;\n    const promise = new Promise((resolve) => {\n      pending[id] = { resolve, callback };\n      bus.emit(\"__REQUEST__\", { id, message });\n    });\n    return promise;\n  }\n\n  bus.on(\"__PORT_CONNECT__\", ({ portId, name }, { source }) => {\n    if (type !== \"background\") return;\n    const backgroundPort = makePort(\"background\", portId, name, source);\n    ports[portId] = backgroundPort;\n\n    onConnectListeners.forEach((fn) => fn(backgroundPort));\n\n    // send back a CONNECT_ACK so the client can\n    // start listening on its end:\n    bus.emit(\"__PORT_CONNECT_ACK__\", { portId, name }, { to: source });\n  });\n\n  // Clients handle the ACK and finalize their Port object by learning the remote window.\n  bus.on(\"__PORT_CONNECT_ACK__\", ({ portId, name }, { source }) => {\n    if (type === \"background\") return; // ignore\n    const p = ports[portId];\n    if (!p) return;\n    // Call the port's internal finalize method to complete the handshake\n    if (p._finalize) {\n      p._finalize(source);\n    }\n  });\n\n  // Any port message travels via \"__PORT_MESSAGE__\"\n  bus.on(\"__PORT_MESSAGE__\", (envelope, { source }) => {\n    const { portId } = envelope;\n    const p = ports[portId];\n    if (!p) return;\n    p._receive(envelope, source);\n  });\n\n  // Any port disconnect:\n  bus.on(\"__PORT_DISCONNECT__\", ({ portId }) => {\n    const p = ports[portId];\n    if (!p) return;\n    p._disconnect();\n    delete ports[portId];\n  });\n\n  // Refactored makePort to correctly manage internal state and the connection handshake.\n  function makePort(side, portId, name, remoteWindow) {\n    let onMessageHandlers = [];\n    let onDisconnectHandlers = [];\n    let buffer = [];\n    // Unique instance ID for this port instance\n    const instanceId = Math.random().toString(36).slice(2) + Date.now();\n    // These state variables are part of the closure and are updated by _finalize\n    let _ready = side === \"background\";\n\n    function _drainBuffer() {\n      buffer.forEach((m) => _post(m));\n      buffer = [];\n    }\n\n    function _post(msg) {\n      // Always use the 'to' parameter for port messages, making them directional.\n      // Include senderInstanceId\n      bus.emit(\n        \"__PORT_MESSAGE__\",\n        { portId, msg, senderInstanceId: instanceId },\n        { to: remoteWindow },\n      );\n    }\n\n    function postMessage(msg) {\n      if (!_ready) {\n        buffer.push(msg);\n      } else {\n        _post(msg);\n      }\n    }\n\n    function _receive(envelope, source) {\n      // envelope: { msg, senderInstanceId }\n      if (envelope.senderInstanceId === instanceId) return; // Don't dispatch to self\n      onMessageHandlers.forEach((fn) =>\n        fn(envelope.msg, { id: portId, tab: { id: source } }),\n      );\n    }\n\n    function disconnect() {\n      // Also use the 'to' parameter for disconnect messages\n      bus.emit(\"__PORT_DISCONNECT__\", { portId }, { to: remoteWindow });\n      _disconnect();\n      delete ports[portId];\n    }\n\n    function _disconnect() {\n      onDisconnectHandlers.forEach((fn) => fn());\n      onMessageHandlers = [];\n      onDisconnectHandlers = [];\n    }\n\n    // This function is called on the client port when the ACK is received from background.\n    // It updates the port's state, completing the connection.\n    function _finalize(win) {\n      remoteWindow = win; // <-- This is the crucial part: learn the destination\n      _ready = true;\n      _drainBuffer();\n    }\n\n    return {\n      name,\n      sender: {\n        id: portId,\n      },\n      onMessage: {\n        addListener(fn) {\n          onMessageHandlers.push(fn);\n        },\n        removeListener(fn) {\n          onMessageHandlers = onMessageHandlers.filter((x) => x !== fn);\n        },\n      },\n      onDisconnect: {\n        addListener(fn) {\n          onDisconnectHandlers.push(fn);\n        },\n        removeListener(fn) {\n          onDisconnectHandlers = onDisconnectHandlers.filter((x) => x !== fn);\n        },\n      },\n      postMessage,\n      disconnect,\n      // Internal methods used by the runtime\n      _receive,\n      _disconnect,\n      _finalize, // Expose the finalizer for the ACK handler\n    };\n  }\n\n  function connect(connectInfo = {}) {\n    if (type === \"background\") {\n      throw new Error(\"Background must use onConnect, not connect()\");\n    }\n    const name = connectInfo.name || \"\";\n    const portId = nextPortId++;\n    // create the client side port\n    // remoteWindow is initially null; it will be set by _finalize upon ACK.\n    const clientPort = makePort(\"client\", portId, name, null);\n    ports[portId] = clientPort;\n\n    // fire the connect event across the bus\n    bus.emit(\"__PORT_CONNECT__\", { portId, name });\n    return clientPort;\n  }\n\n  function onConnect(fn) {\n    if (type !== \"background\") {\n      throw new Error(\"connect event only fires in background\");\n    }\n    onConnectListeners.push(fn);\n  }\n\n  return {\n    // rpc:\n    sendMessage,\n    onMessage: {\n      addListener(fn) {\n        msgListeners.push(fn);\n      },\n      removeListener(fn) {\n        const i = msgListeners.indexOf(fn);\n        if (i >= 0) msgListeners.splice(i, 1);\n      },\n    },\n\n    // port API:\n    connect,\n    onConnect: {\n      addListener(fn) {\n        onConnect(fn);\n      },\n      removeListener(fn) {\n        const i = onConnectListeners.indexOf(fn);\n        if (i >= 0) onConnectListeners.splice(i, 1);\n      },\n    },\n  };\n}\n\n\n// --- Abstraction Layer: PostMessage Target\n\nlet nextRequestId = 1;\nconst pendingRequests = new Map(); // requestId -> { resolve, reject, timeout }\n\nfunction sendAbstractionRequest(method, args = []) {\n  return new Promise((resolve, reject) => {\n    const requestId = nextRequestId++;\n\n    const timeout = setTimeout(() => {\n      pendingRequests.delete(requestId);\n      reject(new Error(`PostMessage request timeout for method: ${method}`));\n    }, 10000);\n\n    pendingRequests.set(requestId, { resolve, reject, timeout });\n\n    window.parent.postMessage({\n      type: \"abstraction-request\",\n      requestId,\n      method,\n      args,\n    });\n  });\n}\n\nwindow.addEventListener(\"message\", (event) => {\n  const { type, requestId, success, result, error } = event.data;\n\n  if (type === \"abstraction-response\") {\n    const pending = pendingRequests.get(requestId);\n    if (pending) {\n      clearTimeout(pending.timeout);\n      pendingRequests.delete(requestId);\n\n      if (success) {\n        pending.resolve(result);\n      } else {\n        const err = new Error(error.message);\n        err.stack = error.stack;\n        pending.reject(err);\n      }\n    }\n  }\n});\n\nasync function _storageSet(items) {\n  return sendAbstractionRequest(\"_storageSet\", [items]);\n}\n\nasync function _storageGet(keys) {\n  return sendAbstractionRequest(\"_storageGet\", [keys]);\n}\n\nasync function _storageRemove(keysToRemove) {\n  return sendAbstractionRequest(\"_storageRemove\", [keysToRemove]);\n}\n\nasync function _storageClear() {\n  return sendAbstractionRequest(\"_storageClear\");\n}\n\nasync function _fetch(url, options) {\n  return sendAbstractionRequest(\"_fetch\", [url, options]);\n}\n\nfunction _registerMenuCommand(name, func) {\n  console.warn(\"_registerMenuCommand called from iframe context:\", name);\n  return sendAbstractionRequest(\"_registerMenuCommand\", [\n    name,\n    func.toString(),\n  ]);\n}\n\nfunction _openTab(url) {\n  return sendAbstractionRequest(\"_openTab\", [url]);\n}\n\nasync function _initStorage() {\n  return sendAbstractionRequest(\"_initStorage\");\n}\n\n\nconst EXTENSION_ASSETS_MAP = {{EXTENSION_ASSETS_MAP}};\n\n// -- Polyfill Implementation\nfunction buildPolyfill({ isBackground = false, isOtherPage = false } = {}) {\n  // Generate a unique context ID for this polyfill instance\n  const contextType = isBackground\n    ? \"background\"\n    : isOtherPage\n      ? \"options\"\n      : \"content\";\n  const contextId = `${contextType}_${Math.random()\n    .toString(36)\n    .substring(2, 15)}`;\n\n  const IS_IFRAME = \"true\" === \"true\";\n  const BUS = (function () {\n    if (globalThis.__BUS) {\n      return globalThis.__BUS;\n    }\n    globalThis.__BUS = createEventBus(\n      \"json-formatter\",\n      IS_IFRAME ? \"iframe\" : \"page\"\n    );\n    return globalThis.__BUS;\n  })();\n  const RUNTIME = createRuntime(isBackground ? \"background\" : \"tab\", BUS);\n  const createNoopListeners = () => ({\n    addListener: (callback) => {\n      console.log(\"addListener\", callback);\n    },\n    removeListener: (callback) => {\n      console.log(\"removeListener\", callback);\n    },\n  });\n  // TODO: Stub\n  const storageChangeListeners = new Set();\n  function broadcastStorageChange(changes, areaName) {\n    storageChangeListeners.forEach((listener) => {\n      listener(changes, areaName);\n    });\n  }\n\n  let REQ_PERMS = [];\n\n  // --- Chrome polyfill\n  let chrome = {\n    extension: {\n      isAllowedIncognitoAccess: () => Promise.resolve(true),\n      sendMessage: (...args) => _messagingHandler.sendMessage(...args),\n    },\n    permissions: {\n      // TODO: Remove origin permission means exclude from origin in startup\n      request: (permissions, callback) => {\n        console.log(\"permissions.request\", permissions, callback);\n        if (Array.isArray(permissions)) {\n          REQ_PERMS = [...REQ_PERMS, ...permissions];\n        }\n        if (typeof callback === \"function\") {\n          callback(permissions);\n        }\n        return Promise.resolve(permissions);\n      },\n      contains: (permissions, callback) => {\n        if (typeof callback === \"function\") {\n          callback(true);\n        }\n        return Promise.resolve(true);\n      },\n      getAll: () => {\n        return Promise.resolve({\n          permissions: EXTENSION_PERMISSIONS,\n          origins: ORIGIN_PERMISSIONS,\n        });\n      },\n      onAdded: createNoopListeners(),\n      onRemoved: createNoopListeners(),\n    },\n    i18n: {\n      getUILanguage: () => {\n        return USED_LOCALE || \"en\";\n      },\n      getMessage: (key, substitutions = []) => {\n        if (typeof substitutions === \"string\") {\n          substitutions = [substitutions];\n        }\n        if (typeof LOCALE_KEYS !== \"undefined\" && LOCALE_KEYS[key]) {\n          return LOCALE_KEYS[key].message?.replace(\n            /\\$(\\d+)/g,\n            (match, p1) => substitutions[p1 - 1] || match\n          );\n        }\n        return key;\n      },\n    },\n    alarms: {\n      onAlarm: createNoopListeners(),\n      create: () => {\n        console.log(\"alarms.create\", arguments);\n      },\n      get: () => {\n        console.log(\"alarms.get\", arguments);\n      },\n    },\n    runtime: {\n      ...RUNTIME,\n      onInstalled: createNoopListeners(),\n      onStartup: createNoopListeners(),\n      // TODO: Postmessage to parent to open options page or call openOptionsPage\n      openOptionsPage: () => {\n        // const url = chrome.runtime.getURL(OPTIONS_PAGE_PATH);\n        // console.log(\"openOptionsPage\", _openTab, url, EXTENSION_ASSETS_MAP);\n        // _openTab(url);\n        if (typeof openOptionsPage === \"function\") {\n          openOptionsPage();\n        } else if (window.parent) {\n          window.parent.postMessage({ type: \"openOptionsPage\" }, \"*\");\n        } else {\n          console.warn(\"openOptionsPage not available.\");\n        }\n      },\n      getManifest: () => {\n        // The manifest object will be injected into the scope where buildPolyfill is called\n        if (typeof INJECTED_MANIFEST !== \"undefined\") {\n          return JSON.parse(JSON.stringify(INJECTED_MANIFEST)); // Return deep copy\n        }\n        console.warn(\n          \"INJECTED_MANIFEST not found for chrome.runtime.getManifest\"\n        );\n        return { name: \"Unknown\", version: \"0.0\", manifest_version: 2 };\n      },\n      getURL: (path) => {\n        if (!path) return \"\";\n        if (path.startsWith(\"/\")) {\n          path = path.substring(1);\n        }\n\n        if (typeof _createAssetUrl === \"function\") {\n          return _createAssetUrl(path);\n        }\n\n        console.warn(\n          `chrome.runtime.getURL fallback for '${path}'. Assets may not be available.`\n        );\n        // Attempt a relative path resolution (highly context-dependent and likely wrong)\n        try {\n          if (window.location.protocol.startsWith(\"http\")) {\n            return new URL(path, window.location.href).toString();\n          }\n        } catch (e) {\n          /* ignore error, fallback */\n        }\n        return path;\n      },\n      id: \"polyfilled-extension-\" + Math.random().toString(36).substring(2, 15),\n      lastError: null,\n      getPlatformInfo: async () => {\n        const platform = {\n          os: \"unknown\",\n          arch: \"unknown\",\n          nacl_arch: \"unknown\",\n        };\n\n        if (typeof navigator !== \"undefined\") {\n          const userAgent = navigator.userAgent.toLowerCase();\n          if (userAgent.includes(\"mac\")) platform.os = \"mac\";\n          else if (userAgent.includes(\"win\")) platform.os = \"win\";\n          else if (userAgent.includes(\"linux\")) platform.os = \"linux\";\n          else if (userAgent.includes(\"android\")) platform.os = \"android\";\n          else if (userAgent.includes(\"ios\")) platform.os = \"ios\";\n\n          if (userAgent.includes(\"x86_64\") || userAgent.includes(\"amd64\")) {\n            platform.arch = \"x86-64\";\n          } else if (userAgent.includes(\"i386\") || userAgent.includes(\"i686\")) {\n            platform.arch = \"x86-32\";\n          } else if (userAgent.includes(\"arm\")) {\n            platform.arch = \"arm\";\n          }\n        }\n\n        return platform;\n      },\n      getBrowserInfo: async () => {\n        const info = {\n          name: \"unknown\",\n          version: \"unknown\",\n          buildID: \"unknown\",\n        };\n\n        if (typeof navigator !== \"undefined\") {\n          const userAgent = navigator.userAgent;\n          if (userAgent.includes(\"Chrome\")) {\n            info.name = \"Chrome\";\n            const match = userAgent.match(/Chrome\\/([0-9.]+)/);\n            if (match) info.version = match[1];\n          } else if (userAgent.includes(\"Firefox\")) {\n            info.name = \"Firefox\";\n            const match = userAgent.match(/Firefox\\/([0-9.]+)/);\n            if (match) info.version = match[1];\n          } else if (userAgent.includes(\"Safari\")) {\n            info.name = \"Safari\";\n            const match = userAgent.match(/Version\\/([0-9.]+)/);\n            if (match) info.version = match[1];\n          }\n        }\n\n        return info;\n      },\n    },\n    storage: {\n      local: {\n        get: function (keys, callback) {\n          if (typeof _storageGet !== \"function\")\n            throw new Error(\"_storageGet not defined\");\n\n          const promise = _storageGet(keys);\n\n          if (typeof callback === \"function\") {\n            promise\n              .then((result) => {\n                try {\n                  callback(result);\n                } catch (e) {\n                  console.error(\"Error in storage.get callback:\", e);\n                }\n              })\n              .catch((error) => {\n                console.error(\"Storage.get error:\", error);\n                callback({});\n              });\n            return;\n          }\n\n          return promise;\n        },\n        set: function (items, callback) {\n          if (typeof _storageSet !== \"function\")\n            throw new Error(\"_storageSet not defined\");\n\n          const promise = _storageSet(items).then((result) => {\n            broadcastStorageChange(items, \"local\");\n            return result;\n          });\n\n          if (typeof callback === \"function\") {\n            promise\n              .then((result) => {\n                try {\n                  callback(result);\n                } catch (e) {\n                  console.error(\"Error in storage.set callback:\", e);\n                }\n              })\n              .catch((error) => {\n                console.error(\"Storage.set error:\", error);\n                callback();\n              });\n            return;\n          }\n\n          return promise;\n        },\n        remove: function (keys, callback) {\n          if (typeof _storageRemove !== \"function\")\n            throw new Error(\"_storageRemove not defined\");\n\n          const promise = _storageRemove(keys).then((result) => {\n            const changes = {};\n            const keyList = Array.isArray(keys) ? keys : [keys];\n            keyList.forEach((key) => {\n              changes[key] = { oldValue: undefined, newValue: undefined };\n            });\n            broadcastStorageChange(changes, \"local\");\n            return result;\n          });\n\n          if (typeof callback === \"function\") {\n            promise\n              .then((result) => {\n                try {\n                  callback(result);\n                } catch (e) {\n                  console.error(\"Error in storage.remove callback:\", e);\n                }\n              })\n              .catch((error) => {\n                console.error(\"Storage.remove error:\", error);\n                callback();\n              });\n            return;\n          }\n\n          return promise;\n        },\n        clear: function (callback) {\n          if (typeof _storageClear !== \"function\")\n            throw new Error(\"_storageClear not defined\");\n\n          const promise = _storageClear().then((result) => {\n            broadcastStorageChange({}, \"local\");\n            return result;\n          });\n\n          if (typeof callback === \"function\") {\n            promise\n              .then((result) => {\n                try {\n                  callback(result);\n                } catch (e) {\n                  console.error(\"Error in storage.clear callback:\", e);\n                }\n              })\n              .catch((error) => {\n                console.error(\"Storage.clear error:\", error);\n                callback();\n              });\n            return;\n          }\n\n          return promise;\n        },\n        onChanged: {\n          addListener: (callback) => {\n            storageChangeListeners.add(callback);\n          },\n          removeListener: (callback) => {\n            storageChangeListeners.delete(callback);\n          },\n        },\n      },\n      sync: {\n        get: function (keys, callback) {\n          console.warn(\"chrome.storage.sync polyfill maps to local\");\n          return chrome.storage.local.get(keys, callback);\n        },\n        set: function (items, callback) {\n          console.warn(\"chrome.storage.sync polyfill maps to local\");\n\n          const promise = chrome.storage.local.set(items).then((result) => {\n            broadcastStorageChange(items, \"sync\");\n            return result;\n          });\n\n          if (typeof callback === \"function\") {\n            promise\n              .then((result) => {\n                try {\n                  callback(result);\n                } catch (e) {\n                  console.error(\"Error in storage.sync.set callback:\", e);\n                }\n              })\n              .catch((error) => {\n                console.error(\"Storage.sync.set error:\", error);\n                callback();\n              });\n            return;\n          }\n\n          return promise;\n        },\n        remove: function (keys, callback) {\n          console.warn(\"chrome.storage.sync polyfill maps to local\");\n\n          const promise = chrome.storage.local.remove(keys).then((result) => {\n            const changes = {};\n            const keyList = Array.isArray(keys) ? keys : [keys];\n            keyList.forEach((key) => {\n              changes[key] = { oldValue: undefined, newValue: undefined };\n            });\n            broadcastStorageChange(changes, \"sync\");\n            return result;\n          });\n\n          if (typeof callback === \"function\") {\n            promise\n              .then((result) => {\n                try {\n                  callback(result);\n                } catch (e) {\n                  console.error(\"Error in storage.sync.remove callback:\", e);\n                }\n              })\n              .catch((error) => {\n                console.error(\"Storage.sync.remove error:\", error);\n                callback();\n              });\n            return;\n          }\n\n          return promise;\n        },\n        clear: function (callback) {\n          console.warn(\"chrome.storage.sync polyfill maps to local\");\n\n          const promise = chrome.storage.local.clear().then((result) => {\n            broadcastStorageChange({}, \"sync\");\n            return result;\n          });\n\n          if (typeof callback === \"function\") {\n            promise\n              .then((result) => {\n                try {\n                  callback(result);\n                } catch (e) {\n                  console.error(\"Error in storage.sync.clear callback:\", e);\n                }\n              })\n              .catch((error) => {\n                console.error(\"Storage.sync.clear error:\", error);\n                callback();\n              });\n            return;\n          }\n\n          return promise;\n        },\n        onChanged: {\n          addListener: (callback) => {\n            storageChangeListeners.add(callback);\n          },\n          removeListener: (callback) => {\n            storageChangeListeners.delete(callback);\n          },\n        },\n      },\n      onChanged: {\n        addListener: (callback) => {\n          storageChangeListeners.add(callback);\n        },\n        removeListener: (callback) => {\n          storageChangeListeners.delete(callback);\n        },\n      },\n      managed: {\n        get: function (keys, callback) {\n          console.warn(\"chrome.storage.managed polyfill is read-only empty.\");\n\n          const promise = Promise.resolve({});\n\n          if (typeof callback === \"function\") {\n            promise.then((result) => {\n              try {\n                callback(result);\n              } catch (e) {\n                console.error(\"Error in storage.managed.get callback:\", e);\n              }\n            });\n            return;\n          }\n\n          return promise;\n        },\n      },\n    },\n    tabs: {\n      query: async (queryInfo) => {\n        console.warn(\n          \"chrome.tabs.query polyfill only returns current tab info.\"\n        );\n        const dummyId = Math.floor(Math.random() * 1000) + 1;\n        return [\n          {\n            id: dummyId,\n            url: CURRENT_LOCATION,\n            active: true,\n            windowId: 1,\n            status: \"complete\",\n          },\n        ];\n      },\n      create: async ({ url }) => {\n        console.log(`[Polyfill tabs.create] URL: ${url}`);\n        if (typeof _openTab !== \"function\")\n          throw new Error(\"_openTab not defined\");\n        _openTab(url);\n        const dummyId = Math.floor(Math.random() * 1000) + 1001;\n        return Promise.resolve({\n          id: dummyId,\n          url: url,\n          active: true,\n          windowId: 1,\n        });\n      },\n      sendMessage: async (tabId, message) => {\n        console.warn(\n          `chrome.tabs.sendMessage polyfill (to tab ${tabId}) redirects to runtime.sendMessage (current context).`\n        );\n        return chrome.runtime.sendMessage(message);\n      },\n    },\n    notifications: {\n      create: async (notificationId, options) => {\n        try {\n          let id = notificationId;\n          let notificationOptions = options;\n\n          if (typeof notificationId === \"object\" && notificationId !== null) {\n            notificationOptions = notificationId;\n            id = \"notification_\" + Math.random().toString(36).substring(2, 15);\n          } else if (typeof notificationId === \"string\" && options) {\n            id = notificationId;\n            notificationOptions = options;\n          } else {\n            throw new Error(\"Invalid parameters for notifications.create\");\n          }\n\n          if (!notificationOptions || typeof notificationOptions !== \"object\") {\n            throw new Error(\"Notification options must be an object\");\n          }\n\n          const {\n            title,\n            message,\n            iconUrl,\n            type = \"basic\",\n          } = notificationOptions;\n\n          if (!title || !message) {\n            throw new Error(\"Notification must have title and message\");\n          }\n\n          if (\"Notification\" in window) {\n            if (Notification.permission === \"granted\") {\n              const notification = new Notification(title, {\n                body: message,\n                icon: iconUrl,\n                tag: id,\n              });\n\n              console.log(`[Notifications] Created notification: ${id}`);\n              return id;\n            } else if (Notification.permission === \"default\") {\n              const permission = await Notification.requestPermission();\n              if (permission === \"granted\") {\n                const notification = new Notification(title, {\n                  body: message,\n                  icon: iconUrl,\n                  tag: id,\n                });\n                console.log(\n                  `[Notifications] Created notification after permission: ${id}`\n                );\n                return id;\n              } else {\n                console.warn(\n                  \"[Notifications] Permission denied for notifications\"\n                );\n                return id;\n              }\n            } else {\n              console.warn(\"[Notifications] Notifications are blocked\");\n              return id;\n            }\n          } else {\n            console.warn(\n              \"[Notifications] Native notifications not supported, using console fallback\"\n            );\n            console.log(`[Notification] ${title}: ${message}`);\n            return id;\n          }\n        } catch (error) {\n          console.error(\n            \"[Notifications] Error creating notification:\",\n            error.message\n          );\n          throw error;\n        }\n      },\n      clear: async (notificationId) => {\n        console.log(`[Notifications] Clear notification: ${notificationId}`);\n        // For native notifications, there's no direct way to clear by ID\n        // This is a limitation of the Web Notifications API\n        return true;\n      },\n      getAll: async () => {\n        console.warn(\"[Notifications] getAll not fully supported in polyfill\");\n        return {};\n      },\n      getPermissionLevel: async () => {\n        if (\"Notification\" in window) {\n          const permission = Notification.permission;\n          return { level: permission === \"granted\" ? \"granted\" : \"denied\" };\n        }\n        return { level: \"denied\" };\n      },\n    },\n    contextMenus: {\n      create: (createProperties, callback) => {\n        try {\n          if (!createProperties || typeof createProperties !== \"object\") {\n            throw new Error(\"Context menu create properties must be an object\");\n          }\n\n          const { id, title, contexts = [\"page\"], onclick } = createProperties;\n          const menuId =\n            id || `menu_${Math.random().toString(36).substring(2, 15)}`;\n\n          if (!title || typeof title !== \"string\") {\n            throw new Error(\"Context menu must have a title\");\n          }\n\n          // Store menu items for potential use\n          if (!window._polyfillContextMenus) {\n            window._polyfillContextMenus = new Map();\n          }\n\n          window._polyfillContextMenus.set(menuId, {\n            id: menuId,\n            title,\n            contexts,\n            onclick,\n            enabled: createProperties.enabled !== false,\n          });\n\n          console.log(\n            `[ContextMenus] Created context menu item: ${title} (${menuId})`\n          );\n\n          // Try to register a menu command as fallback\n          if (typeof _registerMenuCommand === \"function\") {\n            try {\n              _registerMenuCommand(\n                title,\n                onclick ||\n                  (() => {\n                    console.log(`Context menu clicked: ${title}`);\n                  })\n              );\n            } catch (e) {\n              console.warn(\n                \"[ContextMenus] Failed to register as menu command:\",\n                e.message\n              );\n            }\n          }\n\n          if (callback && typeof callback === \"function\") {\n            setTimeout(() => callback(), 0);\n          }\n\n          return menuId;\n        } catch (error) {\n          console.error(\n            \"[ContextMenus] Error creating context menu:\",\n            error.message\n          );\n          if (callback && typeof callback === \"function\") {\n            setTimeout(() => callback(), 0);\n          }\n          throw error;\n        }\n      },\n      update: (id, updateProperties, callback) => {\n        try {\n          if (\n            !window._polyfillContextMenus ||\n            !window._polyfillContextMenus.has(id)\n          ) {\n            throw new Error(`Context menu item not found: ${id}`);\n          }\n\n          const menuItem = window._polyfillContextMenus.get(id);\n          Object.assign(menuItem, updateProperties);\n\n          console.log(`[ContextMenus] Updated context menu item: ${id}`);\n\n          if (callback && typeof callback === \"function\") {\n            setTimeout(() => callback(), 0);\n          }\n        } catch (error) {\n          console.error(\n            \"[ContextMenus] Error updating context menu:\",\n            error.message\n          );\n          if (callback && typeof callback === \"function\") {\n            setTimeout(() => callback(), 0);\n          }\n        }\n      },\n      remove: (menuItemId, callback) => {\n        try {\n          if (\n            window._polyfillContextMenus &&\n            window._polyfillContextMenus.has(menuItemId)\n          ) {\n            window._polyfillContextMenus.delete(menuItemId);\n            console.log(\n              `[ContextMenus] Removed context menu item: ${menuItemId}`\n            );\n          } else {\n            console.warn(\n              `[ContextMenus] Context menu item not found for removal: ${menuItemId}`\n            );\n          }\n\n          if (callback && typeof callback === \"function\") {\n            setTimeout(() => callback(), 0);\n          }\n        } catch (error) {\n          console.error(\n            \"[ContextMenus] Error removing context menu:\",\n            error.message\n          );\n          if (callback && typeof callback === \"function\") {\n            setTimeout(() => callback(), 0);\n          }\n        }\n      },\n      removeAll: (callback) => {\n        try {\n          if (window._polyfillContextMenus) {\n            const count = window._polyfillContextMenus.size;\n            window._polyfillContextMenus.clear();\n            console.log(\n              `[ContextMenus] Removed all ${count} context menu items`\n            );\n          }\n\n          if (callback && typeof callback === \"function\") {\n            setTimeout(() => callback(), 0);\n          }\n        } catch (error) {\n          console.error(\n            \"[ContextMenus] Error removing all context menus:\",\n            error.message\n          );\n          if (callback && typeof callback === \"function\") {\n            setTimeout(() => callback(), 0);\n          }\n        }\n      },\n      onClicked: {\n        addListener: (callback) => {\n          if (!window._polyfillContextMenuListeners) {\n            window._polyfillContextMenuListeners = new Set();\n          }\n          window._polyfillContextMenuListeners.add(callback);\n          console.log(\"[ContextMenus] Added click listener\");\n        },\n        removeListener: (callback) => {\n          if (window._polyfillContextMenuListeners) {\n            window._polyfillContextMenuListeners.delete(callback);\n            console.log(\"[ContextMenus] Removed click listener\");\n          }\n        },\n      },\n    },\n  };\n\n  const tc = (fn) => {\n    try {\n      fn();\n    } catch (e) {}\n  };\n  const loggingProxyHandler = (_key) => ({\n    get(target, key, receiver) {\n      tc(() =>\n        console.log(`[${contextType}] [CHROME - ${_key}] Getting ${key}`)\n      );\n      return Reflect.get(target, key, receiver);\n    },\n    set(target, key, value, receiver) {\n      tc(() =>\n        console.log(\n          `[${contextType}] [CHROME - ${_key}] Setting ${key} to ${value}`\n        )\n      );\n      return Reflect.set(target, key, value, receiver);\n    },\n    has(target, key) {\n      tc(() =>\n        console.log(\n          `[${contextType}] [CHROME - ${_key}] Checking if ${key} exists`\n        )\n      );\n      return Reflect.has(target, key);\n    },\n  });\n  chrome = Object.fromEntries(\n    Object.entries(chrome).map(([key, value]) => [\n      key,\n      new Proxy(value, loggingProxyHandler(key)),\n    ])\n  );\n\n  // Alias browser to chrome for common Firefox pattern\n  const browser = new Proxy(chrome, loggingProxyHandler);\n\n  const oldGlobalThis = globalThis;\n  const oldWindow = window;\n  const oldSelf = self;\n  const oldGlobal = globalThis;\n  const __globalsStorage = {};\n\n  const TO_MODIFY = [oldGlobalThis, oldWindow, oldSelf, oldGlobal];\n  const set = (k, v) => {\n    __globalsStorage[k] = v;\n    TO_MODIFY.forEach((target) => {\n      target[k] = v;\n    });\n  };\n  const proxyHandler = {\n    get(target, key, receiver) {\n      try {\n        return __globalsStorage[key] || Reflect.get(target, key, receiver);\n      } catch (e) {\n        console.error(\"Error getting\", key, e);\n        return undefined;\n      }\n    },\n    set(target, key, value, receiver) {\n      try {\n        tc(() => console.log(`[${contextType}] Setting ${key} to ${value}`));\n        set(key, value);\n        return Reflect.set(target, key, value, receiver);\n      } catch (e) {\n        console.error(\"Error setting\", key, value, e);\n        return false;\n      }\n    },\n    has(target, key) {\n      try {\n        return key in __globalsStorage || key in target;\n      } catch (e) {\n        console.error(\"Error has\", key, e);\n        return false;\n      }\n    },\n    getOwnPropertyDescriptor(target, key) {\n      try {\n        if (key in __globalsStorage) {\n          return {\n            configurable: true,\n            enumerable: true,\n            writable: true,\n            value: __globalsStorage[key],\n          };\n        }\n        // fall back to the real globalThis\n        const desc = Reflect.getOwnPropertyDescriptor(target, key);\n        // ensure it's configurable so the with‑scope binding logic can override it\n        if (desc && !desc.configurable) {\n          desc.configurable = true;\n        }\n        return desc;\n      } catch (e) {\n        console.error(\"Error getOwnPropertyDescriptor\", key, e);\n        return {\n          configurable: true,\n          enumerable: true,\n          writable: true,\n          value: undefined,\n        };\n      }\n    },\n\n    defineProperty(target, key, descriptor) {\n      try {\n        // Normalize descriptor to avoid mixed accessor & data attributes\n        const hasAccessor = \"get\" in descriptor || \"set\" in descriptor;\n\n        if (hasAccessor) {\n          // Build a clean descriptor without value/writable when accessors present\n          const normalized = {\n            configurable:\n              \"configurable\" in descriptor ? descriptor.configurable : true,\n            enumerable:\n              \"enumerable\" in descriptor ? descriptor.enumerable : false,\n          };\n          if (\"get\" in descriptor) normalized.get = descriptor.get;\n          if (\"set\" in descriptor) normalized.set = descriptor.set;\n\n          // Store accessor references for inspection but avoid breaking invariants\n          set(key, {\n            get: descriptor.get,\n            set: descriptor.set,\n          });\n\n          return Reflect.defineProperty(target, key, normalized);\n        }\n\n        // Data descriptor path\n        set(key, descriptor.value);\n        return Reflect.defineProperty(target, key, descriptor);\n      } catch (e) {\n        console.error(\"Error defineProperty\", key, descriptor, e);\n        return false;\n      }\n    },\n  };\n\n  // Create proxies once proxyHandler is defined\n  const proxyWindow = new Proxy(oldWindow, proxyHandler);\n  const proxyGlobalThis = new Proxy(oldGlobalThis, proxyHandler);\n  const proxyGlobal = new Proxy(oldGlobal, proxyHandler);\n  const proxySelf = new Proxy(oldSelf, proxyHandler);\n\n  // Seed storage with core globals so lookups succeed inside `with` blocks\n  Object.assign(__globalsStorage, {\n    chrome,\n    browser,\n    window: proxyWindow,\n    globalThis: proxyGlobalThis,\n    global: proxyGlobal,\n    self: proxySelf,\n  });\n\n  const __globals = {\n    chrome,\n    browser,\n    window: proxyWindow,\n    globalThis: proxyGlobalThis,\n    global: proxyGlobal,\n    self: proxySelf,\n    __globals: __globalsStorage,\n  };\n\n  __globalsStorage.contextId = contextId;\n  __globalsStorage.contextType = contextType;\n  __globalsStorage.module = undefined;\n  __globalsStorage.amd = undefined;\n  __globalsStorage.define = undefined;\n\n  return __globals;\n}\n\n\nif (typeof window !== 'undefined') {\n    window.buildPolyfill = buildPolyfill;\n}\n"
 			    let newMap = JSON.parse(JSON.stringify(EXTENSION_ASSETS_MAP));
 			    delete newMap[OPTIONS_PAGE_PATH];
-			    const PASS_ON = {
+			    const PASS_ON = Object.fromEntries(Object.entries({
 			        LOCALE_KEYS,
 			        INJECTED_MANIFEST,
 			        USED_LOCALE,
 			        EXTENSION_ICON,
-			    }
+			        CURRENT_LOCATION,
+			        OPTIONS_PAGE_PATH,
+			        CAN_USE_BLOB_CSP,
+			        ALL_PERMISSIONS,
+			        ORIGIN_PERMISSIONS,
+			        EXTENSION_PERMISSIONS,
+			        _base64ToBlob,
+			        _getMimeTypeFromPath,
+			        _isTextAsset,
+			        _createAssetUrl,
+			        _matchGlobPattern,
+			        _isWebAccessibleResource,
+			    }).map(i => {
+			      let out = [...i];
+			      if (typeof i[1] === 'function'){
+			        out[1] = i[1].toString();
+			      } else {
+			        out[1] = JSON.stringify(i[1])
+			      }
+			      return out;
+			    }))
+			    console.log(PASS_ON);
 			    return `
-			        ${Object.entries(PASS_ON).map(i => `const ${i[0]} = ${JSON.stringify(i[1])};`).join('\n')}
+			    ${Object.entries(PASS_ON).map(i => `const ${i[0]} = ${i[1]};\nwindow[${JSON.stringify(i[0])}] = ${i[0]}`).join('\n')}
 			
-			        ${polyfillString.replaceAll("{{EXTENSION_ASSETS_MAP}}", `atob("${btoa(EXTENSION_ASSETS_MAP)}")`)}
+			        console.log("Initialized polyfill", {${Object.keys(PASS_ON).join(', ')}})
+			        ${polyfillString.replaceAll("{{EXTENSION_ASSETS_MAP}}", `JSON.parse(atob("${btoa(JSON.stringify(EXTENSION_ASSETS_MAP))}"))`)}
 			
 			        // Initialize the polyfill context for options page
 			        const polyfillCtx = buildPolyfill({ isOtherPage: true });
@@ -2770,6 +2708,6 @@ const e=!0,t=e=>e,s="passthrough";let o,c={createHTML:t,createScript:t,createScr
 			
 			
 			})();
-  // #endregion
+    // #endregion
   // #endregion
     // #endregion

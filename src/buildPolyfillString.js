@@ -16,14 +16,14 @@ const abstractionLayer = require("./abstractionLayer");
 async function generateBuildPolyfillString(
   target = "userscript",
   assetsMap = {},
-  manifest = {}
+  manifest = {},
 ) {
   const abstractionLayerCode =
     await abstractionLayer.getAbstractionLayerCode(target);
 
   const assetsHelperFunctions = generateAssetsHelperFunctions(
     assetsMap,
-    target === "postmessage"
+    target === "postmessage",
   );
 
   const messagingTemplate = await templateManager.getMessagingTemplate();
@@ -56,120 +56,11 @@ if (typeof window !== 'undefined') {
  * @returns {string} Asset helper functions code
  */
 function generateAssetsHelperFunctions(assetsMap = {}, inlineAssets = false) {
-  if (Object.keys(assetsMap).length === 0) {
-    return `// No assets available
-const EXTENSION_ASSETS_MAP = {};
-function _base64ToBlob() { return null; }
-function _getMimeTypeFromPath() { return 'application/octet-stream'; }
-function _isTextAsset() { return false; }
-function _createAssetUrl() { return ''; }`;
-  }
-
   const assetMapJson = inlineAssets
     ? `{{EXTENSION_ASSETS_MAP}}`
     : JSON.stringify(assetsMap, null, 2);
 
-  return `// --- Extension Assets Map & Helper Functions ---
-const EXTENSION_ASSETS_MAP = ${assetMapJson};
-
-function _testBlobCSP() {
-  try {
-    const code = \`console.log("Blob CSP test");\`;
-    const blob = new Blob([code], { type: 'application/javascript' });
-    const blobUrl = URL.createObjectURL(blob);
-
-    const script = document.createElement('script');
-    script.src = blobUrl;
-
-    let blocked = false;
-    script.onerror = () => {
-      blocked = true;
-    };
-
-    document.head.appendChild(script);
-
-    return new Promise((resolve) => {
-      setTimeout(() => {
-        resolve(!blocked);
-        document.head.removeChild(script);
-        URL.revokeObjectURL(blobUrl);
-      }, 100);
-    });
-  } catch (e) {
-    return Promise.resolve(false);
-  }
-}
-
-let CAN_USE_BLOB_CSP = false;
-
-_testBlobCSP().then((result) => {
-  CAN_USE_BLOB_CSP = result;
-});
-
-function _base64ToBlob(base64, mimeType = 'application/octet-stream') {
-  const binary = atob(base64);
-  const len = binary.length;
-  const bytes = new Uint8Array(len);
-  for (let i = 0; i < len; i++) bytes[i] = binary.charCodeAt(i);
-  return new Blob([bytes], { type: mimeType });
-}
-
-function _getMimeTypeFromPath(p) {
-  const ext = (p.split('.').pop() || '').toLowerCase();
-  const map = {
-    html: 'text/html',
-    htm: 'text/html',
-    js: 'text/javascript',
-    css: 'text/css',
-    json: 'application/json',
-    png: 'image/png',
-    jpg: 'image/jpeg',
-    jpeg: 'image/jpeg',
-    gif: 'image/gif',
-    svg: 'image/svg+xml',
-    webp: 'image/webp',
-    ico: 'image/x-icon',
-    woff: 'font/woff',
-    woff2: 'font/woff2',
-    ttf: 'font/ttf',
-    otf: 'font/otf',
-    eot: 'application/vnd.ms-fontobject'
-  };
-  return map[ext] || 'application/octet-stream';
-}
-
-function _isTextAsset(ext) {
-  return ['html','htm','js','css','json','svg','txt','xml'].includes(ext);
-}
-
-function _createAssetUrl(path = '') {
-  if (path.startsWith('/')) path = path.slice(1);
-  const assetData = EXTENSION_ASSETS_MAP[path];
-  if (typeof assetData === 'undefined') {
-    console.warn('[runtime.getURL] Asset not found for', path);
-    return path;
-  }
-
-  const mime = _getMimeTypeFromPath(path);
-  const ext = (path.split('.').pop() || '').toLowerCase();
-
-  if (CAN_USE_BLOB_CSP) {
-    let blob;
-    if (_isTextAsset(ext)) {
-      blob = new Blob([assetData], { type: mime });
-    } else {
-      blob = _base64ToBlob(assetData, mime);
-    }
-
-    return URL.createObjectURL(blob);
-  } else {
-    if (_isTextAsset(ext)) {
-      return \`data:\${mime};base64,\${btoa(assetData)}\`;
-    } else {
-      return \`data:\${mime};base64,\${assetData}\`;
-    }
-  }
-}`;
+  return `const EXTENSION_ASSETS_MAP = ${assetMapJson};`;
 }
 
 module.exports = { generateBuildPolyfillString };

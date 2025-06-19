@@ -405,9 +405,10 @@ const e=!0,t=e=>e,s="passthrough";let o,c={createHTML:t,createScript:t,createScr
 		  }
 		
 		  function sendMessage(...args) {
-		    if (type === "background") {
-		      throw new Error("Background cannot sendMessage to itself");
-		    }
+		    // Background should be able to send message to itself
+		    // if (type === "background") {
+		    //   throw new Error("Background cannot sendMessage to itself");
+		    // }
 		    const { target, message, callback } = parseArgs(args);
 		    const id = nextId++;
 		    const promise = new Promise((resolve) => {
@@ -910,110 +911,9 @@ const e=!0,t=e=>e,s="passthrough";let o,c={createHTML:t,createScript:t,createScr
 			}
 			
 			
-// #endregion
-// #region Extension Assets Map Helper Functions ---
 			const EXTENSION_ASSETS_MAP = {
 			  "options_page.html": "<!DOCTYPE html>\n<html>\n\n<head>\n    <title>Options for Web Search Navigator</title>\n    <link rel=\"stylesheet\" href=\"data:text/css;base64,Ym9keSB7CiAgd2lkdGg6IDQwMHB4Owp9CgpzZWN0aW9uIHsKICBtYXJnaW4tYm90dG9tOiAxMHB4Owp9CgpoMiB7CiAgZm9udC1zaXplOiAxLjRlbTsKICBmb250LXdlaWdodDogNTUwOwogIG1hcmdpbi10b3A6IDEwcHg7CiAgbWFyZ2luLWJvdHRvbTogMTBweDsKfQoKaDMgewogIGZvbnQtc2l6ZTogMS4yZW07CiAgZm9udC13ZWlnaHQ6IDQ1MDsKICBtYXJnaW4tdG9wOiAxMHB4OwogIG1hcmdpbi1ib3R0b206IDVweDsKfQoKc3VtbWFyeSB7CiAgbWFyZ2luLXRvcDogNXB4OwogIG1hcmdpbi1ib3R0b206IDVweDsKfQoKZGV0YWlscyB7CiAgbWFyZ2luLWJvdHRvbTogNXB4Owp9CgpzdW1tYXJ5IGgzLApzdW1tYXJ5IGgyIHsKICBkaXNwbGF5OiBpbmxpbmU7Cn0KCi5vcHRpb24gewogIG1hcmdpbi1ib3R0b206IDVweDsKfQoKLm9wdGlvbi1kZXNjIHsKICBkaXNwbGF5OiBpbmxpbmUtYmxvY2s7CiAgd2lkdGg6IDQ4JTsKfQoKLmlucHV0LWtleWJpbmRpbmcgewogIG1hcmdpbi1sZWZ0OiBhdXRvOwogIG1hcmdpbi1yaWdodDogMDsKICB3aWR0aDogNDglOwp9CgouaGVscCB7CiAgZm9udC13ZWlnaHQ6IDM1MDsKfQoKI2N1c3RvbS1jc3MtdGV4dGFyZWEgewogIHdpZHRoOiAxMDAlOwogIGhlaWdodDogNDAwcHg7Cn0KCi5zZWFyY2gtZW5naW5lLWNoZWNrYm94IHsKICBkaXNwbGF5OiBibG9jazsKfQoKI2RlbGF5LWNvbnRhaW5lciB7CiAgbWFyZ2luLXRvcDogNXB4Owp9CgojZGVsYXkgewogIHdpZHRoOiA3NXB4OwogIG1hcmdpbi1yaWdodDogNXB4Owp9Cgojc3RhdHVzIHsKICBmb250LXdlaWdodDogYm9sZDsKfQoKI2J1dHRvbnMtY29udGFpbmVyIGJ1dHRvbiB7CiAgbWFyZ2luLXRvcDogNXB4OwogIG1hcmdpbi1ib3R0b206IDVweDsKfQoKLyogRmlyZWZveCBzcGVjaWZpYyBvdmVycmlkZXMgKi8KQC1tb3otZG9jdW1lbnQgdXJsLXByZWZpeCgiIikgewogIGJvZHkgewogICAgd2lkdGg6IDYwMHB4OwogICAgLyogV2l0aG91dCB0aGlzLCB0aGUgRmlyZWZveCBvcHRpb25zIHBhZ2UgYm9keSBpcyBjbG9zZSB0byB0aGUgYm9yZGVyICovCiAgICBtYXJnaW4tbGVmdDogMTBweDsKICB9CgogIC5vcHRpb24tZGVzYyB7CiAgICB3aWR0aDogMjgwcHg7CiAgfQoKICAjY3VzdG9tLWNzcy10ZXh0YXJlYSB7CiAgICB3aWR0aDogNjAwcHg7CiAgICBoZWlnaHQ6IDYwMHB4OwogIH0KfQo=\">\n</head>\n\n<body>\n    <section id=\"general-settings-container\">\n        <h2>General settings</h2>\n        <div class=\"option\">\n            <label for=\"wrap-navigation\">\n                <input type=\"checkbox\" id=\"wrap-navigation\"> Wrap around when navigating before/after the first/last search result\n            </label>\n        </div>\n        <div class=\"option\">\n            <label for=\"auto-select-first\">\n                <input type=\"checkbox\" id=\"auto-select-first\"> Focus on first search result automatically after the page loads\n            </label>\n        </div>\n    </section>\n    <section id=\"google-settings-container\">\n        <h2>Google specific settings</h2>\n        <div class=\"option\">\n            <label for=\"google-include-cards\">\n                <input type=\"checkbox\" id=\"google-include-cards\"> Include cards (top stories, twitter, videos) in regular Google search page\n            </label>\n        </div>\n        <div class=\"option\">\n            <label for=\"google-include-places\">\n                <input type=\"checkbox\" id=\"google-include-places\"> Include Places in regular Google search page\n            </label>\n        </div>\n        <div class=\"option\">\n            <label for=\"google-include-memex\">\n                <input type=\"checkbox\" id=\"google-include-memex\"> Include WorldBrain's Memex extension results in Google search page\n            </label>\n        </div>\n    </section>\n    <section id=\"keybindings-container\">\n        <h2>Keybindings</h2>\n        <details>\n            <summary><h3>Help</h3></summary>\n            <div class=\"help\">\n                All keybindings should be specified in\n                <a href=\"https://github.com/ccampbell/mousetrap\" target=\"_blank\">Mousetrap</a> format. Examples:\n                <ul>\n                    <li>\n                        <kbd class=\"keybinding\">a</kbd>\n                    </li>\n                    <li>\n                        <kbd class=\"keybinding\">z y</kbd>\n                    </li>\n                    <li>\n                        <kbd class=\"keybinding\">ctrl+a</kbd>\n                    </li>\n                    <li>\n                        <kbd class=\"keybinding\">command+a</kbd>\n                    </li>\n                    <li>\n                        <kbd class=\"keybinding\">a, ctrl+b, z y, command+c</kbd> - multiple shortcuts that will be treated equivalently</li>\n                </ul>\n                Special keys names: backspace, tab, clear, enter, return, esc, escape, space, up, down, left, right, home, end, pageup, pagedown,\n                del, delete, and f1 through f19. In order to disable a keybinding, delete its keybinding in the textbox.\n\n                Note that not all search engines support all the keybindings.\n            </div>\n        </details>\n        <details>\n            <summary><h3>Common actions</h3></summary>\n            <div class=\"option\">\n                <label for=\"next-key\" class=\"option-desc\">Next search result</label>\n                <input id=\"next-key\" class=\"input-keybinding\" type=\"text\" value=\"down, j\">\n            </div>\n            <div class=\"option\">\n                <label for=\"previous-key\" class=\"option-desc\">Previous search result</label>\n                <input id=\"previous-key\" class=\"input-keybinding\" type=\"text\" value=\"up, k\">\n            </div>\n            <div class=\"option\">\n                <label for=\"navigate-key\" class=\"option-desc\">Open</label>\n                <input id=\"navigate-key\" class=\"input-keybinding\" type=\"text\" value=\"return, space\">\n            </div>\n            <div class=\"option\">\n                <label for=\"navigate-new-tab-background-key\" class=\"option-desc\">Open in a new background tab</label>\n                <input id=\"navigate-new-tab-background-key\" class=\"input-keybinding\" type=\"text\" value=\"ctrl+shift+return, command+shift+return, ctrl+shift+space\">\n            </div>\n            <div class=\"option\">\n                <label for=\"navigate-new-tab-key\" class=\"option-desc\">Open in a new window/tab</label>\n                <input id=\"navigate-new-tab-key\" class=\"input-keybinding\" type=\"text\" value=\"ctrl+return, command+return, ctrl+space\">\n            </div>\n            <div class=\"option\">\n                <label for=\"focus-search-input\" class=\"option-desc\">Focus search box</label>\n                <input id=\"focus-search-input\" class=\"input-keybinding\" type=\"text\" value=\"/, escape\">\n            </div>\n            <div class=\"option\">\n                <label for=\"navigate-next-result-page\" class=\"option-desc\">Next page</label>\n                <input id=\"navigate-next-result-page\" class=\"input-keybinding\" type=\"text\" value=\"right\">\n            </div>\n            <div class=\"option\">\n                <label for=\"navigate-previous-result-page\" class=\"option-desc\">Previous page</label>\n                <input id=\"navigate-previous-result-page\" class=\"input-keybinding\" type=\"text\" value=\"left\">\n            </div>\n        </details>\n        <details>\n            <summary><h3>Results filtering</h3></summary>\n            <div class=\"option\">\n                <label for=\"navigate-show-all\" class=\"option-desc\">Turn off filter (show all results)</label>\n                <input id=\"navigate-show-all\" class=\"input-keybinding\" type=\"text\" value=\"z z, ctrl-shift-a\">\n            </div>\n            <div class=\"option\">\n                <label for=\"navigate-show-hour\" class=\"option-desc\">Filter results by past hour</label>\n                <input id=\"navigate-show-hour\" class=\"input-keybinding\" type=\"text\" value=\"z h, ctrl-shift-h\">\n            </div>\n            <div class=\"option\">\n                <label for=\"navigate-show-day\" class=\"option-desc\">Filter results by past 24 hours</label>\n                <input id=\"navigate-show-day\" class=\"input-keybinding\" type=\"text\" value=\"z d, ctrl-shift-d\">\n            </div>\n            <div class=\"option\">\n                <label for=\"navigate-show-week\" class=\"option-desc\">Filter results by past week</label>\n                <input id=\"navigate-show-week\" class=\"input-keybinding\" type=\"text\" value=\"z w, ctrl-shift-w\">\n            </div>\n            <div class=\"option\">\n                <label for=\"navigate-show-month\" class=\"option-desc\">Filter results by past month</label>\n                <input id=\"navigate-show-month\" class=\"input-keybinding\" type=\"text\" value=\"z m, ctrl-shift-m\">\n            </div>\n            <div class=\"option\">\n                <label for=\"navigate-show-year\" class=\"option-desc\">Filter results by past year</label>\n                <input id=\"navigate-show-year\" class=\"input-keybinding\" type=\"text\" value=\"z y, ctrl-shift-y\">\n            </div>\n            <div class=\"option\">\n                <label for=\"toggle-sort\" class=\"option-desc\">Toggle sort by date/relevance</label>\n                <input id=\"toggle-sort\" class=\"input-keybinding\" type=\"text\" value=\"z s, ctrl-shift-s\">\n            </div>\n            <div class=\"option\">\n                <label for=\"toggle-verbatim-search\" class=\"option-desc\">Toggle verbatim search</label>\n                <input id=\"toggle-verbatim-search\" class=\"input-keybinding\" type=\"text\" value=\"z v, ctrl-shift-v\">\n            </div>\n            <div class=\"option\">\n                <label for=\"show-images-large\" class=\"option-desc\">Filter image results by large size</label>\n                <input id=\"show-images-large\" class=\"input-keybinding\" type=\"text\" value=\"z l\">\n            </div>\n            <div class=\"option\">\n                <label for=\"show-images-medium\" class=\"option-desc\">Filter image results by medium size</label>\n                <input id=\"show-images-medium\" class=\"input-keybinding\" type=\"text\" value=\"z e\">\n            </div>\n            <div class=\"option\">\n                <label for=\"show-images-icon\" class=\"option-desc\">Filter image results by icon size</label>\n                <input id=\"show-images-icon\" class=\"input-keybinding\" type=\"text\" value=\"z i\">\n            </div>\n        </details>\n        <details>\n            <summary><h3>Google and Startpage</h3></summary>\n            <div class=\"option\">\n                <label for=\"navigate-search-tab\" class=\"option-desc\">Go to All (= default search tab)</label>\n                <input id=\"navigate-search-tab\" class=\"input-keybinding\" type=\"text\" value=\"a, s\">\n            </div>\n            <div class=\"option\">\n                <label for=\"navigate-images-tab\" class=\"option-desc\">Go to Images</label>\n                <input id=\"navigate-images-tab\" class=\"input-keybinding\" type=\"text\" value=\"i\">\n            </div>\n            <div class=\"option\">\n                <label for=\"navigate-videos-tab\" class=\"option-desc\">Go to Videos</label>\n                <input id=\"navigate-videos-tab\" class=\"input-keybinding\" type=\"text\" value=\"v\">\n            </div>\n            <div class=\"option\">\n                <label for=\"navigate-maps-tab\" class=\"option-desc\">Go to Maps</label>\n                <input id=\"navigate-maps-tab\" class=\"input-keybinding\" type=\"text\" value=\"m\">\n            </div>\n            <div class=\"option\">\n                <label for=\"navigate-news-tab\" class=\"option-desc\">Go to News</label>\n                <input id=\"navigate-news-tab\" class=\"input-keybinding\" type=\"text\" value=\"n\">\n            </div>\n            <div class=\"option\">\n                <label for=\"navigate-shopping-tab\" class=\"option-desc\">Go to Shopping</label>\n                <input id=\"navigate-shopping-tab\" class=\"input-keybinding\" type=\"text\" value=\"alt+n\">\n            </div>\n            <div class=\"option\">\n                <label for=\"navigate-books-tab\" class=\"option-desc\">Go to Books</label>\n                <input id=\"navigate-books-tab\" class=\"input-keybinding\" type=\"text\" value=\"b\">\n            </div>\n            <div class=\"option\">\n                <label for=\"navigate-flights-tab\" class=\"option-desc\">Go to Flights</label>\n                <input id=\"navigate-flights-tab\" class=\"input-keybinding\" type=\"text\" value=\"alt+l\">\n            </div>\n            <div class=\"option\">\n                <label for=\"navigate-financial-tab\" class=\"option-desc\">Go to Financial</label>\n                <input id=\"navigate-financial-tab\" class=\"input-keybinding\" type=\"text\" value=\"f\">\n            </div>\n        </details>\n    </section>\n    <section id=\"search-engines-container\">\n        <h2>EXPERIMENTAL: Alternative search engines</h2>\n        <details class=\"help\">\n            <summary><h3>Help</h3></summary>\n            There is experimental support for using this extension in the websites below.\n            Note that some features are still buggy in certain websites.\n            You can enable or disable the extension of these websites at any time by clicking on the checkboxes.\n            When you enable a website, the browser will prompt you for additional permissions which are needed to be able to run this extension on that website.\n        </details>\n        <div class=\"option\">\n            <label for=\"brave-search\">\n                <input type=\"checkbox\" id=\"brave-search\"> Enable on Brave Search\n            </label>\n        </div>\n        <div class=\"option\">\n            <label for=\"startpage\">\n                <input type=\"checkbox\" id=\"startpage\"> Enable on Startpage\n            </label>\n        </div>\n        <div class=\"option\">\n            <label for=\"youtube\">\n                <input type=\"checkbox\" id=\"youtube\"> Enable on YouTube\n            </label>\n        </div>\n        <div class=\"option\">\n            <label for=\"google-scholar\">\n                <input type=\"checkbox\" id=\"google-scholar\"> Enable on Google Scholar\n            </label>\n        </div>\n        <div class=\"option\">\n            <label for=\"amazon\">\n                <input type=\"checkbox\" id=\"amazon\"> Enable on Amazon\n            </label>\n        </div>\n        <div class=\"option\">\n            <label for=\"github\">\n                <input type=\"checkbox\" id=\"github\"> Enable on Github\n            </label>\n        </div>\n        <div class=\"option\">\n            <label for=\"gitlab\">\n                <input type=\"checkbox\" id=\"gitlab\"> Enable on Gitlab\n            </label>\n        </div>\n        <div class=\"option\">\n            <label for=\"custom-gitlab\">\n                <input type=\"checkbox\" id=\"custom-gitlab\"> Enable on custom Gitlab\n            </label>\n        </div>\n    </section>\n    <section id=\"appearance-container\">\n        <h2>Appearance</h2>\n        <div class=\"option\">\n            <label for=\"hide-outline\">\n                <input type=\"checkbox\" id=\"hide-outline\"> Hide outline on selected search result\n            </label>\n        </div>\n        <div class=\"option\">\n            <h3>EXPERIMENTAL: Custom CSS</h3>\n            You can set custom CSS rules to change how the focused search results are highlighted. The textarea below contains the default CSS rules.\n            If you want to reset the CSS to the defaults, set the textarea content to an empty string and save.\n            <details>\n                <summary><h3>Edit CSS rules</h3></summary>\n                <textarea name=\"custom-css-textarea\" id=\"custom-css-textarea\"></textarea>\n            </details>\n        </div>\n    </section>\n    <section id=\"advanced-settings-container\">\n        <details>\n            <summary><h2>Advanced</h2></summary>\n            <div class=\"option\">\n                <div class=\"help\">\n                    This option can be used as a workaround for some websites.\n                </div>\n                <div id=\"delay-container\">\n                    <label for=\"delay\">\n                        <input type=\"number\" id=\"delay\">Delay extension initialization in milliseconds\n                    </label>\n                </div>\n            </div>\n            <div class=\"option\">\n                <label for=\"simulate-middle-click\">\n                    <input type=\"checkbox\" id=\"simulate-middle-click\"> Simulate middle click when opening in a new background tab\n                </label>\n            </div>\n            <div class=\"option\">\n                <h3>Custom Gitlab URL regex</h3>\n                <div class=\"help\">\n                    Define private Gitlab URL regex. Default is ^https://(www\\.)?.*git.*\\. \n                </div>\n                <div id=\"custom-gitlab-url-container\">\n                    <label for=\"custom-gitlab-url\">\n                        <input type=\"text\" id=\"custom-gitlab-url\">\n                    </label>\n                </div>\n            </div>\n        </details>\n    </section>\n\n    <div id=\"status\"></div>\n    <div id=\"buttons-container\">\n        <button id=\"save\">Save</button>\n        <button id=\"reset\">Reset to defaults</button>\n    </div>\n\n    <script src=\"data:text/javascript;base64,IWZ1bmN0aW9uKGUscil7aWYoImZ1bmN0aW9uIj09dHlwZW9mIGRlZmluZSYmZGVmaW5lLmFtZClkZWZpbmUoIndlYmV4dGVuc2lvbi1wb2x5ZmlsbCIsWyJtb2R1bGUiXSxyKTtlbHNlIGlmKCJ1bmRlZmluZWQiIT10eXBlb2YgZXhwb3J0cylyKG1vZHVsZSk7ZWxzZXt2YXIgcz17ZXhwb3J0czp7fX07cihzKSxlLmJyb3dzZXI9cy5leHBvcnRzfX0oInVuZGVmaW5lZCIhPXR5cGVvZiBnbG9iYWxUaGlzP2dsb2JhbFRoaXM6InVuZGVmaW5lZCIhPXR5cGVvZiBzZWxmP3NlbGY6dGhpcywoZnVuY3Rpb24oZSl7InVzZSBzdHJpY3QiO2lmKCFnbG9iYWxUaGlzLmNocm9tZT8ucnVudGltZT8uaWQpdGhyb3cgbmV3IEVycm9yKCJUaGlzIHNjcmlwdCBzaG91bGQgb25seSBiZSBsb2FkZWQgaW4gYSBicm93c2VyIGV4dGVuc2lvbi4iKTtpZih2b2lkIDA9PT1nbG9iYWxUaGlzLmJyb3dzZXJ8fE9iamVjdC5nZXRQcm90b3R5cGVPZihnbG9iYWxUaGlzLmJyb3dzZXIpIT09T2JqZWN0LnByb3RvdHlwZSl7Y29uc3Qgcj0iVGhlIG1lc3NhZ2UgcG9ydCBjbG9zZWQgYmVmb3JlIGEgcmVzcG9uc2Ugd2FzIHJlY2VpdmVkLiIscz1lPT57Y29uc3Qgcz17YWxhcm1zOntjbGVhcjp7bWluQXJnczowLG1heEFyZ3M6MX0sY2xlYXJBbGw6e21pbkFyZ3M6MCxtYXhBcmdzOjB9LGdldDp7bWluQXJnczowLG1heEFyZ3M6MX0sZ2V0QWxsOnttaW5BcmdzOjAsbWF4QXJnczowfX0sYm9va21hcmtzOntjcmVhdGU6e21pbkFyZ3M6MSxtYXhBcmdzOjF9LGdldDp7bWluQXJnczoxLG1heEFyZ3M6MX0sZ2V0Q2hpbGRyZW46e21pbkFyZ3M6MSxtYXhBcmdzOjF9LGdldFJlY2VudDp7bWluQXJnczoxLG1heEFyZ3M6MX0sZ2V0U3ViVHJlZTp7bWluQXJnczoxLG1heEFyZ3M6MX0sZ2V0VHJlZTp7bWluQXJnczowLG1heEFyZ3M6MH0sbW92ZTp7bWluQXJnczoyLG1heEFyZ3M6Mn0scmVtb3ZlOnttaW5BcmdzOjEsbWF4QXJnczoxfSxyZW1vdmVUcmVlOnttaW5BcmdzOjEsbWF4QXJnczoxfSxzZWFyY2g6e21pbkFyZ3M6MSxtYXhBcmdzOjF9LHVwZGF0ZTp7bWluQXJnczoyLG1heEFyZ3M6Mn19LGJyb3dzZXJBY3Rpb246e2Rpc2FibGU6e21pbkFyZ3M6MCxtYXhBcmdzOjEsZmFsbGJhY2tUb05vQ2FsbGJhY2s6ITB9LGVuYWJsZTp7bWluQXJnczowLG1heEFyZ3M6MSxmYWxsYmFja1RvTm9DYWxsYmFjazohMH0sZ2V0QmFkZ2VCYWNrZ3JvdW5kQ29sb3I6e21pbkFyZ3M6MSxtYXhBcmdzOjF9LGdldEJhZGdlVGV4dDp7bWluQXJnczoxLG1heEFyZ3M6MX0sZ2V0UG9wdXA6e21pbkFyZ3M6MSxtYXhBcmdzOjF9LGdldFRpdGxlOnttaW5BcmdzOjEsbWF4QXJnczoxfSxvcGVuUG9wdXA6e21pbkFyZ3M6MCxtYXhBcmdzOjB9LHNldEJhZGdlQmFja2dyb3VuZENvbG9yOnttaW5BcmdzOjEsbWF4QXJnczoxLGZhbGxiYWNrVG9Ob0NhbGxiYWNrOiEwfSxzZXRCYWRnZVRleHQ6e21pbkFyZ3M6MSxtYXhBcmdzOjEsZmFsbGJhY2tUb05vQ2FsbGJhY2s6ITB9LHNldEljb246e21pbkFyZ3M6MSxtYXhBcmdzOjF9LHNldFBvcHVwOnttaW5BcmdzOjEsbWF4QXJnczoxLGZhbGxiYWNrVG9Ob0NhbGxiYWNrOiEwfSxzZXRUaXRsZTp7bWluQXJnczoxLG1heEFyZ3M6MSxmYWxsYmFja1RvTm9DYWxsYmFjazohMH19LGJyb3dzaW5nRGF0YTp7cmVtb3ZlOnttaW5BcmdzOjIsbWF4QXJnczoyfSxyZW1vdmVDYWNoZTp7bWluQXJnczoxLG1heEFyZ3M6MX0scmVtb3ZlQ29va2llczp7bWluQXJnczoxLG1heEFyZ3M6MX0scmVtb3ZlRG93bmxvYWRzOnttaW5BcmdzOjEsbWF4QXJnczoxfSxyZW1vdmVGb3JtRGF0YTp7bWluQXJnczoxLG1heEFyZ3M6MX0scmVtb3ZlSGlzdG9yeTp7bWluQXJnczoxLG1heEFyZ3M6MX0scmVtb3ZlTG9jYWxTdG9yYWdlOnttaW5BcmdzOjEsbWF4QXJnczoxfSxyZW1vdmVQYXNzd29yZHM6e21pbkFyZ3M6MSxtYXhBcmdzOjF9LHJlbW92ZVBsdWdpbkRhdGE6e21pbkFyZ3M6MSxtYXhBcmdzOjF9LHNldHRpbmdzOnttaW5BcmdzOjAsbWF4QXJnczowfX0sY29tbWFuZHM6e2dldEFsbDp7bWluQXJnczowLG1heEFyZ3M6MH19LGNvbnRleHRNZW51czp7cmVtb3ZlOnttaW5BcmdzOjEsbWF4QXJnczoxfSxyZW1vdmVBbGw6e21pbkFyZ3M6MCxtYXhBcmdzOjB9LHVwZGF0ZTp7bWluQXJnczoyLG1heEFyZ3M6Mn19LGNvb2tpZXM6e2dldDp7bWluQXJnczoxLG1heEFyZ3M6MX0sZ2V0QWxsOnttaW5BcmdzOjEsbWF4QXJnczoxfSxnZXRBbGxDb29raWVTdG9yZXM6e21pbkFyZ3M6MCxtYXhBcmdzOjB9LHJlbW92ZTp7bWluQXJnczoxLG1heEFyZ3M6MX0sc2V0OnttaW5BcmdzOjEsbWF4QXJnczoxfX0sZGV2dG9vbHM6e2luc3BlY3RlZFdpbmRvdzp7ZXZhbDp7bWluQXJnczoxLG1heEFyZ3M6MixzaW5nbGVDYWxsYmFja0FyZzohMX19LHBhbmVsczp7Y3JlYXRlOnttaW5BcmdzOjMsbWF4QXJnczozLHNpbmdsZUNhbGxiYWNrQXJnOiEwfSxlbGVtZW50czp7Y3JlYXRlU2lkZWJhclBhbmU6e21pbkFyZ3M6MSxtYXhBcmdzOjF9fX19LGRvd25sb2Fkczp7Y2FuY2VsOnttaW5BcmdzOjEsbWF4QXJnczoxfSxkb3dubG9hZDp7bWluQXJnczoxLG1heEFyZ3M6MX0sZXJhc2U6e21pbkFyZ3M6MSxtYXhBcmdzOjF9LGdldEZpbGVJY29uOnttaW5BcmdzOjEsbWF4QXJnczoyfSxvcGVuOnttaW5BcmdzOjEsbWF4QXJnczoxLGZhbGxiYWNrVG9Ob0NhbGxiYWNrOiEwfSxwYXVzZTp7bWluQXJnczoxLG1heEFyZ3M6MX0scmVtb3ZlRmlsZTp7bWluQXJnczoxLG1heEFyZ3M6MX0scmVzdW1lOnttaW5BcmdzOjEsbWF4QXJnczoxfSxzZWFyY2g6e21pbkFyZ3M6MSxtYXhBcmdzOjF9LHNob3c6e21pbkFyZ3M6MSxtYXhBcmdzOjEsZmFsbGJhY2tUb05vQ2FsbGJhY2s6ITB9fSxleHRlbnNpb246e2lzQWxsb3dlZEZpbGVTY2hlbWVBY2Nlc3M6e21pbkFyZ3M6MCxtYXhBcmdzOjB9LGlzQWxsb3dlZEluY29nbml0b0FjY2Vzczp7bWluQXJnczowLG1heEFyZ3M6MH19LGhpc3Rvcnk6e2FkZFVybDp7bWluQXJnczoxLG1heEFyZ3M6MX0sZGVsZXRlQWxsOnttaW5BcmdzOjAsbWF4QXJnczowfSxkZWxldGVSYW5nZTp7bWluQXJnczoxLG1heEFyZ3M6MX0sZGVsZXRlVXJsOnttaW5BcmdzOjEsbWF4QXJnczoxfSxnZXRWaXNpdHM6e21pbkFyZ3M6MSxtYXhBcmdzOjF9LHNlYXJjaDp7bWluQXJnczoxLG1heEFyZ3M6MX19LGkxOG46e2RldGVjdExhbmd1YWdlOnttaW5BcmdzOjEsbWF4QXJnczoxfSxnZXRBY2NlcHRMYW5ndWFnZXM6e21pbkFyZ3M6MCxtYXhBcmdzOjB9fSxpZGVudGl0eTp7bGF1bmNoV2ViQXV0aEZsb3c6e21pbkFyZ3M6MSxtYXhBcmdzOjF9fSxpZGxlOntxdWVyeVN0YXRlOnttaW5BcmdzOjEsbWF4QXJnczoxfX0sbWFuYWdlbWVudDp7Z2V0OnttaW5BcmdzOjEsbWF4QXJnczoxfSxnZXRBbGw6e21pbkFyZ3M6MCxtYXhBcmdzOjB9LGdldFNlbGY6e21pbkFyZ3M6MCxtYXhBcmdzOjB9LHNldEVuYWJsZWQ6e21pbkFyZ3M6MixtYXhBcmdzOjJ9LHVuaW5zdGFsbFNlbGY6e21pbkFyZ3M6MCxtYXhBcmdzOjF9fSxub3RpZmljYXRpb25zOntjbGVhcjp7bWluQXJnczoxLG1heEFyZ3M6MX0sY3JlYXRlOnttaW5BcmdzOjEsbWF4QXJnczoyfSxnZXRBbGw6e21pbkFyZ3M6MCxtYXhBcmdzOjB9LGdldFBlcm1pc3Npb25MZXZlbDp7bWluQXJnczowLG1heEFyZ3M6MH0sdXBkYXRlOnttaW5BcmdzOjIsbWF4QXJnczoyfX0scGFnZUFjdGlvbjp7Z2V0UG9wdXA6e21pbkFyZ3M6MSxtYXhBcmdzOjF9LGdldFRpdGxlOnttaW5BcmdzOjEsbWF4QXJnczoxfSxoaWRlOnttaW5BcmdzOjEsbWF4QXJnczoxLGZhbGxiYWNrVG9Ob0NhbGxiYWNrOiEwfSxzZXRJY29uOnttaW5BcmdzOjEsbWF4QXJnczoxfSxzZXRQb3B1cDp7bWluQXJnczoxLG1heEFyZ3M6MSxmYWxsYmFja1RvTm9DYWxsYmFjazohMH0sc2V0VGl0bGU6e21pbkFyZ3M6MSxtYXhBcmdzOjEsZmFsbGJhY2tUb05vQ2FsbGJhY2s6ITB9LHNob3c6e21pbkFyZ3M6MSxtYXhBcmdzOjEsZmFsbGJhY2tUb05vQ2FsbGJhY2s6ITB9fSxwZXJtaXNzaW9uczp7Y29udGFpbnM6e21pbkFyZ3M6MSxtYXhBcmdzOjF9LGdldEFsbDp7bWluQXJnczowLG1heEFyZ3M6MH0scmVtb3ZlOnttaW5BcmdzOjEsbWF4QXJnczoxfSxyZXF1ZXN0OnttaW5BcmdzOjEsbWF4QXJnczoxfX0scnVudGltZTp7Z2V0QmFja2dyb3VuZFBhZ2U6e21pbkFyZ3M6MCxtYXhBcmdzOjB9LGdldFBsYXRmb3JtSW5mbzp7bWluQXJnczowLG1heEFyZ3M6MH0sb3Blbk9wdGlvbnNQYWdlOnttaW5BcmdzOjAsbWF4QXJnczowfSxyZXF1ZXN0VXBkYXRlQ2hlY2s6e21pbkFyZ3M6MCxtYXhBcmdzOjB9LHNlbmRNZXNzYWdlOnttaW5BcmdzOjEsbWF4QXJnczozfSxzZW5kTmF0aXZlTWVzc2FnZTp7bWluQXJnczoyLG1heEFyZ3M6Mn0sc2V0VW5pbnN0YWxsVVJMOnttaW5BcmdzOjEsbWF4QXJnczoxfX0sc2Vzc2lvbnM6e2dldERldmljZXM6e21pbkFyZ3M6MCxtYXhBcmdzOjF9LGdldFJlY2VudGx5Q2xvc2VkOnttaW5BcmdzOjAsbWF4QXJnczoxfSxyZXN0b3JlOnttaW5BcmdzOjAsbWF4QXJnczoxfX0sc3RvcmFnZTp7bG9jYWw6e2NsZWFyOnttaW5BcmdzOjAsbWF4QXJnczowfSxnZXQ6e21pbkFyZ3M6MCxtYXhBcmdzOjF9LGdldEJ5dGVzSW5Vc2U6e21pbkFyZ3M6MCxtYXhBcmdzOjF9LHJlbW92ZTp7bWluQXJnczoxLG1heEFyZ3M6MX0sc2V0OnttaW5BcmdzOjEsbWF4QXJnczoxfX0sbWFuYWdlZDp7Z2V0OnttaW5BcmdzOjAsbWF4QXJnczoxfSxnZXRCeXRlc0luVXNlOnttaW5BcmdzOjAsbWF4QXJnczoxfX0sc3luYzp7Y2xlYXI6e21pbkFyZ3M6MCxtYXhBcmdzOjB9LGdldDp7bWluQXJnczowLG1heEFyZ3M6MX0sZ2V0Qnl0ZXNJblVzZTp7bWluQXJnczowLG1heEFyZ3M6MX0scmVtb3ZlOnttaW5BcmdzOjEsbWF4QXJnczoxfSxzZXQ6e21pbkFyZ3M6MSxtYXhBcmdzOjF9fX0sdGFiczp7Y2FwdHVyZVZpc2libGVUYWI6e21pbkFyZ3M6MCxtYXhBcmdzOjJ9LGNyZWF0ZTp7bWluQXJnczoxLG1heEFyZ3M6MX0sZGV0ZWN0TGFuZ3VhZ2U6e21pbkFyZ3M6MCxtYXhBcmdzOjF9LGRpc2NhcmQ6e21pbkFyZ3M6MCxtYXhBcmdzOjF9LGR1cGxpY2F0ZTp7bWluQXJnczoxLG1heEFyZ3M6MX0sZXhlY3V0ZVNjcmlwdDp7bWluQXJnczoxLG1heEFyZ3M6Mn0sZ2V0OnttaW5BcmdzOjEsbWF4QXJnczoxfSxnZXRDdXJyZW50OnttaW5BcmdzOjAsbWF4QXJnczowfSxnZXRab29tOnttaW5BcmdzOjAsbWF4QXJnczoxfSxnZXRab29tU2V0dGluZ3M6e21pbkFyZ3M6MCxtYXhBcmdzOjF9LGdvQmFjazp7bWluQXJnczowLG1heEFyZ3M6MX0sZ29Gb3J3YXJkOnttaW5BcmdzOjAsbWF4QXJnczoxfSxoaWdobGlnaHQ6e21pbkFyZ3M6MSxtYXhBcmdzOjF9LGluc2VydENTUzp7bWluQXJnczoxLG1heEFyZ3M6Mn0sbW92ZTp7bWluQXJnczoyLG1heEFyZ3M6Mn0scXVlcnk6e21pbkFyZ3M6MSxtYXhBcmdzOjF9LHJlbG9hZDp7bWluQXJnczowLG1heEFyZ3M6Mn0scmVtb3ZlOnttaW5BcmdzOjEsbWF4QXJnczoxfSxyZW1vdmVDU1M6e21pbkFyZ3M6MSxtYXhBcmdzOjJ9LHNlbmRNZXNzYWdlOnttaW5BcmdzOjIsbWF4QXJnczozfSxzZXRab29tOnttaW5BcmdzOjEsbWF4QXJnczoyfSxzZXRab29tU2V0dGluZ3M6e21pbkFyZ3M6MSxtYXhBcmdzOjJ9LHVwZGF0ZTp7bWluQXJnczoxLG1heEFyZ3M6Mn19LHRvcFNpdGVzOntnZXQ6e21pbkFyZ3M6MCxtYXhBcmdzOjB9fSx3ZWJOYXZpZ2F0aW9uOntnZXRBbGxGcmFtZXM6e21pbkFyZ3M6MSxtYXhBcmdzOjF9LGdldEZyYW1lOnttaW5BcmdzOjEsbWF4QXJnczoxfX0sd2ViUmVxdWVzdDp7aGFuZGxlckJlaGF2aW9yQ2hhbmdlZDp7bWluQXJnczowLG1heEFyZ3M6MH19LHdpbmRvd3M6e2NyZWF0ZTp7bWluQXJnczowLG1heEFyZ3M6MX0sZ2V0OnttaW5BcmdzOjEsbWF4QXJnczoyfSxnZXRBbGw6e21pbkFyZ3M6MCxtYXhBcmdzOjF9LGdldEN1cnJlbnQ6e21pbkFyZ3M6MCxtYXhBcmdzOjF9LGdldExhc3RGb2N1c2VkOnttaW5BcmdzOjAsbWF4QXJnczoxfSxyZW1vdmU6e21pbkFyZ3M6MSxtYXhBcmdzOjF9LHVwZGF0ZTp7bWluQXJnczoyLG1heEFyZ3M6Mn19fTtpZigwPT09T2JqZWN0LmtleXMocykubGVuZ3RoKXRocm93IG5ldyBFcnJvcigiYXBpLW1ldGFkYXRhLmpzb24gaGFzIG5vdCBiZWVuIGluY2x1ZGVkIGluIGJyb3dzZXItcG9seWZpbGwiKTtjbGFzcyBnIGV4dGVuZHMgV2Vha01hcHtjb25zdHJ1Y3RvcihlLHIpe3N1cGVyKHIpLHRoaXMuY3JlYXRlSXRlbT1lfWdldChlKXtyZXR1cm4gdGhpcy5oYXMoZSl8fHRoaXMuc2V0KGUsdGhpcy5jcmVhdGVJdGVtKGUpKSxzdXBlci5nZXQoZSl9fWNvbnN0IGE9KHIscyk9PiguLi5nKT0+e2UucnVudGltZS5sYXN0RXJyb3I/ci5yZWplY3QobmV3IEVycm9yKGUucnVudGltZS5sYXN0RXJyb3IubWVzc2FnZSkpOnMuc2luZ2xlQ2FsbGJhY2tBcmd8fGcubGVuZ3RoPD0xJiYhMSE9PXMuc2luZ2xlQ2FsbGJhY2tBcmc/ci5yZXNvbHZlKGdbMF0pOnIucmVzb2x2ZShnKX0sbT1lPT4xPT1lPyJhcmd1bWVudCI6ImFyZ3VtZW50cyIsbj0oZSxyLHMpPT5uZXcgUHJveHkocix7YXBwbHk6KHIsZyxhKT0+cy5jYWxsKGcsZSwuLi5hKX0pO2xldCB0PUZ1bmN0aW9uLmNhbGwuYmluZChPYmplY3QucHJvdG90eXBlLmhhc093blByb3BlcnR5KTtjb25zdCBBPShlLHI9e30scz17fSk9PntsZXQgZz1PYmplY3QuY3JlYXRlKG51bGwpLGk9e2hhczoocixzKT0+cyBpbiBlfHxzIGluIGcsZ2V0KGksbyxsKXtpZihvIGluIGcpcmV0dXJuIGdbb107aWYoIShvIGluIGUpKXJldHVybjtsZXQgeD1lW29dO2lmKCJmdW5jdGlvbiI9PXR5cGVvZiB4KWlmKCJmdW5jdGlvbiI9PXR5cGVvZiByW29dKXg9bihlLGVbb10scltvXSk7ZWxzZSBpZih0KHMsbykpe2xldCByPSgoZSxyKT0+ZnVuY3Rpb24ocywuLi5nKXtpZihnLmxlbmd0aDxyLm1pbkFyZ3MpdGhyb3cgbmV3IEVycm9yKGBFeHBlY3RlZCBhdCBsZWFzdCAke3IubWluQXJnc30gJHttKHIubWluQXJncyl9IGZvciAke2V9KCksIGdvdCAke2cubGVuZ3RofWApO2lmKGcubGVuZ3RoPnIubWF4QXJncyl0aHJvdyBuZXcgRXJyb3IoYEV4cGVjdGVkIGF0IG1vc3QgJHtyLm1heEFyZ3N9ICR7bShyLm1heEFyZ3MpfSBmb3IgJHtlfSgpLCBnb3QgJHtnLmxlbmd0aH1gKTtyZXR1cm4gbmV3IFByb21pc2UoKChtLG4pPT57aWYoci5mYWxsYmFja1RvTm9DYWxsYmFjayl0cnl7c1tlXSguLi5nLGEoe3Jlc29sdmU6bSxyZWplY3Q6bn0scikpfWNhdGNoKGEpe2NvbnNvbGUud2FybihgJHtlfSBBUEkgbWV0aG9kIGRvZXNuJ3Qgc2VlbSB0byBzdXBwb3J0IHRoZSBjYWxsYmFjayBwYXJhbWV0ZXIsIGZhbGxpbmcgYmFjayB0byBjYWxsIGl0IHdpdGhvdXQgYSBjYWxsYmFjazogYCxhKSxzW2VdKC4uLmcpLHIuZmFsbGJhY2tUb05vQ2FsbGJhY2s9ITEsci5ub0NhbGxiYWNrPSEwLG0oKX1lbHNlIHIubm9DYWxsYmFjaz8oc1tlXSguLi5nKSxtKCkpOnNbZV0oLi4uZyxhKHtyZXNvbHZlOm0scmVqZWN0Om59LHIpKX0pKX0pKG8sc1tvXSk7eD1uKGUsZVtvXSxyKX1lbHNlIHg9eC5iaW5kKGUpO2Vsc2UgaWYoIm9iamVjdCI9PXR5cGVvZiB4JiZudWxsIT09eCYmKHQocixvKXx8dChzLG8pKSl4PUEoeCxyW29dLHNbb10pO2Vsc2V7aWYoIXQocywiKiIpKXJldHVybiBPYmplY3QuZGVmaW5lUHJvcGVydHkoZyxvLHtjb25maWd1cmFibGU6ITAsZW51bWVyYWJsZTohMCxnZXQ6KCk9PmVbb10sc2V0KHIpe2Vbb109cn19KSx4O3g9QSh4LHJbb10sc1siKiJdKX1yZXR1cm4gZ1tvXT14LHh9LHNldDoocixzLGEsbSk9PihzIGluIGc/Z1tzXT1hOmVbc109YSwhMCksZGVmaW5lUHJvcGVydHk6KGUscixzKT0+UmVmbGVjdC5kZWZpbmVQcm9wZXJ0eShnLHIscyksZGVsZXRlUHJvcGVydHk6KGUscik9PlJlZmxlY3QuZGVsZXRlUHJvcGVydHkoZyxyKX0sbz1PYmplY3QuY3JlYXRlKGUpO3JldHVybiBuZXcgUHJveHkobyxpKX0saT1lPT4oe2FkZExpc3RlbmVyKHIscywuLi5nKXtyLmFkZExpc3RlbmVyKGUuZ2V0KHMpLC4uLmcpfSxoYXNMaXN0ZW5lcjoocixzKT0+ci5oYXNMaXN0ZW5lcihlLmdldChzKSkscmVtb3ZlTGlzdGVuZXIocixzKXtyLnJlbW92ZUxpc3RlbmVyKGUuZ2V0KHMpKX19KSxvPW5ldyBnKChlPT4iZnVuY3Rpb24iIT10eXBlb2YgZT9lOmZ1bmN0aW9uKHIpe2NvbnN0IHM9QShyLHt9LHtnZXRDb250ZW50OnttaW5BcmdzOjAsbWF4QXJnczowfX0pO2Uocyl9KSksbD1uZXcgZygoZT0+ImZ1bmN0aW9uIiE9dHlwZW9mIGU/ZTpmdW5jdGlvbihyLHMsZyl7bGV0IGEsbSxuPSExLHQ9bmV3IFByb21pc2UoKGU9PnthPWZ1bmN0aW9uKHIpe249ITAsZShyKX19KSk7dHJ5e209ZShyLHMsYSl9Y2F0Y2goZSl7bT1Qcm9taXNlLnJlamVjdChlKX1jb25zdCBBPSEwIT09bSYmKChpPW0pJiYib2JqZWN0Ij09dHlwZW9mIGkmJiJmdW5jdGlvbiI9PXR5cGVvZiBpLnRoZW4pO3ZhciBpO2lmKCEwIT09bSYmIUEmJiFuKXJldHVybiExO2NvbnN0IG89ZT0+e2UudGhlbigoZT0+e2coZSl9KSwoZT0+e2xldCByO3I9ZSYmKGUgaW5zdGFuY2VvZiBFcnJvcnx8InN0cmluZyI9PXR5cGVvZiBlLm1lc3NhZ2UpP2UubWVzc2FnZToiQW4gdW5leHBlY3RlZCBlcnJvciBvY2N1cnJlZCIsZyh7X19tb3pXZWJFeHRlbnNpb25Qb2x5ZmlsbFJlamVjdF9fOiEwLG1lc3NhZ2U6cn0pfSkpLmNhdGNoKChlPT57Y29uc29sZS5lcnJvcigiRmFpbGVkIHRvIHNlbmQgb25NZXNzYWdlIHJlamVjdGVkIHJlcGx5IixlKX0pKX07cmV0dXJuIG8oQT9tOnQpLCEwfSkpLHg9KHtyZWplY3Q6cyxyZXNvbHZlOmd9LGEpPT57ZS5ydW50aW1lLmxhc3RFcnJvcj9lLnJ1bnRpbWUubGFzdEVycm9yLm1lc3NhZ2U9PT1yP2coKTpzKG5ldyBFcnJvcihlLnJ1bnRpbWUubGFzdEVycm9yLm1lc3NhZ2UpKTphJiZhLl9fbW96V2ViRXh0ZW5zaW9uUG9seWZpbGxSZWplY3RfXz9zKG5ldyBFcnJvcihhLm1lc3NhZ2UpKTpnKGEpfSxjPShlLHIscywuLi5nKT0+e2lmKGcubGVuZ3RoPHIubWluQXJncyl0aHJvdyBuZXcgRXJyb3IoYEV4cGVjdGVkIGF0IGxlYXN0ICR7ci5taW5BcmdzfSAke20oci5taW5BcmdzKX0gZm9yICR7ZX0oKSwgZ290ICR7Zy5sZW5ndGh9YCk7aWYoZy5sZW5ndGg+ci5tYXhBcmdzKXRocm93IG5ldyBFcnJvcihgRXhwZWN0ZWQgYXQgbW9zdCAke3IubWF4QXJnc30gJHttKHIubWF4QXJncyl9IGZvciAke2V9KCksIGdvdCAke2cubGVuZ3RofWApO3JldHVybiBuZXcgUHJvbWlzZSgoKGUscik9Pntjb25zdCBhPXguYmluZChudWxsLHtyZXNvbHZlOmUscmVqZWN0OnJ9KTtnLnB1c2goYSkscy5zZW5kTWVzc2FnZSguLi5nKX0pKX0sZD17ZGV2dG9vbHM6e25ldHdvcms6e29uUmVxdWVzdEZpbmlzaGVkOmkobyl9fSxydW50aW1lOntvbk1lc3NhZ2U6aShsKSxvbk1lc3NhZ2VFeHRlcm5hbDppKGwpLHNlbmRNZXNzYWdlOmMuYmluZChudWxsLCJzZW5kTWVzc2FnZSIse21pbkFyZ3M6MSxtYXhBcmdzOjN9KX0sdGFiczp7c2VuZE1lc3NhZ2U6Yy5iaW5kKG51bGwsInNlbmRNZXNzYWdlIix7bWluQXJnczoyLG1heEFyZ3M6M30pfX0sdT17Y2xlYXI6e21pbkFyZ3M6MSxtYXhBcmdzOjF9LGdldDp7bWluQXJnczoxLG1heEFyZ3M6MX0sc2V0OnttaW5BcmdzOjEsbWF4QXJnczoxfX07cmV0dXJuIHMucHJpdmFjeT17bmV0d29yazp7IioiOnV9LHNlcnZpY2VzOnsiKiI6dX0sd2Vic2l0ZXM6eyIqIjp1fX0sQShlLGQscyl9O2UuZXhwb3J0cz1zKGNocm9tZSl9ZWxzZSBlLmV4cG9ydHM9Z2xvYmFsVGhpcy5icm93c2VyfSkpOw==\"></script>\n    <script src=\"data:text/javascript;base64,Y29uc3QgREVGQVVMVF9DU1MgPSBgLyogTk9URToKICoKICogLSBVc2luZyAhaW1wb3J0YW50IGlzIG5lZWRlZCBmb3Igc29tZSBzdHlsZXMgYmVjYXVzZSBvdGhlcndpc2UgdGhleSBnZXQKICogICBvdmVycmlkZW4gYnkgdGhlIHNlYXJjaCBlbmdpbmUgc3R5bGVzaGVldHMKICogLSBVc2luZyBvdXRsaW5lIHdvcmtzIGJldHRlciB0aGFuIGJvcmRlciBzb21ldGltZXMgYmVjYXVzZSBjcmVhdGluZyB0aGUKICogICBib3JkZXIgY2FuIG1vdmUgb3RoZXIgZWxlbWVudHMsIGZvciBleGFtcGxlIHRoZSBwYWdlIG51bWJlcnMgYXJlIG1vdmVkIGluCiAqICAgR29vZ2xlIFNjaG9sYXIgd2hlbiBoaWdobGlnaHRpbmcgdGhlIHByZXYvbmV4dCBidXR0b25zLgogKi8KCjpyb290IHsKICAtLXJlc3VsdC1vdXRsaW5lOiAxcHggc29saWQgYmxhY2s7Cn0KCkBtZWRpYSAocHJlZmVycy1jb2xvci1zY2hlbWU6IGRhcmspIHsKICA6cm9vdCB7CiAgICAtLXJlc3VsdC1vdXRsaW5lOiAxcHggc29saWQgI2FhYWFhYTsKICB9Cn0KCmh0bWxbZGFya10sIFtkYXJrXSB7CiAgLS1yZXN1bHQtb3V0bGluZTogMXB4IHNvbGlkICNhYWFhYWE7Cn0KCi53c24tZ29vZ2xlLWZvY3VzZWQtbGluayB7CiAgICBwb3NpdGlvbjogcmVsYXRpdmU7CiAgICAvKiBUaGlzIGlzIHJlcXVpcmVkIGZvciB0aGUgYXJyb3cgdG8gYXBwZWFyIHdoZW4gbmF2aWdhdGluZyBzdWItcmVzdWx0cywgc2VlCiAgICAgKiBhbHNvOiBodHRwczovL2dpdGh1Yi5jb20vaW5mb2tpbGxlci93ZWItc2VhcmNoLW5hdmlnYXRvci9pc3N1ZXMvMzU3ICovCiAgICBvdmVyZmxvdzogdmlzaWJsZSAhaW1wb3J0YW50Owp9Cgoud3NuLWdvb2dsZS1mb2N1c2VkLWxpbms6OmJlZm9yZSwKLndzbi1nb29nbGUtZm9jdXNlZC1tYXA6OmJlZm9yZSwKLndzbi1naXRsYWItZm9jdXNlZC1saW5rOjpiZWZvcmUsCi53c24tYnJhdmUtc2VhcmNoLWZvY3VzZWQtbGluazo6YmVmb3JlLAoud3NuLXN0YXJ0cGFnZS1mb2N1c2VkLWxpbms6OmJlZm9yZSB7CiAgICBjb250ZW50OiAiXHUyNUJBIjsKICAgIG1hcmdpbi1yaWdodDogMjVweDsKICAgIGxlZnQ6IC0yNXB4OwogICAgcG9zaXRpb246IGFic29sdXRlOwp9Cgoud3NuLWJyYXZlLXNlYXJjaC1mb2N1c2VkLW5ld3MgewogIHBvc2l0aW9uOiByZWxhdGl2ZTsKfQoKLndzbi1icmF2ZS1zZWFyY2gtZm9jdXNlZC1uZXdzOjpiZWZvcmUgewogIGNvbnRlbnQ6ICJcdTI1QkEiOwogIHRvcDogNXB4OwogIGxlZnQ6IC00NXB4OwogIHBvc2l0aW9uOiBhYnNvbHV0ZTsKfQoKLndzbi1nb29nbGUtZm9jdXNlZC1pbWFnZSB7CiAgICBvdXRsaW5lOiB2YXIoLS1yZXN1bHQtb3V0bGluZSkgIWltcG9ydGFudDsKICAgIC8qIEltYWdlcyBhcmUgbGVzcyB2aXNpYmxlIHdpdGggYSB0aGluIG91dGxpbmUgKi8KICAgIG91dGxpbmUtd2lkdGg6IDJweDsKfQoKLndzbi1nb29nbGUtZm9jdXNlZC1jYXJkLAoud3NuLWJyYXZlLXNlYXJjaC1mb2N1c2VkLWNhcmQsCi53c24tZ29vZ2xlLWZvY3VzZWQtam9iLWNhcmQgewogICAgYm9yZGVyOiB2YXIoLS1yZXN1bHQtb3V0bGluZSkgIWltcG9ydGFudDsKfQoKLndzbi1nb29nbGUtZm9jdXNlZC1tYXAsCi53c24tZ29vZ2xlLWNhcmQtaXRlbSwKLndzbi1naXRsYWItZm9jdXNlZC1ncm91cC1yb3cgewogICAgb3V0bGluZTogdmFyKC0tcmVzdWx0LW91dGxpbmUpICFpbXBvcnRhbnQ7Cn0KCi53c24tZ29vZ2xlLWZvY3VzZWQtbWVtZXgtcmVzdWx0IHsKICAgIGJvcmRlcjogdmFyKC0tcmVzdWx0LW91dGxpbmUpICFpbXBvcnRhbnQ7CiAgICBib3gtc2l6aW5nOiBib3JkZXItYm94OwogICAgLW1vei1ib3gtc2l6aW5nOiBib3JkZXItYm94OwogICAgLXdlYmtpdC1ib3gtc2l6aW5nOiBib3JkZXItYm94Owp9CgovKiBTdGFydHBhZ2UgaGFzIGRhcmsgdGhlbWVzIHdoZXJlIGEgYmxhY2sgb3V0bGluZSB3b24ndCBiZSB2aXNpYmxlICovCi53c24tc3RhcnRwYWdlLWZvY3VzZWQtbGluayB7CiAgICBvdXRsaW5lOiAxcHggc29saWQgIzQzNWE2OSAhaW1wb3J0YW50OwogICAgb3V0bGluZS1vZmZzZXQ6IDNweDsKfQoKLndzbi15b3V0dWJlLWZvY3VzZWQtdmlkZW8gewogICAgb3V0bGluZTogdmFyKC0tcmVzdWx0LW91dGxpbmUpICFpbXBvcnRhbnQ7CiAgICBvdXRsaW5lLW9mZnNldDogMXB4Owp9Cgoud3NuLXlvdXR1YmUtZm9jdXNlZC1ncmlkLXZpZGVvIHsKICAgIGJvcmRlcjogdmFyKC0tcmVzdWx0LW91dGxpbmUpICFpbXBvcnRhbnQ7Cn0KCi53c24tZ29vZ2xlLXNjaG9sYXItbmV4dC1wYWdlIHsKICAgIC8qIFVzaW5nIG91dGxpbmUgd29ya3MgYmV0dGVyIHRoYW4gYm9yZGVyIGZvciB0aGUgU2Nob2xhciBwcmV2aW91cy9uZXh0CiAgICAgKiBidXR0b25zIGJlY2F1c2UgYm9yZGVyIG1vdmVzIHRoZSBwYWdlIG51bWJlcnMgYSBiaXQuICovCiAgICBvdXRsaW5lOiB2YXIoLS1yZXN1bHQtb3V0bGluZSkgIWltcG9ydGFudDsKfQoKLndzbi1hbWF6b24tZm9jdXNlZC1pdGVtIHsKICAgIG91dGxpbmU6IHZhcigtLXJlc3VsdC1vdXRsaW5lKSAhaW1wb3J0YW50OwogICAgb3V0bGluZS1vZmZzZXQ6IDNweDsKfQoKLndzbi1hbWF6b24tZm9jdXNlZC1jYXJ0LWl0ZW0sCi53c24tYW1hem9uLWZvY3VzZWQtY2Fyb3VzZWwtaXRlbSB7CiAgICBib3JkZXI6IHZhcigtLXJlc3VsdC1vdXRsaW5lKSAhaW1wb3J0YW50Owp9Cgoud3NuLWdpdGh1Yi1mb2N1c2VkLWl0ZW0sCi53c24tZ2l0aHViLWZvY3VzZWQtcGFnaW5hdGlvbiB7CiAgICBvdXRsaW5lOiB2YXIoLS1yZXN1bHQtb3V0bGluZSkgIWltcG9ydGFudDsKICAgIG91dGxpbmUtb2Zmc2V0OiAycHg7Cn0KCi8qIFRoaXMgcnVsZSBpcyBvbmx5IHVzZWQgd2hlbiB0aGUgImhpZGUgb3V0bGluZSIgb3B0aW9uIGlzIGVuYWJsZWQsIGFuZCBpcyB1c2VkCiAqIHRvIGRpc2FibGUgdGhlIHdlYnNpdGUncyBkZWZhdWx0IHNlYXJjaCByZXN1bHQgb3V0bGluaW5nICovCi53c24tbm8tb3V0bGluZSwKLndzbi1uby1vdXRsaW5lOmZvY3VzIHsKICAgIG91dGxpbmU6IG5vbmU7Cn1gOwoKY29uc3QgREVGQVVMVF9LRVlCSU5ESU5HUyA9IHsKICBuZXh0S2V5OiBbJ2Rvd24nLCAnaiddLAogIHByZXZpb3VzS2V5OiBbJ3VwJywgJ2snXSwKICBuYXZpZ2F0ZVByZXZpb3VzUmVzdWx0UGFnZTogWydsZWZ0JywgJ2gnXSwKICBuYXZpZ2F0ZU5leHRSZXN1bHRQYWdlOiBbJ3JpZ2h0JywgJ2wnXSwKICBuYXZpZ2F0ZUtleTogWydyZXR1cm4nLCAnc3BhY2UnXSwKICBuYXZpZ2F0ZU5ld1RhYkJhY2tncm91bmRLZXk6IFsnY3RybCtyZXR1cm4nLCAnY29tbWFuZCtyZXR1cm4nLCAnY3RybCtzcGFjZSddLAogIG5hdmlnYXRlTmV3VGFiS2V5OiBbCiAgICAnY3RybCtzaGlmdCtyZXR1cm4nLAogICAgJ2NvbW1hbmQrc2hpZnQrcmV0dXJuJywKICAgICdjdHJsK3NoaWZ0K3NwYWNlJywKICBdLAogIG5hdmlnYXRlU2VhcmNoVGFiOiBbJ2EnLCAncyddLAogIG5hdmlnYXRlSW1hZ2VzVGFiOiBbJ2knXSwKICBuYXZpZ2F0ZVZpZGVvc1RhYjogWyd2J10sCiAgbmF2aWdhdGVNYXBzVGFiOiBbJ20nXSwKICBuYXZpZ2F0ZU5ld3NUYWI6IFsnbiddLAogIG5hdmlnYXRlU2hvcHBpbmdUYWI6IFsnYWx0K3MnXSwKICBuYXZpZ2F0ZUJvb2tzVGFiOiBbJ2InXSwKICBuYXZpZ2F0ZUZsaWdodHNUYWI6IFsnYWx0K2wnXSwKICBuYXZpZ2F0ZUZpbmFuY2lhbFRhYjogWydmJ10sCiAgZm9jdXNTZWFyY2hJbnB1dDogWycvJywgJ2VzY2FwZSddLAogIG5hdmlnYXRlU2hvd0FsbDogWyd6IHonXSwKICBuYXZpZ2F0ZVNob3dIb3VyOiBbJ3ogaCddLAogIG5hdmlnYXRlU2hvd0RheTogWyd6IGQnXSwKICBuYXZpZ2F0ZVNob3dXZWVrOiBbJ3ogdyddLAogIG5hdmlnYXRlU2hvd01vbnRoOiBbJ3ogbSddLAogIG5hdmlnYXRlU2hvd1llYXI6IFsneiB5J10sCiAgdG9nZ2xlU29ydDogWyd6IHMnXSwKICB0b2dnbGVWZXJiYXRpbVNlYXJjaDogWyd6IHYnXSwKICBzaG93SW1hZ2VzTGFyZ2U6IFsneiBsJ10sCiAgc2hvd0ltYWdlc01lZGl1bTogWyd6IGUnXSwKICBzaG93SW1hZ2VzSWNvbjogWyd6IGknXSwKfTsKCmNvbnN0IERFRkFVTFRfT1BUSU9OUyA9IHsKICAuLi5ERUZBVUxUX0tFWUJJTkRJTkdTLAogIHdyYXBOYXZpZ2F0aW9uOiBmYWxzZSwKICBhdXRvU2VsZWN0Rmlyc3Q6IHRydWUsCiAgaGlkZU91dGxpbmU6IGZhbHNlLAogIGRlbGF5OiAwLAogIGdvb2dsZUluY2x1ZGVDYXJkczogdHJ1ZSwKICBnb29nbGVJbmNsdWRlTWVtZXg6IGZhbHNlLAogIGdvb2dsZUluY2x1ZGVQbGFjZXM6IHRydWUsCiAgY3VzdG9tQ1NTOiBERUZBVUxUX0NTUywKICBzaW11bGF0ZU1pZGRsZUNsaWNrOiBmYWxzZSwKICBjdXN0b21HaXRsYWJVcmw6ICdeaHR0cHM6Ly8od3d3Lik/XFwuKmdpdC4qXFwuJywKfTsKCmNvbnN0IGtleWJpbmRpbmdTdHJpbmdUb0FycmF5ID0gKGtiKSA9PiB7CiAgLy8gQWx0ZXJuYXRpdmU6IGtiLnNwbGl0KC8sICovKTsKICByZXR1cm4ga2Iuc3BsaXQoJywnKS5tYXAoKHQpID0+IHQudHJpbSgpKTsKfTsKCi8vIGVzbGludC1kaXNhYmxlLW5leHQtbGluZSBuby11bnVzZWQtdmFycwpjb25zdCBrZXliaW5kaW5nQXJyYXlUb1N0cmluZyA9IChrYikgPT4gewogIHJldHVybiBrYi5qb2luKCcsICcpOwp9OwoKLyoqCiAqIEBwYXJhbSB7U3RvcmFnZUFyZWF9IHN0b3JhZ2UgVGhlIHN0b3JhZ2UgYXJlYSB0byB3aGljaCB0aGlzIHNlY3Rpb24gd2lsbAogKiAgd3JpdGUuCiAqIEBwYXJhbSB7T2JqZWN0fSBkZWZhdWx0VmFsdWVzIFRoZSBkZWZhdWx0IG9wdGlvbnMuCiAqIEBjb25zdHJ1Y3RvcgogKi8KY2xhc3MgQnJvd3NlclN0b3JhZ2UgewogIGNvbnN0cnVjdG9yKHN0b3JhZ2UsIGRlZmF1bHRWYWx1ZXMpIHsKICAgIHRoaXMuc3RvcmFnZSA9IHN0b3JhZ2U7CiAgICB0aGlzLnZhbHVlcyA9IHt9OwogICAgdGhpcy5kZWZhdWx0VmFsdWVzID0gZGVmYXVsdFZhbHVlczsKICB9CiAgbG9hZCgpIHsKICAgIC8vIHRoaXMuc3RvcmFnZS5nZXQobnVsbCkgcmV0dXJucyBhbGwgdGhlIGRhdGEgc3RvcmVkOgogICAgLy8gaHR0cHM6Ly9kZXZlbG9wZXIuY2hyb21lLmNvbS9leHRlbnNpb25zL3N0b3JhZ2UjbWV0aG9kLVN0b3JhZ2VBcmVhLWdldAogICAgcmV0dXJuIHRoaXMuc3RvcmFnZS5nZXQobnVsbCkudGhlbigodmFsdWVzKSA9PiB7CiAgICAgIHRoaXMudmFsdWVzID0gdmFsdWVzOwogICAgICAvLyBQcmlvciB0byB2ZXJzaW9ucyAwLjQuKiB0aGUga2V5YmluZGluZ3Mgd2VyZSBzdG9yZWQgYXMgc3RyaW5ncywgc28gd2UKICAgICAgLy8gbWlncmF0ZSB0aGVtIHRvIGFycmF5cyBpZiBuZWVkZWQuCiAgICAgIGxldCBtaWdyYXRlZCA9IGZhbHNlOwogICAgICBmb3IgKGNvbnN0IFtrZXksIHZhbHVlXSBvZiBPYmplY3QuZW50cmllcyh0aGlzLnZhbHVlcykpIHsKICAgICAgICBpZiAoIShrZXkgaW4gREVGQVVMVF9LRVlCSU5ESU5HUykgfHwgQXJyYXkuaXNBcnJheSh2YWx1ZSkpIHsKICAgICAgICAgIGNvbnRpbnVlOwogICAgICAgIH0KICAgICAgICBtaWdyYXRlZCA9IHRydWU7CiAgICAgICAgdGhpcy52YWx1ZXNba2V5XSA9IGtleWJpbmRpbmdTdHJpbmdUb0FycmF5KHZhbHVlKTsKICAgICAgfQogICAgICBpZiAobWlncmF0ZWQpIHsKICAgICAgICByZXR1cm4gdGhpcy5zYXZlKCk7CiAgICAgIH0KICAgIH0pOwogIH0KICBzYXZlKCkgewogICAgcmV0dXJuIHRoaXMuc3RvcmFnZS5zZXQodGhpcy52YWx1ZXMpOwogIH0KICBnZXQoa2V5KSB7CiAgICBjb25zdCB2YWx1ZSA9IHRoaXMudmFsdWVzW2tleV07CiAgICBpZiAodmFsdWUgIT0gbnVsbCkgewogICAgICByZXR1cm4gdmFsdWU7CiAgICB9CiAgICByZXR1cm4gdGhpcy5kZWZhdWx0VmFsdWVzW2tleV07CiAgfQogIHNldChrZXksIHZhbHVlKSB7CiAgICB0aGlzLnZhbHVlc1trZXldID0gdmFsdWU7CiAgfQogIGNsZWFyKCkgewogICAgcmV0dXJuIHRoaXMuc3RvcmFnZS5jbGVhcigpLnRoZW4oKCkgPT4gewogICAgICB0aGlzLnZhbHVlcyA9IHt9OwogICAgfSk7CiAgfQogIGdldEFsbCgpIHsKICAgIC8vIE1lcmdlIG9wdGlvbnMgZnJvbSBzdG9yYWdlIHdpdGggZGVmYXVsdHMuCiAgICByZXR1cm4gey4uLnRoaXMuZGVmYXVsdFZhbHVlcywgLi4udGhpcy52YWx1ZXN9OwogIH0KfQoKY29uc3QgY3JlYXRlU3luY2VkT3B0aW9ucyA9ICgpID0+IHsKICByZXR1cm4gbmV3IEJyb3dzZXJTdG9yYWdlKGJyb3dzZXIuc3RvcmFnZS5zeW5jLCBERUZBVUxUX09QVElPTlMpOwp9OwoKLy8gZXNsaW50LWRpc2FibGUtbmV4dC1saW5lIG5vLXVudXNlZC12YXJzCmNsYXNzIEV4dGVuc2lvbk9wdGlvbnMgewogIGNvbnN0cnVjdG9yKCkgewogICAgdGhpcy5zeW5jID0gY3JlYXRlU3luY2VkT3B0aW9ucygpOwogICAgdGhpcy5sb2NhbCA9IG5ldyBCcm93c2VyU3RvcmFnZShicm93c2VyLnN0b3JhZ2UubG9jYWwsIHsKICAgICAgbGFzdFF1ZXJ5VXJsOiBudWxsLAogICAgICBsYXN0Rm9jdXNlZEluZGV4OiAwLAogICAgfSk7CiAgfQoKICBsb2FkKCkgewogICAgcmV0dXJuIFByb21pc2UuYWxsKFt0aGlzLmxvY2FsLmxvYWQoKSwgdGhpcy5zeW5jLmxvYWQoKV0pOwogIH0KfQo=\"></script>\n    <script src=\"data:text/javascript;base64,Ly8gQmFzZWQgb24gaHR0cHM6Ly9kZXZlbG9wZXIuY2hyb21lLmNvbS9leHRlbnNpb25zL29wdGlvbnNWMgoKLyogZ2xvYmFsIGtleWJpbmRpbmdTdHJpbmdUb0FycmF5LCBrZXliaW5kaW5nQXJyYXlUb1N0cmluZyAqLwovKiBnbG9iYWwgY3JlYXRlU3luY2VkT3B0aW9ucywgREVGQVVMVF9DU1MgKi8KCmNvbnN0IEdPT0dMRV9ET01BSU5TID0gWwogICdhZCcsICdhZScsICdhbCcsICdhbScsICdhcycsICdhdCcsICdheicsICdiYScsICdiZScsICdiZicsICdiZycsICdiaScsICdiaicsCiAgJ2JzJywgJ2J0JywgJ2J5JywgJ2NhJywgJ2NhdCcsICdjZCcsICdjZicsICdjZycsICdjaCcsICdjaScsICdjbCcsICdjbScsICdjbicsCiAgJ2NvLmFvJywgJ2NvLmJ3JywgJ2NvLmNrJywgJ2NvLmNyJywgJ2NvLmlkJywgJ2NvLmlsJywgJ2NvLmluJywgJ2NvLmpwJywKICAnY28ua2UnLCAnY28ua3InLCAnY28ubHMnLCAnY28ubWEnLCAnY28ubXonLCAnY28ubnonLCAnY28udGgnLCAnY28udHonLAogICdjby51ZycsICdjby51aycsICdjby51eicsICdjby52ZScsICdjby52aScsICdjby56YScsICdjby56bScsICdjby56dycsICdjb20nLAogICdjb20uYWYnLCAnY29tLmFnJywgJ2NvbS5haScsICdjb20uYXInLCAnY29tLmF1JywgJ2NvbS5iZCcsICdjb20uYmgnLAogICdjb20uYm4nLCAnY29tLmJvJywgJ2NvbS5icicsICdjb20uYnonLCAnY29tLmNvJywgJ2NvbS5jdScsICdjb20uY3knLAogICdjb20uZG8nLCAnY29tLmVjJywgJ2NvbS5lZycsICdjb20uZXQnLCAnY29tLmZqJywgJ2NvbS5naCcsICdjb20uZ2knLAogICdjb20uZ3QnLCAnY29tLmhrJywgJ2NvbS5qbScsICdjb20ua2gnLCAnY29tLmt3JywgJ2NvbS5sYicsICdjb20ubHknLAogICdjb20ubW0nLCAnY29tLm10JywgJ2NvbS5teCcsICdjb20ubXknLCAnY29tLm5hJywgJ2NvbS5uZicsICdjb20ubmcnLAogICdjb20ubmknLCAnY29tLm5wJywgJ2NvbS5vbScsICdjb20ucGEnLCAnY29tLnBlJywgJ2NvbS5wZycsICdjb20ucGgnLAogICdjb20ucGsnLCAnY29tLnByJywgJ2NvbS5weScsICdjb20ucWEnLCAnY29tLnNhJywgJ2NvbS5zYicsICdjb20uc2cnLAogICdjb20uc2wnLCAnY29tLnN2JywgJ2NvbS50aicsICdjb20udHInLCAnY29tLnR3JywgJ2NvbS51YScsICdjb20udXknLAogICdjb20udmMnLCAnY29tLnZuJywgJ2N2JywgJ2N6JywgJ2RlJywgJ2RqJywgJ2RrJywgJ2RtJywgJ2R6JywgJ2VlJywgJ2VzJywKICAnZmknLCAnZm0nLCAnZnInLCAnZ2EnLCAnZ2UnLCAnZ2cnLCAnZ2wnLCAnZ20nLCAnZ3AnLCAnZ3InLCAnZ3knLCAnaG4nLCAnaHInLAogICdodCcsICdodScsICdpZScsICdpbScsICdpcScsICdpcycsICdpdCcsICdqZScsICdqbycsICdrZycsICdraScsICdreicsICdsYScsCiAgJ2xpJywgJ2xrJywgJ2x0JywgJ2x1JywgJ2x2JywgJ21kJywgJ21lJywgJ21nJywgJ21rJywgJ21sJywgJ21uJywgJ21zJywgJ211JywKICAnbXYnLCAnbXcnLCAnbmUnLCAnbmwnLCAnbm8nLCAnbnInLCAnbnUnLCAncGwnLCAncG4nLCAncHMnLCAncHQnLCAncm8nLCAncnMnLAogICdydScsICdydycsICdzYycsICdzZScsICdzaCcsICdzaScsICdzaycsICdzbScsICdzbicsICdzbycsICdzcicsICdzdCcsICd0ZCcsCiAgJ3RnJywgJ3RrJywgJ3RsJywgJ3RtJywgJ3RuJywgJ3RvJywgJ3R0JywgJ3ZnJywgJ3Z1JywgJ3dzJywKXTsKCmNvbnN0IEFNQVpPTl9ET01BSU5TID0gWwogICdjYScsCiAgJ2NuJywKICAnY28uanAnLAogICdjby51aycsCiAgJ2NvbScsCiAgJ2NvbS5hdScsCiAgJ2NvbS5icicsCiAgJ2NvbS5teCcsCiAgJ2RlJywKICAnZXMnLAogICdmcicsCiAgJ2luJywKICAnaXQnLAogICdubCcsCl07Cgpjb25zdCBnZW5lcmF0ZVVSTFBhdHRlcm5zID0gKHByZWZpeCwgZG9tYWlucywgc3VmZml4KSA9PiB7CiAgY29uc3QgdXJscyA9IFtdOwogIGZvciAoY29uc3QgZG9tYWluIG9mIGRvbWFpbnMpIHsKICAgIHVybHMucHVzaChgJHtwcmVmaXh9LiR7ZG9tYWlufSR7c3VmZml4fWApOwogIH0KICByZXR1cm4gdXJsczsKfTsKCi8vIEF1dGhvcml6ZWQgdXJscyBmb3IgY29tcGF0aWJsZSBzZWFyY2ggZW5naW5lcwpjb25zdCBPUFRJT05BTF9QRVJNSVNTSU9OU19VUkxTID0gewogICdicmF2ZS1zZWFyY2gnOiBbJ2h0dHBzOi8vc2VhcmNoLmJyYXZlLmNvbS8qJ10sCiAgJ3N0YXJ0cGFnZSc6IFsKICAgIC8vIEl0IHVzZWQgdG8gYmUgJ2h0dHBzOi8vd3d3LnN0YXJ0cGFnZS5jb20vKi8qc2VhcmNoKicgYnV0IHdoZW4gcmVxdWVzdGluZwogICAgLy8gdGhpcyBVUkwgY2hyb21lIGFjdHVhbGx5IGdyYW50cyBwZXJtaXNzaW9uIHRvIHRoZSBVUkwgYmVsb3cuIFRoaXMKICAgIC8vIGRpc2NyZXBhbmN5IGNhdXNlcyB0aGUgb3B0aW9ucyBwYWdlIHRvIHRoaW5rIHRoYXQgd2UgZG9uJ3QgaGF2ZQogICAgLy8gcGVybWlzc2lvbiBmb3Igc3RhcnRwYWdlLgogICAgJ2h0dHBzOi8vd3d3LnN0YXJ0cGFnZS5jb20vKicsCiAgICAnaHR0cHM6Ly9zdGFydHBhZ2UuY29tLyonLAogIF0sCiAgJ3lvdXR1YmUnOiBbJ2h0dHBzOi8vd3d3LnlvdXR1YmUuY29tLyonXSwKICAnZ29vZ2xlLXNjaG9sYXInOiBnZW5lcmF0ZVVSTFBhdHRlcm5zKAogICAgICAnaHR0cHM6Ly9zY2hvbGFyLmdvb2dsZScsCiAgICAgIEdPT0dMRV9ET01BSU5TLAogICAgICAnLyonLAogICksCiAgJ2dpdGh1Yic6IFsnaHR0cHM6Ly9naXRodWIuY29tLyonXSwKICAnYW1hem9uJzogZ2VuZXJhdGVVUkxQYXR0ZXJucygnaHR0cHM6Ly93d3cuYW1hem9uJywgQU1BWk9OX0RPTUFJTlMsICcvKicpLAogICdnaXRsYWInOiBbJ2h0dHBzOi8vZ2l0bGFiLmNvbS8qJ10sCiAgJ2N1c3RvbS1naXRsYWInOiBbJ2h0dHBzOi8vKi8qJ10sCn07Cgpjb25zdCBLRVlCSU5ESU5HX1RPX0RJViA9IHsKICBuZXh0S2V5OiAnbmV4dC1rZXknLAogIHByZXZpb3VzS2V5OiAncHJldmlvdXMta2V5JywKICBuYXZpZ2F0ZVByZXZpb3VzUmVzdWx0UGFnZTogJ25hdmlnYXRlLXByZXZpb3VzLXJlc3VsdC1wYWdlJywKICBuYXZpZ2F0ZU5leHRSZXN1bHRQYWdlOiAnbmF2aWdhdGUtbmV4dC1yZXN1bHQtcGFnZScsCiAgbmF2aWdhdGVLZXk6ICduYXZpZ2F0ZS1rZXknLAogIG5hdmlnYXRlTmV3VGFiS2V5OiAnbmF2aWdhdGUtbmV3LXRhYi1rZXknLAogIG5hdmlnYXRlTmV3VGFiQmFja2dyb3VuZEtleTogJ25hdmlnYXRlLW5ldy10YWItYmFja2dyb3VuZC1rZXknLAogIG5hdmlnYXRlU2VhcmNoVGFiOiAnbmF2aWdhdGUtc2VhcmNoLXRhYicsCiAgbmF2aWdhdGVJbWFnZXNUYWI6ICduYXZpZ2F0ZS1pbWFnZXMtdGFiJywKICBuYXZpZ2F0ZVZpZGVvc1RhYjogJ25hdmlnYXRlLXZpZGVvcy10YWInLAogIG5hdmlnYXRlTWFwc1RhYjogJ25hdmlnYXRlLW1hcHMtdGFiJywKICBuYXZpZ2F0ZU5ld3NUYWI6ICduYXZpZ2F0ZS1uZXdzLXRhYicsCiAgbmF2aWdhdGVTaG9wcGluZ1RhYjogJ25hdmlnYXRlLXNob3BwaW5nLXRhYicsCiAgbmF2aWdhdGVCb29rc1RhYjogJ25hdmlnYXRlLWJvb2tzLXRhYicsCiAgbmF2aWdhdGVGbGlnaHRzVGFiOiAnbmF2aWdhdGUtZmxpZ2h0cy10YWInLAogIG5hdmlnYXRlRmluYW5jaWFsVGFiOiAnbmF2aWdhdGUtZmluYW5jaWFsLXRhYicsCiAgZm9jdXNTZWFyY2hJbnB1dDogJ2ZvY3VzLXNlYXJjaC1pbnB1dCcsCiAgbmF2aWdhdGVTaG93QWxsOiAnbmF2aWdhdGUtc2hvdy1hbGwnLAogIG5hdmlnYXRlU2hvd0hvdXI6ICduYXZpZ2F0ZS1zaG93LWhvdXInLAogIG5hdmlnYXRlU2hvd0RheTogJ25hdmlnYXRlLXNob3ctZGF5JywKICBuYXZpZ2F0ZVNob3dXZWVrOiAnbmF2aWdhdGUtc2hvdy13ZWVrJywKICBuYXZpZ2F0ZVNob3dNb250aDogJ25hdmlnYXRlLXNob3ctbW9udGgnLAogIG5hdmlnYXRlU2hvd1llYXI6ICduYXZpZ2F0ZS1zaG93LXllYXInLAogIHRvZ2dsZVNvcnQ6ICd0b2dnbGUtc29ydCcsCiAgdG9nZ2xlVmVyYmF0aW1TZWFyY2g6ICd0b2dnbGUtdmVyYmF0aW0tc2VhcmNoJywKICBzaG93SW1hZ2VzTGFyZ2U6ICdzaG93LWltYWdlcy1sYXJnZScsCiAgc2hvd0ltYWdlc01lZGl1bTogJ3Nob3ctaW1hZ2VzLW1lZGl1bScsCiAgc2hvd0ltYWdlc0ljb246ICdzaG93LWltYWdlcy1pY29uJywKfTsKCi8qKgogKiBBZGQgb3RoZXIgc2VhcmNoIGVuZ2luZXMgZG9tYWluIG9uIHVzZXIgaW5wdXQKICogQHBhcmFtIHtFbGVtZW50fSBjaGVja2JveAogKi8KY29uc3Qgc2V0U2VhcmNoRW5naW5lUGVybWlzc2lvbl8gPSBhc3luYyAoY2hlY2tib3gpID0+IHsKICBjb25zdCB1cmxzID0gT1BUSU9OQUxfUEVSTUlTU0lPTlNfVVJMU1tjaGVja2JveC5pZF07CiAgaWYgKGNoZWNrYm94LmNoZWNrZWQpIHsKICAgIGNoZWNrYm94LmNoZWNrZWQgPSBmYWxzZTsKICAgIGNvbnN0IGdyYW50ZWQgPSBhd2FpdCBicm93c2VyLnBlcm1pc3Npb25zLnJlcXVlc3Qoe29yaWdpbnM6IHVybHN9KTsKICAgIGNoZWNrYm94LmNoZWNrZWQgPSBncmFudGVkOwogIH0gZWxzZSB7CiAgICBicm93c2VyLnBlcm1pc3Npb25zLnJlbW92ZSh7b3JpZ2luczogdXJsc30pOwogIH0KfTsKCmNsYXNzIE9wdGlvbnNQYWdlTWFuYWdlciB7CiAgYXN5bmMgaW5pdCgpIHsKICAgIGF3YWl0IHRoaXMubG9hZE9wdGlvbnMoKTsKICAgIGNvbnN0IGJyYXZlU2VhcmNoID0gZG9jdW1lbnQuZ2V0RWxlbWVudEJ5SWQoJ2JyYXZlLXNlYXJjaCcpOwogICAgYnJhdmVTZWFyY2guYWRkRXZlbnRMaXN0ZW5lcignY2hhbmdlJywgKCkgPT4gewogICAgICBzZXRTZWFyY2hFbmdpbmVQZXJtaXNzaW9uXyhicmF2ZVNlYXJjaCk7CiAgICB9KTsKICAgIGNvbnN0IHN0YXJ0cGFnZSA9IGRvY3VtZW50LmdldEVsZW1lbnRCeUlkKCdzdGFydHBhZ2UnKTsKICAgIHN0YXJ0cGFnZS5hZGRFdmVudExpc3RlbmVyKCdjaGFuZ2UnLCAoKSA9PiB7CiAgICAgIHNldFNlYXJjaEVuZ2luZVBlcm1pc3Npb25fKHN0YXJ0cGFnZSk7CiAgICB9KTsKICAgIGNvbnN0IHlvdXR1YmUgPSBkb2N1bWVudC5nZXRFbGVtZW50QnlJZCgneW91dHViZScpOwogICAgeW91dHViZS5hZGRFdmVudExpc3RlbmVyKCdjaGFuZ2UnLCAoKSA9PiB7CiAgICAgIHNldFNlYXJjaEVuZ2luZVBlcm1pc3Npb25fKHlvdXR1YmUpOwogICAgfSk7CiAgICBjb25zdCBnb29nbGVTY2hvbGFyID0gZG9jdW1lbnQuZ2V0RWxlbWVudEJ5SWQoJ2dvb2dsZS1zY2hvbGFyJyk7CiAgICBnb29nbGVTY2hvbGFyLmFkZEV2ZW50TGlzdGVuZXIoJ2NoYW5nZScsICgpID0+IHsKICAgICAgc2V0U2VhcmNoRW5naW5lUGVybWlzc2lvbl8oZ29vZ2xlU2Nob2xhcik7CiAgICB9KTsKICAgIGNvbnN0IGdpdGh1YiA9IGRvY3VtZW50LmdldEVsZW1lbnRCeUlkKCdnaXRodWInKTsKICAgIGdpdGh1Yi5hZGRFdmVudExpc3RlbmVyKCdjaGFuZ2UnLCAoKSA9PiB7CiAgICAgIHNldFNlYXJjaEVuZ2luZVBlcm1pc3Npb25fKGdpdGh1Yik7CiAgICB9KTsKICAgIGNvbnN0IGFtYXpvbiA9IGRvY3VtZW50LmdldEVsZW1lbnRCeUlkKCdhbWF6b24nKTsKICAgIGFtYXpvbi5hZGRFdmVudExpc3RlbmVyKCdjaGFuZ2UnLCAoKSA9PiB7CiAgICAgIHNldFNlYXJjaEVuZ2luZVBlcm1pc3Npb25fKGFtYXpvbik7CiAgICB9KTsKICAgIGNvbnN0IGdpdGxhYiA9IGRvY3VtZW50LmdldEVsZW1lbnRCeUlkKCdnaXRsYWInKTsKICAgIGdpdGxhYi5hZGRFdmVudExpc3RlbmVyKCdjaGFuZ2UnLCAoKSA9PiB7CiAgICAgIHNldFNlYXJjaEVuZ2luZVBlcm1pc3Npb25fKGdpdGxhYik7CiAgICB9KTsKICAgIGNvbnN0IGN1c3RvbUdpdGxhYiA9IGRvY3VtZW50LmdldEVsZW1lbnRCeUlkKCdjdXN0b20tZ2l0bGFiJyk7CiAgICBjdXN0b21HaXRsYWIuYWRkRXZlbnRMaXN0ZW5lcignY2hhbmdlJywgKCkgPT4gewogICAgICBzZXRTZWFyY2hFbmdpbmVQZXJtaXNzaW9uXyhjdXN0b21HaXRsYWIpOwogICAgfSk7CiAgICAvLyBOT1RFOiB0aGlzLnNhdmVPcHRpb25zIGFuZCB0aGlzLnJlc2V0VG9EZWZhdWx0cyBjYW5ub3QgYmUgcGFzc2VkIGRpcmVjdGx5CiAgICAvLyBvciBvdGhlcndpc2UgYHRoaXNgIHdvbid0IGJlIGJvdW5kIHRvIHRoZSBvYmplY3QuCiAgICBkb2N1bWVudC5nZXRFbGVtZW50QnlJZCgnc2F2ZScpLmFkZEV2ZW50TGlzdGVuZXIoJ2NsaWNrJywgKCkgPT4gewogICAgICB0aGlzLnNhdmVPcHRpb25zKCk7CiAgICB9KTsKICAgIGRvY3VtZW50LmdldEVsZW1lbnRCeUlkKCdyZXNldCcpLmFkZEV2ZW50TGlzdGVuZXIoJ2NsaWNrJywgKCkgPT4gewogICAgICB0aGlzLnJlc2V0VG9EZWZhdWx0cygpOwogICAgfSk7CiAgfQoKICAvLyBTYXZlcyBvcHRpb25zIGZyb20gdGhlIERPTSB0byBicm93c2VyLnN0b3JhZ2Uuc3luYy4KICBhc3luYyBzYXZlT3B0aW9ucygpIHsKICAgIGNvbnN0IGdldE9wdCA9IChrZXkpID0+IHsKICAgICAgcmV0dXJuIHRoaXMub3B0aW9ucy5nZXQoa2V5KTsKICAgIH07CiAgICBjb25zdCBzZXRPcHQgPSAoa2V5LCB2YWx1ZSkgPT4gewogICAgICB0aGlzLm9wdGlvbnMuc2V0KGtleSwgdmFsdWUpOwogICAgfTsKICAgIC8vIEhhbmRsZSBub24ta2V5YmluZGluZ3Mgc2V0dGluZ3MgZmlyc3QKICAgIHNldE9wdCgKICAgICAgICAnd3JhcE5hdmlnYXRpb24nLAogICAgICAgIGRvY3VtZW50LmdldEVsZW1lbnRCeUlkKCd3cmFwLW5hdmlnYXRpb24nKS5jaGVja2VkLAogICAgKTsKICAgIHNldE9wdCgKICAgICAgICAnYXV0b1NlbGVjdEZpcnN0JywKICAgICAgICBkb2N1bWVudC5nZXRFbGVtZW50QnlJZCgnYXV0by1zZWxlY3QtZmlyc3QnKS5jaGVja2VkLAogICAgKTsKICAgIHNldE9wdCgnaGlkZU91dGxpbmUnLCBkb2N1bWVudC5nZXRFbGVtZW50QnlJZCgnaGlkZS1vdXRsaW5lJykuY2hlY2tlZCk7CiAgICBzZXRPcHQoJ2RlbGF5JywgZG9jdW1lbnQuZ2V0RWxlbWVudEJ5SWQoJ2RlbGF5JykudmFsdWUpOwogICAgc2V0T3B0KAogICAgICAgICdnb29nbGVJbmNsdWRlQ2FyZHMnLAogICAgICAgIGRvY3VtZW50LmdldEVsZW1lbnRCeUlkKCdnb29nbGUtaW5jbHVkZS1jYXJkcycpLmNoZWNrZWQsCiAgICApOwogICAgc2V0T3B0KAogICAgICAgICdnb29nbGVJbmNsdWRlTWVtZXgnLAogICAgICAgIGRvY3VtZW50LmdldEVsZW1lbnRCeUlkKCdnb29nbGUtaW5jbHVkZS1tZW1leCcpLmNoZWNrZWQsCiAgICApOwogICAgc2V0T3B0KAogICAgICAgICdnb29nbGVJbmNsdWRlUGxhY2VzJywKICAgICAgICBkb2N1bWVudC5nZXRFbGVtZW50QnlJZCgnZ29vZ2xlLWluY2x1ZGUtcGxhY2VzJykuY2hlY2tlZCwKICAgICk7CiAgICAvLyBIYW5kbGUga2V5YmluZGluZyBvcHRpb25zCiAgICBmb3IgKGNvbnN0IFtrZXksIG9wdE5hbWVdIG9mIE9iamVjdC5lbnRyaWVzKEtFWUJJTkRJTkdfVE9fRElWKSkgewogICAgICAvLyBLZXliaW5kaW5ncyBhcmUgc3RvcmVkIGludGVybmFsbHkgYXMgYXJyYXlzLCBidXQgZWRpdGVkIGJ5IHVzZXJzIGFzCiAgICAgIC8vIGNvbW1hbiBkZWxpbWl0ZWQgc3RyaW5ncy4KICAgICAgc2V0T3B0KAogICAgICAgICAga2V5LAogICAgICAgICAga2V5YmluZGluZ1N0cmluZ1RvQXJyYXkoZG9jdW1lbnQuZ2V0RWxlbWVudEJ5SWQob3B0TmFtZSkudmFsdWUpLAogICAgICApOwogICAgfQogICAgY29uc3QgY3VzdG9tQ1NTID0gZG9jdW1lbnQuZ2V0RWxlbWVudEJ5SWQoJ2N1c3RvbS1jc3MtdGV4dGFyZWEnKS52YWx1ZTsKICAgIGlmIChnZXRPcHQoJ2N1c3RvbUNTUycpICE9PSBERUZBVUxUX0NTUyB8fCBjdXN0b21DU1MgIT09IERFRkFVTFRfQ1NTKSB7CiAgICAgIGlmIChjdXN0b21DU1MudHJpbSgpKSB7CiAgICAgICAgc2V0T3B0KCdjdXN0b21DU1MnLCBjdXN0b21DU1MpOwogICAgICB9IGVsc2UgewogICAgICAgIHNldE9wdCgnY3VzdG9tQ1NTJywgREVGQVVMVF9DU1MpOwogICAgICB9CiAgICB9CiAgICBzZXRPcHQoCiAgICAgICAgJ3NpbXVsYXRlTWlkZGxlQ2xpY2snLAogICAgICAgIGRvY3VtZW50LmdldEVsZW1lbnRCeUlkKCdzaW11bGF0ZS1taWRkbGUtY2xpY2snKS5jaGVja2VkLAogICAgKTsKICAgIGNvbnN0IGdpdGxhYlVSTFJlZ2V4ID0gZG9jdW1lbnQuZ2V0RWxlbWVudEJ5SWQoJ2N1c3RvbS1naXRsYWItdXJsJykudmFsdWU7CiAgICB0cnkgewogICAgICBuZXcgUmVnRXhwKGdpdGxhYlVSTFJlZ2V4KTsKICAgICAgc2V0T3B0KAogICAgICAgICAgJ2N1c3RvbUdpdGxhYlVybCcsCiAgICAgICAgICBkb2N1bWVudC5nZXRFbGVtZW50QnlJZCgnY3VzdG9tLWdpdGxhYi11cmwnKS52YWx1ZSwKICAgICAgKTsKICAgIH0gY2F0Y2ggKGUpIHsKICAgICAgY29uc3Qgc3RhdHVzID0gZG9jdW1lbnQuZ2V0RWxlbWVudEJ5SWQoJ3N0YXR1cycpOwogICAgICBzdGF0dXMudGV4dENvbnRlbnQgPSBgSW52YWxpZCBnaXRsYWIgVVJMIHJlZ2V4OiAke2UubWVzc2FnZX1gOwogICAgICByZXR1cm47CiAgICB9CiAgICB0cnkgewogICAgICBhd2FpdCB0aGlzLm9wdGlvbnMuc2F2ZSgpOwogICAgICB0aGlzLmZsYXNoTWVzc2FnZSgnT3B0aW9ucyBzYXZlZCcpOwogICAgfSBjYXRjaCAoZSkgewogICAgICB0aGlzLmZsYXNoTWVzc2FnZSgnRXJyb3Igd2hlbiBzYXZpbmcgb3B0aW9ucycpOwogICAgfQogIH0KCiAgbG9hZFNlYXJjaEVuZ2luZVBlcm1pc3Npb25zXyhwZXJtaXNzaW9ucykgewogICAgLy8gQ2hlY2sgd2hhdCBVUkxzIHdlIGhhdmUgcGVybWlzc2lvbiBmb3IuCiAgICBjb25zdCBicmF2ZVNlYXJjaCA9IGRvY3VtZW50LmdldEVsZW1lbnRCeUlkKCdicmF2ZS1zZWFyY2gnKTsKICAgIGJyYXZlU2VhcmNoLmNoZWNrZWQgPSBPUFRJT05BTF9QRVJNSVNTSU9OU19VUkxTWydicmF2ZS1zZWFyY2gnXS5ldmVyeSgKICAgICAgICAodXJsKSA9PiB7CiAgICAgICAgICByZXR1cm4gcGVybWlzc2lvbnMub3JpZ2lucy5pbmNsdWRlcyh1cmwpOwogICAgICAgIH0sCiAgICApOwogICAgY29uc3Qgc3RhcnRwYWdlID0gZG9jdW1lbnQuZ2V0RWxlbWVudEJ5SWQoJ3N0YXJ0cGFnZScpOwogICAgc3RhcnRwYWdlLmNoZWNrZWQgPSBPUFRJT05BTF9QRVJNSVNTSU9OU19VUkxTWydzdGFydHBhZ2UnXS5ldmVyeSgodXJsKSA9PiB7CiAgICAgIHJldHVybiBwZXJtaXNzaW9ucy5vcmlnaW5zLmluY2x1ZGVzKHVybCk7CiAgICB9KTsKICAgIGNvbnN0IHlvdXR1YmUgPSBkb2N1bWVudC5nZXRFbGVtZW50QnlJZCgneW91dHViZScpOwogICAgeW91dHViZS5jaGVja2VkID0gT1BUSU9OQUxfUEVSTUlTU0lPTlNfVVJMU1sneW91dHViZSddLmV2ZXJ5KCh1cmwpID0+IHsKICAgICAgcmV0dXJuIHBlcm1pc3Npb25zLm9yaWdpbnMuaW5jbHVkZXModXJsKTsKICAgIH0pOwogICAgY29uc3QgZ29vZ2xlU2Nob2xhciA9IGRvY3VtZW50LmdldEVsZW1lbnRCeUlkKCdnb29nbGUtc2Nob2xhcicpOwogICAgZ29vZ2xlU2Nob2xhci5jaGVja2VkID0gT1BUSU9OQUxfUEVSTUlTU0lPTlNfVVJMU1snZ29vZ2xlLXNjaG9sYXInXS5ldmVyeSgKICAgICAgICAodXJsKSA9PiB7CiAgICAgICAgICByZXR1cm4gcGVybWlzc2lvbnMub3JpZ2lucy5pbmNsdWRlcyh1cmwpOwogICAgICAgIH0sCiAgICApOwogICAgY29uc3QgYW1hem9uID0gZG9jdW1lbnQuZ2V0RWxlbWVudEJ5SWQoJ2FtYXpvbicpOwogICAgYW1hem9uLmNoZWNrZWQgPSBPUFRJT05BTF9QRVJNSVNTSU9OU19VUkxTWydhbWF6b24nXS5ldmVyeSgodXJsKSA9PiB7CiAgICAgIHJldHVybiBwZXJtaXNzaW9ucy5vcmlnaW5zLmluY2x1ZGVzKHVybCk7CiAgICB9KTsKICAgIGNvbnN0IGdpdGh1YiA9IGRvY3VtZW50LmdldEVsZW1lbnRCeUlkKCdnaXRodWInKTsKICAgIGdpdGh1Yi5jaGVja2VkID0gT1BUSU9OQUxfUEVSTUlTU0lPTlNfVVJMU1snZ2l0aHViJ10uZXZlcnkoKHVybCkgPT4gewogICAgICByZXR1cm4gcGVybWlzc2lvbnMub3JpZ2lucy5pbmNsdWRlcyh1cmwpOwogICAgfSk7CiAgICBjb25zdCBnaXRsYWIgPSBkb2N1bWVudC5nZXRFbGVtZW50QnlJZCgnZ2l0bGFiJyk7CiAgICBnaXRsYWIuY2hlY2tlZCA9IE9QVElPTkFMX1BFUk1JU1NJT05TX1VSTFNbJ2dpdGxhYiddLmV2ZXJ5KCh1cmwpID0+IHsKICAgICAgcmV0dXJuIHBlcm1pc3Npb25zLm9yaWdpbnMuaW5jbHVkZXModXJsKTsKICAgIH0pOwogICAgY29uc3QgY3VzdG9tR2l0bGFiID0gZG9jdW1lbnQuZ2V0RWxlbWVudEJ5SWQoJ2N1c3RvbS1naXRsYWInKTsKICAgIGN1c3RvbUdpdGxhYi5jaGVja2VkID0gT1BUSU9OQUxfUEVSTUlTU0lPTlNfVVJMU1snY3VzdG9tLWdpdGxhYiddLmV2ZXJ5KAogICAgICAgICh1cmwpID0+IHsKICAgICAgICAgIHJldHVybiBwZXJtaXNzaW9ucy5vcmlnaW5zLmluY2x1ZGVzKHVybCk7CiAgICAgICAgfSwKICAgICk7CiAgfQoKICAvLyBMb2FkIG9wdGlvbnMgZnJvbSBicm93c2VyLnN0b3JhZ2Uuc3luYyB0byB0aGUgRE9NLgogIGFzeW5jIGxvYWRPcHRpb25zKCkgewogICAgdGhpcy5vcHRpb25zID0gY3JlYXRlU3luY2VkT3B0aW9ucygpOwogICAgY29uc3QgWywgcGVybWlzc2lvbnNdID0gYXdhaXQgUHJvbWlzZS5hbGwoWwogICAgICB0aGlzLm9wdGlvbnMubG9hZCgpLAogICAgICBicm93c2VyLnBlcm1pc3Npb25zLmdldEFsbCgpLAogICAgXSk7CiAgICB0aGlzLmxvYWRTZWFyY2hFbmdpbmVQZXJtaXNzaW9uc18ocGVybWlzc2lvbnMpOwogICAgY29uc3QgZ2V0T3B0ID0gKGtleSkgPT4gewogICAgICByZXR1cm4gdGhpcy5vcHRpb25zLmdldChrZXkpOwogICAgfTsKICAgIC8vIEhhbmRsZSBjaGVja3Mgc2VwYXJhdGVseS4KICAgIGRvY3VtZW50LmdldEVsZW1lbnRCeUlkKCd3cmFwLW5hdmlnYXRpb24nKS5jaGVja2VkID0KICAgICAgZ2V0T3B0KCd3cmFwTmF2aWdhdGlvbicpOwogICAgZG9jdW1lbnQuZ2V0RWxlbWVudEJ5SWQoJ2F1dG8tc2VsZWN0LWZpcnN0JykuY2hlY2tlZCA9CiAgICAgIGdldE9wdCgnYXV0b1NlbGVjdEZpcnN0Jyk7CiAgICBkb2N1bWVudC5nZXRFbGVtZW50QnlJZCgnaGlkZS1vdXRsaW5lJykuY2hlY2tlZCA9IGdldE9wdCgnaGlkZU91dGxpbmUnKTsKICAgIGRvY3VtZW50LmdldEVsZW1lbnRCeUlkKCdkZWxheScpLnZhbHVlID0gZ2V0T3B0KCdkZWxheScpOwogICAgZG9jdW1lbnQuZ2V0RWxlbWVudEJ5SWQoJ2N1c3RvbS1naXRsYWItdXJsJykudmFsdWUgPQogICAgICBnZXRPcHQoJ2N1c3RvbUdpdGxhYlVybCcpOwogICAgZG9jdW1lbnQuZ2V0RWxlbWVudEJ5SWQoJ2dvb2dsZS1pbmNsdWRlLWNhcmRzJykuY2hlY2tlZCA9CiAgICAgIGdldE9wdCgnZ29vZ2xlSW5jbHVkZUNhcmRzJyk7CiAgICBkb2N1bWVudC5nZXRFbGVtZW50QnlJZCgnZ29vZ2xlLWluY2x1ZGUtbWVtZXgnKS5jaGVja2VkID0KICAgICAgZ2V0T3B0KCdnb29nbGVJbmNsdWRlTWVtZXgnKTsKICAgIGRvY3VtZW50LmdldEVsZW1lbnRCeUlkKCdnb29nbGUtaW5jbHVkZS1wbGFjZXMnKS5jaGVja2VkID0gZ2V0T3B0KAogICAgICAgICdnb29nbGVJbmNsdWRlUGxhY2VzJywKICAgICk7CiAgICAvLyBSZXN0b3JlIG9wdGlvbnMgZnJvbSBkaXZzLgogICAgZm9yIChjb25zdCBba2V5LCBvcHROYW1lXSBvZiBPYmplY3QuZW50cmllcyhLRVlCSU5ESU5HX1RPX0RJVikpIHsKICAgICAgLy8gS2V5YmluZGluZ3MgYXJlIHN0b3JlZCBpbnRlcm5hbGx5IGFzIGFycmF5cywgYnV0IGVkaXRlZCBieSB1c2VycyBhcwogICAgICAvLyBjb21tYW4gZGVsaW1pdGVkIHN0cmluZ3MuCiAgICAgIGRvY3VtZW50LmdldEVsZW1lbnRCeUlkKG9wdE5hbWUpLnZhbHVlID0ga2V5YmluZGluZ0FycmF5VG9TdHJpbmcoCiAgICAgICAgICBnZXRPcHQoa2V5KSwKICAgICAgKTsKICAgIH0KICAgIC8vIExvYWQgY3VzdG9tIENTUwogICAgZG9jdW1lbnQuZ2V0RWxlbWVudEJ5SWQoJ2N1c3RvbS1jc3MtdGV4dGFyZWEnKS52YWx1ZSA9IGdldE9wdCgnY3VzdG9tQ1NTJyk7CiAgICBkb2N1bWVudC5nZXRFbGVtZW50QnlJZCgnc2ltdWxhdGUtbWlkZGxlLWNsaWNrJykuY2hlY2tlZCA9IGdldE9wdCgKICAgICAgICAnc2ltdWxhdGVNaWRkbGVDbGljaycsCiAgICApOwogIH0KCiAgYXN5bmMgcmVzZXRUb0RlZmF1bHRzKCkgewogICAgdHJ5IHsKICAgICAgYXdhaXQgdGhpcy5vcHRpb25zLmNsZWFyKCk7CiAgICAgIGF3YWl0IHRoaXMubG9hZE9wdGlvbnMoKTsKICAgICAgdGhpcy5mbGFzaE1lc3NhZ2UoJ09wdGlvbnMgc2V0IHRvIGRlZmF1bHRzJyk7CiAgICB9IGNhdGNoIChlKSB7CiAgICAgIHRoaXMuZmxhc2hNZXNzYWdlKCdFcnJvciB3aGVuIHNldHRpbmcgb3B0aW9ucyB0byBkZWZhdWx0cycpOwogICAgfQogIH0KCiAgZmxhc2hNZXNzYWdlKG1lc3NhZ2UpIHsKICAgIC8vIFVwZGF0ZSBzdGF0dXMgdG8gbGV0IHVzZXIga25vdy4KICAgIGNvbnN0IHN0YXR1cyA9IGRvY3VtZW50LmdldEVsZW1lbnRCeUlkKCdzdGF0dXMnKTsKICAgIHN0YXR1cy50ZXh0Q29udGVudCA9IG1lc3NhZ2U7CiAgICBzZXRUaW1lb3V0KCgpID0+IHsKICAgICAgc3RhdHVzLnRleHRDb250ZW50ID0gJyc7CiAgICB9LCAzMDAwKTsKICB9Cn0KCmNvbnN0IG1hbmFnZXIgPSBuZXcgT3B0aW9uc1BhZ2VNYW5hZ2VyKCk7Ci8vIE5PVEU6IG1hbmFnZXIuaW5pdCBjYW5ub3QgYmUgcGFzc2VkIGRpcmVjdGx5IG9yIG90aGVyd2lzZSBgdGhpc2Agd29uJ3QgYmUKLy8gYm91bmQgdG8gdGhlIG9iamVjdC4KZG9jdW1lbnQuYWRkRXZlbnRMaXN0ZW5lcignRE9NQ29udGVudExvYWRlZCcsICgpID0+IHsKICBtYW5hZ2VyLmluaXQoKTsKfSk7Cg==\"></script>\n</body>\n\n</html>\n"
 			};
-			
-			function _testBlobCSP() {
-			  try {
-			    const code = `console.log("Blob CSP test");`;
-			    const blob = new Blob([code], { type: 'application/javascript' });
-			    const blobUrl = URL.createObjectURL(blob);
-			
-			    const script = document.createElement('script');
-			    script.src = blobUrl;
-			
-			    let blocked = false;
-			    script.onerror = () => {
-			      blocked = true;
-			    };
-			
-			    document.head.appendChild(script);
-			
-			    return new Promise((resolve) => {
-			      setTimeout(() => {
-			        resolve(!blocked);
-			        document.head.removeChild(script);
-			        URL.revokeObjectURL(blobUrl);
-			      }, 100);
-			    });
-			  } catch (e) {
-			    return Promise.resolve(false);
-			  }
-			}
-			
-			let CAN_USE_BLOB_CSP = false;
-			
-			_testBlobCSP().then((result) => {
-			  CAN_USE_BLOB_CSP = result;
-			});
-			
-			function _base64ToBlob(base64, mimeType = 'application/octet-stream') {
-			  const binary = atob(base64);
-			  const len = binary.length;
-			  const bytes = new Uint8Array(len);
-			  for (let i = 0; i < len; i++) bytes[i] = binary.charCodeAt(i);
-			  return new Blob([bytes], { type: mimeType });
-			}
-			
-			function _getMimeTypeFromPath(p) {
-			  const ext = (p.split('.').pop() || '').toLowerCase();
-			  const map = {
-			    html: 'text/html',
-			    htm: 'text/html',
-			    js: 'text/javascript',
-			    css: 'text/css',
-			    json: 'application/json',
-			    png: 'image/png',
-			    jpg: 'image/jpeg',
-			    jpeg: 'image/jpeg',
-			    gif: 'image/gif',
-			    svg: 'image/svg+xml',
-			    webp: 'image/webp',
-			    ico: 'image/x-icon',
-			    woff: 'font/woff',
-			    woff2: 'font/woff2',
-			    ttf: 'font/ttf',
-			    otf: 'font/otf',
-			    eot: 'application/vnd.ms-fontobject'
-			  };
-			  return map[ext] || 'application/octet-stream';
-			}
-			
-			function _isTextAsset(ext) {
-			  return ['html','htm','js','css','json','svg','txt','xml'].includes(ext);
-			}
-			
-			function _createAssetUrl(path = '') {
-			  if (path.startsWith('/')) path = path.slice(1);
-			  const assetData = EXTENSION_ASSETS_MAP[path];
-			  if (typeof assetData === 'undefined') {
-			    console.warn('[runtime.getURL] Asset not found for', path);
-			    return path;
-			  }
-			
-			  const mime = _getMimeTypeFromPath(path);
-			  const ext = (path.split('.').pop() || '').toLowerCase();
-			
-			  if (CAN_USE_BLOB_CSP) {
-			    let blob;
-			    if (_isTextAsset(ext)) {
-			      blob = new Blob([assetData], { type: mime });
-			    } else {
-			      blob = _base64ToBlob(assetData, mime);
-			    }
-			
-			    return URL.createObjectURL(blob);
-			  } else {
-			    if (_isTextAsset(ext)) {
-			      return `data:${mime};base64,${btoa(assetData)}`;
-			    } else {
-			      return `data:${mime};base64,${assetData}`;
-			    }
-			  }
-			}
 			
 // #endregion
 // #endregion
@@ -1057,6 +957,8 @@ const e=!0,t=e=>e,s="passthrough";let o,c={createHTML:t,createScript:t,createScr
 		    });
 		  }
 		
+		  let REQ_PERMS = [];
+		
   // #region Chrome polyfill
 			  let chrome = {
 			    extension: {
@@ -1064,7 +966,12 @@ const e=!0,t=e=>e,s="passthrough";let o,c={createHTML:t,createScript:t,createScr
 			      sendMessage: (...args) => _messagingHandler.sendMessage(...args),
 			    },
 			    permissions: {
+			      // TODO: Remove origin permission means exclude from origin in startup
 			      request: (permissions, callback) => {
+			        console.log("permissions.request", permissions, callback);
+			        if (Array.isArray(permissions)) {
+			          REQ_PERMS = [...REQ_PERMS, ...permissions];
+			        }
 			        if (typeof callback === "function") {
 			          callback(permissions);
 			        }
@@ -1076,14 +983,28 @@ const e=!0,t=e=>e,s="passthrough";let o,c={createHTML:t,createScript:t,createScr
 			        }
 			        return Promise.resolve(true);
 			      },
+			      getAll: () => {
+			        return Promise.resolve({
+			          permissions: EXTENSION_PERMISSIONS,
+			          origins: ORIGIN_PERMISSIONS,
+			        });
+			      },
+			      onAdded: createNoopListeners(),
+			      onRemoved: createNoopListeners(),
 			    },
 			    i18n: {
 			      getUILanguage: () => {
 			        return USED_LOCALE || "en";
 			      },
-			      getMessage: (key) => {
+			      getMessage: (key, substitutions = []) => {
+			        if (typeof substitutions === "string") {
+			          substitutions = [substitutions];
+			        }
 			        if (typeof LOCALE_KEYS !== "undefined" && LOCALE_KEYS[key]) {
-			          return LOCALE_KEYS[key].message;
+			          return LOCALE_KEYS[key].message?.replace(
+			            /\$(\d+)/g,
+			            (match, p1) => substitutions[p1 - 1] || match
+			          );
 			        }
 			        return key;
 			      },
@@ -1101,10 +1022,18 @@ const e=!0,t=e=>e,s="passthrough";let o,c={createHTML:t,createScript:t,createScr
 			      ...RUNTIME,
 			      onInstalled: createNoopListeners(),
 			      onStartup: createNoopListeners(),
+			      // TODO: Postmessage to parent to open options page or call openOptionsPage
 			      openOptionsPage: () => {
-			        const url = chrome.runtime.getURL(OPTIONS_PAGE_PATH);
-			        console.log("openOptionsPage", _openTab, url);
-			        _openTab(url);
+			        // const url = chrome.runtime.getURL(OPTIONS_PAGE_PATH);
+			        // console.log("openOptionsPage", _openTab, url, EXTENSION_ASSETS_MAP);
+			        // _openTab(url);
+			        if (typeof openOptionsPage === "function") {
+			          openOptionsPage();
+			        } else if (window.parent) {
+			          window.parent.postMessage({ type: "openOptionsPage" }, "*");
+			        } else {
+			          console.warn("openOptionsPage not available.");
+			        }
 			      },
 			      getManifest: () => {
 			        // The manifest object will be injected into the scope where buildPolyfill is called
@@ -1450,7 +1379,7 @@ const e=!0,t=e=>e,s="passthrough";let o,c={createHTML:t,createScript:t,createScr
 			        return [
 			          {
 			            id: dummyId,
-			            url: window.location.href,
+			            url: CURRENT_LOCATION,
 			            active: true,
 			            windowId: 1,
 			            status: "complete",
@@ -1790,61 +1719,91 @@ const e=!0,t=e=>e,s="passthrough";let o,c={createHTML:t,createScript:t,createScr
 			  };
 			  const proxyHandler = {
 			    get(target, key, receiver) {
-			      return __globalsStorage[key] || Reflect.get(target, key, receiver);
+			      try {
+			        return __globalsStorage[key] || Reflect.get(target, key, receiver);
+			      } catch (e) {
+			        console.error("Error getting", key, e);
+			        return undefined;
+			      }
 			    },
 			    set(target, key, value, receiver) {
-			      tc(() => console.log(`[${contextType}] Setting ${key} to ${value}`));
-			      set(key, value);
-			      return Reflect.set(target, key, value, receiver);
+			      try {
+			        tc(() => console.log(`[${contextType}] Setting ${key} to ${value}`));
+			        set(key, value);
+			        return Reflect.set(target, key, value, receiver);
+			      } catch (e) {
+			        console.error("Error setting", key, value, e);
+			        return false;
+			      }
 			    },
 			    has(target, key) {
-			      return key in __globalsStorage || key in target;
+			      try {
+			        return key in __globalsStorage || key in target;
+			      } catch (e) {
+			        console.error("Error has", key, e);
+			        return false;
+			      }
 			    },
 			    getOwnPropertyDescriptor(target, key) {
-			      if (key in __globalsStorage) {
+			      try {
+			        if (key in __globalsStorage) {
+			          return {
+			            configurable: true,
+			            enumerable: true,
+			            writable: true,
+			            value: __globalsStorage[key],
+			          };
+			        }
+			        // fall back to the real globalThis
+			        const desc = Reflect.getOwnPropertyDescriptor(target, key);
+			        // ensure it's configurable so the with‑scope binding logic can override it
+			        if (desc && !desc.configurable) {
+			          desc.configurable = true;
+			        }
+			        return desc;
+			      } catch (e) {
+			        console.error("Error getOwnPropertyDescriptor", key, e);
 			        return {
 			          configurable: true,
 			          enumerable: true,
 			          writable: true,
-			          value: __globalsStorage[key],
+			          value: undefined,
 			        };
 			      }
-			      // fall back to the real globalThis
-			      const desc = Reflect.getOwnPropertyDescriptor(target, key);
-			      // ensure it's configurable so the with‑scope binding logic can override it
-			      if (desc && !desc.configurable) {
-			        desc.configurable = true;
-			      }
-			      return desc;
 			    },
 			
 			    defineProperty(target, key, descriptor) {
-			      // Normalize descriptor to avoid mixed accessor & data attributes
-			      const hasAccessor = "get" in descriptor || "set" in descriptor;
+			      try {
+			        // Normalize descriptor to avoid mixed accessor & data attributes
+			        const hasAccessor = "get" in descriptor || "set" in descriptor;
 			
-			      if (hasAccessor) {
-			        // Build a clean descriptor without value/writable when accessors present
-			        const normalized = {
-			          configurable:
-			            "configurable" in descriptor ? descriptor.configurable : true,
-			          enumerable:
-			            "enumerable" in descriptor ? descriptor.enumerable : false,
-			        };
-			        if ("get" in descriptor) normalized.get = descriptor.get;
-			        if ("set" in descriptor) normalized.set = descriptor.set;
+			        if (hasAccessor) {
+			          // Build a clean descriptor without value/writable when accessors present
+			          const normalized = {
+			            configurable:
+			              "configurable" in descriptor ? descriptor.configurable : true,
+			            enumerable:
+			              "enumerable" in descriptor ? descriptor.enumerable : false,
+			          };
+			          if ("get" in descriptor) normalized.get = descriptor.get;
+			          if ("set" in descriptor) normalized.set = descriptor.set;
 			
-			        // Store accessor references for inspection but avoid breaking invariants
-			        set(key, {
-			          get: descriptor.get,
-			          set: descriptor.set,
-			        });
+			          // Store accessor references for inspection but avoid breaking invariants
+			          set(key, {
+			            get: descriptor.get,
+			            set: descriptor.set,
+			          });
 			
-			        return Reflect.defineProperty(target, key, normalized);
+			          return Reflect.defineProperty(target, key, normalized);
+			        }
+			
+			        // Data descriptor path
+			        set(key, descriptor.value);
+			        return Reflect.defineProperty(target, key, descriptor);
+			      } catch (e) {
+			        console.error("Error defineProperty", key, descriptor, e);
+			        return false;
 			      }
-			
-			      // Data descriptor path
-			      set(key, descriptor.value);
-			      return Reflect.defineProperty(target, key, descriptor);
 			    },
 			  };
 			
@@ -1945,7 +1904,7 @@ const e=!0,t=e=>e,s="passthrough";let o,c={createHTML:t,createScript:t,createScr
     // #region Orchestration Logic
 	const SCRIPT_NAME = "Web Search Navigator";
 	
-	const INJECTED_MANIFEST = {"manifest_version":2,"name":"Web Search Navigator","version":"0.5.2","description":"Keyboard shortcuts for Google search, YouTube, Startpage, Brave Search, Google Scholar, Github, and Amazon.","permissions":["storage"],"content_scripts":[{"js":["browser-polyfill.js","mousetrap.js","mousetrap-global-bind.js","options.js","search_engines.js","main.js"],"run_at":"document_end","matches":["*://www.google.com/search*","*://www.google.ad/search*","*://www.google.ae/search*","*://www.google.com.af/search*","*://www.google.com.ag/search*","*://www.google.com.ai/search*","*://www.google.al/search*","*://www.google.am/search*","*://www.google.co.ao/search*","*://www.google.com.ar/search*","*://www.google.as/search*","*://www.google.at/search*","*://www.google.com.au/search*","*://www.google.az/search*","*://www.google.ba/search*","*://www.google.com.bd/search*","*://www.google.be/search*","*://www.google.bf/search*","*://www.google.bg/search*","*://www.google.com.bh/search*","*://www.google.bi/search*","*://www.google.bj/search*","*://www.google.com.bn/search*","*://www.google.com.bo/search*","*://www.google.com.br/search*","*://www.google.bs/search*","*://www.google.bt/search*","*://www.google.co.bw/search*","*://www.google.by/search*","*://www.google.com.bz/search*","*://www.google.ca/search*","*://www.google.cd/search*","*://www.google.cf/search*","*://www.google.cg/search*","*://www.google.ch/search*","*://www.google.ci/search*","*://www.google.co.ck/search*","*://www.google.cl/search*","*://www.google.cm/search*","*://www.google.cn/search*","*://www.google.com.co/search*","*://www.google.co.cr/search*","*://www.google.com.cu/search*","*://www.google.cv/search*","*://www.google.com.cy/search*","*://www.google.cz/search*","*://www.google.de/search*","*://www.google.dj/search*","*://www.google.dk/search*","*://www.google.dm/search*","*://www.google.com.do/search*","*://www.google.dz/search*","*://www.google.com.ec/search*","*://www.google.ee/search*","*://www.google.com.eg/search*","*://www.google.es/search*","*://www.google.com.et/search*","*://www.google.fi/search*","*://www.google.com.fj/search*","*://www.google.fm/search*","*://www.google.fr/search*","*://www.google.ga/search*","*://www.google.ge/search*","*://www.google.gg/search*","*://www.google.com.gh/search*","*://www.google.com.gi/search*","*://www.google.gl/search*","*://www.google.gm/search*","*://www.google.gp/search*","*://www.google.gr/search*","*://www.google.com.gt/search*","*://www.google.gy/search*","*://www.google.com.hk/search*","*://www.google.hn/search*","*://www.google.hr/search*","*://www.google.ht/search*","*://www.google.hu/search*","*://www.google.co.id/search*","*://www.google.ie/search*","*://www.google.co.il/search*","*://www.google.im/search*","*://www.google.co.in/search*","*://www.google.iq/search*","*://www.google.is/search*","*://www.google.it/search*","*://www.google.je/search*","*://www.google.com.jm/search*","*://www.google.jo/search*","*://www.google.co.jp/search*","*://www.google.co.ke/search*","*://www.google.com.kh/search*","*://www.google.ki/search*","*://www.google.kg/search*","*://www.google.co.kr/search*","*://www.google.com.kw/search*","*://www.google.kz/search*","*://www.google.la/search*","*://www.google.com.lb/search*","*://www.google.li/search*","*://www.google.lk/search*","*://www.google.co.ls/search*","*://www.google.lt/search*","*://www.google.lu/search*","*://www.google.lv/search*","*://www.google.com.ly/search*","*://www.google.co.ma/search*","*://www.google.md/search*","*://www.google.me/search*","*://www.google.mg/search*","*://www.google.mk/search*","*://www.google.ml/search*","*://www.google.com.mm/search*","*://www.google.mn/search*","*://www.google.ms/search*","*://www.google.com.mt/search*","*://www.google.mu/search*","*://www.google.mv/search*","*://www.google.mw/search*","*://www.google.com.mx/search*","*://www.google.com.my/search*","*://www.google.co.mz/search*","*://www.google.com.na/search*","*://www.google.com.nf/search*","*://www.google.com.ng/search*","*://www.google.com.ni/search*","*://www.google.ne/search*","*://www.google.nl/search*","*://www.google.no/search*","*://www.google.com.np/search*","*://www.google.nr/search*","*://www.google.nu/search*","*://www.google.co.nz/search*","*://www.google.com.om/search*","*://www.google.com.pa/search*","*://www.google.com.pe/search*","*://www.google.com.pg/search*","*://www.google.com.ph/search*","*://www.google.com.pk/search*","*://www.google.pl/search*","*://www.google.pn/search*","*://www.google.com.pr/search*","*://www.google.ps/search*","*://www.google.pt/search*","*://www.google.com.py/search*","*://www.google.com.qa/search*","*://www.google.ro/search*","*://www.google.ru/search*","*://www.google.rw/search*","*://www.google.com.sa/search*","*://www.google.com.sb/search*","*://www.google.sc/search*","*://www.google.se/search*","*://www.google.com.sg/search*","*://www.google.sh/search*","*://www.google.si/search*","*://www.google.sk/search*","*://www.google.com.sl/search*","*://www.google.sn/search*","*://www.google.so/search*","*://www.google.sm/search*","*://www.google.sr/search*","*://www.google.st/search*","*://www.google.com.sv/search*","*://www.google.td/search*","*://www.google.tg/search*","*://www.google.co.th/search*","*://www.google.com.tj/search*","*://www.google.tk/search*","*://www.google.tl/search*","*://www.google.tm/search*","*://www.google.tn/search*","*://www.google.to/search*","*://www.google.com.tr/search*","*://www.google.tt/search*","*://www.google.com.tw/search*","*://www.google.co.tz/search*","*://www.google.com.ua/search*","*://www.google.co.ug/search*","*://www.google.co.uk/search*","*://www.google.com.uy/search*","*://www.google.co.uz/search*","*://www.google.com.vc/search*","*://www.google.co.ve/search*","*://www.google.vg/search*","*://www.google.co.vi/search*","*://www.google.com.vn/search*","*://www.google.vu/search*","*://www.google.ws/search*","*://www.google.rs/search*","*://www.google.co.za/search*","*://www.google.co.zm/search*","*://www.google.co.zw/search*","*://www.google.cat/search*"],"css":[]}],"options_ui":{"page":"options_page.html","chrome_style":true},"browser_action":{},"page_action":{},"action":{},"icons":{"16":"icon16.png","48":"icon48.png","128":"icon128.png"},"web_accessible_resources":[],"background":{"scripts":["browser-polyfill.js","webext-dynamic-content-scripts.js","background.js"],"persistent":false},"_id":"web-search-navigator"};
+	const INJECTED_MANIFEST = {"manifest_version":2,"name":"Web Search Navigator","version":"0.5.2","description":"Keyboard shortcuts for Google search, YouTube, Startpage, Brave Search, Google Scholar, Github, and Amazon.","permissions":["storage"],"optional_permissions":["https://*/*","https://search.brave.com/*","https://startpage.com/*","https://www.startpage.com/*","https://www.youtube.com/*","https://github.com/*","https://gitlab.com/*","https://www.github.com/*","https://www.amazon.com/*","https://www.amazon.cn/*","https://www.amazon.in/*","https://www.amazon.co.jp/*","https://www.amazon.co.uk/*","https://www.amazon.ca/*","https://www.amazon.fr/*","https://www.amazon.de/*","https://www.amazon.it/*","https://www.amazon.es/*","https://www.amazon.com.au/*","https://www.amazon.com.mx/*","https://www.amazon.com.br/*","https://www.amazon.nl/*","https://scholar.google.ad/*","https://scholar.google.ae/*","https://scholar.google.al/*","https://scholar.google.am/*","https://scholar.google.as/*","https://scholar.google.at/*","https://scholar.google.az/*","https://scholar.google.ba/*","https://scholar.google.be/*","https://scholar.google.bf/*","https://scholar.google.bg/*","https://scholar.google.bi/*","https://scholar.google.bj/*","https://scholar.google.bs/*","https://scholar.google.bt/*","https://scholar.google.by/*","https://scholar.google.ca/*","https://scholar.google.cat/*","https://scholar.google.cd/*","https://scholar.google.cf/*","https://scholar.google.cg/*","https://scholar.google.ch/*","https://scholar.google.ci/*","https://scholar.google.cl/*","https://scholar.google.cm/*","https://scholar.google.cn/*","https://scholar.google.co.ao/*","https://scholar.google.co.bw/*","https://scholar.google.co.ck/*","https://scholar.google.co.cr/*","https://scholar.google.co.id/*","https://scholar.google.co.il/*","https://scholar.google.co.in/*","https://scholar.google.co.jp/*","https://scholar.google.co.ke/*","https://scholar.google.co.kr/*","https://scholar.google.co.ls/*","https://scholar.google.co.ma/*","https://scholar.google.co.mz/*","https://scholar.google.co.nz/*","https://scholar.google.co.th/*","https://scholar.google.co.tz/*","https://scholar.google.co.ug/*","https://scholar.google.co.uk/*","https://scholar.google.co.uz/*","https://scholar.google.co.ve/*","https://scholar.google.co.vi/*","https://scholar.google.co.za/*","https://scholar.google.co.zm/*","https://scholar.google.co.zw/*","https://scholar.google.com.af/*","https://scholar.google.com.ag/*","https://scholar.google.com.ai/*","https://scholar.google.com.ar/*","https://scholar.google.com.au/*","https://scholar.google.com.bd/*","https://scholar.google.com.bh/*","https://scholar.google.com.bn/*","https://scholar.google.com.bo/*","https://scholar.google.com.br/*","https://scholar.google.com.bz/*","https://scholar.google.com.co/*","https://scholar.google.com.cu/*","https://scholar.google.com.cy/*","https://scholar.google.com.do/*","https://scholar.google.com.ec/*","https://scholar.google.com.eg/*","https://scholar.google.com.et/*","https://scholar.google.com.fj/*","https://scholar.google.com.gh/*","https://scholar.google.com.gi/*","https://scholar.google.com.gt/*","https://scholar.google.com.hk/*","https://scholar.google.com.jm/*","https://scholar.google.com.kh/*","https://scholar.google.com.kw/*","https://scholar.google.com.lb/*","https://scholar.google.com.ly/*","https://scholar.google.com.mm/*","https://scholar.google.com.mt/*","https://scholar.google.com.mx/*","https://scholar.google.com.my/*","https://scholar.google.com.na/*","https://scholar.google.com.nf/*","https://scholar.google.com.ng/*","https://scholar.google.com.ni/*","https://scholar.google.com.np/*","https://scholar.google.com.om/*","https://scholar.google.com.pa/*","https://scholar.google.com.pe/*","https://scholar.google.com.pg/*","https://scholar.google.com.ph/*","https://scholar.google.com.pk/*","https://scholar.google.com.pr/*","https://scholar.google.com.py/*","https://scholar.google.com.qa/*","https://scholar.google.com.sa/*","https://scholar.google.com.sb/*","https://scholar.google.com.sg/*","https://scholar.google.com.sl/*","https://scholar.google.com.sv/*","https://scholar.google.com.tj/*","https://scholar.google.com.tr/*","https://scholar.google.com.tw/*","https://scholar.google.com.ua/*","https://scholar.google.com.uy/*","https://scholar.google.com.vc/*","https://scholar.google.com.vn/*","https://scholar.google.com/*","https://scholar.google.cv/*","https://scholar.google.cz/*","https://scholar.google.de/*","https://scholar.google.dj/*","https://scholar.google.dk/*","https://scholar.google.dm/*","https://scholar.google.dz/*","https://scholar.google.ee/*","https://scholar.google.es/*","https://scholar.google.fi/*","https://scholar.google.fm/*","https://scholar.google.fr/*","https://scholar.google.ga/*","https://scholar.google.ge/*","https://scholar.google.gg/*","https://scholar.google.gl/*","https://scholar.google.gm/*","https://scholar.google.gp/*","https://scholar.google.gr/*","https://scholar.google.gy/*","https://scholar.google.hn/*","https://scholar.google.hr/*","https://scholar.google.ht/*","https://scholar.google.hu/*","https://scholar.google.ie/*","https://scholar.google.im/*","https://scholar.google.iq/*","https://scholar.google.is/*","https://scholar.google.it/*","https://scholar.google.je/*","https://scholar.google.jo/*","https://scholar.google.kg/*","https://scholar.google.ki/*","https://scholar.google.kz/*","https://scholar.google.la/*","https://scholar.google.li/*","https://scholar.google.lk/*","https://scholar.google.lt/*","https://scholar.google.lu/*","https://scholar.google.lv/*","https://scholar.google.md/*","https://scholar.google.me/*","https://scholar.google.mg/*","https://scholar.google.mk/*","https://scholar.google.ml/*","https://scholar.google.mn/*","https://scholar.google.ms/*","https://scholar.google.mu/*","https://scholar.google.mv/*","https://scholar.google.mw/*","https://scholar.google.ne/*","https://scholar.google.nl/*","https://scholar.google.no/*","https://scholar.google.nr/*","https://scholar.google.nu/*","https://scholar.google.pl/*","https://scholar.google.pn/*","https://scholar.google.ps/*","https://scholar.google.pt/*","https://scholar.google.ro/*","https://scholar.google.rs/*","https://scholar.google.ru/*","https://scholar.google.rw/*","https://scholar.google.sc/*","https://scholar.google.se/*","https://scholar.google.sh/*","https://scholar.google.si/*","https://scholar.google.sk/*","https://scholar.google.sm/*","https://scholar.google.sn/*","https://scholar.google.so/*","https://scholar.google.sr/*","https://scholar.google.st/*","https://scholar.google.td/*","https://scholar.google.tg/*","https://scholar.google.tk/*","https://scholar.google.tl/*","https://scholar.google.tm/*","https://scholar.google.tn/*","https://scholar.google.to/*","https://scholar.google.tt/*","https://scholar.google.vg/*","https://scholar.google.vu/*","https://scholar.google.ws/*"],"content_scripts":[{"js":["browser-polyfill.js","mousetrap.js","mousetrap-global-bind.js","options.js","search_engines.js","main.js"],"run_at":"document_end","matches":["*://www.google.com/search*","*://www.google.ad/search*","*://www.google.ae/search*","*://www.google.com.af/search*","*://www.google.com.ag/search*","*://www.google.com.ai/search*","*://www.google.al/search*","*://www.google.am/search*","*://www.google.co.ao/search*","*://www.google.com.ar/search*","*://www.google.as/search*","*://www.google.at/search*","*://www.google.com.au/search*","*://www.google.az/search*","*://www.google.ba/search*","*://www.google.com.bd/search*","*://www.google.be/search*","*://www.google.bf/search*","*://www.google.bg/search*","*://www.google.com.bh/search*","*://www.google.bi/search*","*://www.google.bj/search*","*://www.google.com.bn/search*","*://www.google.com.bo/search*","*://www.google.com.br/search*","*://www.google.bs/search*","*://www.google.bt/search*","*://www.google.co.bw/search*","*://www.google.by/search*","*://www.google.com.bz/search*","*://www.google.ca/search*","*://www.google.cd/search*","*://www.google.cf/search*","*://www.google.cg/search*","*://www.google.ch/search*","*://www.google.ci/search*","*://www.google.co.ck/search*","*://www.google.cl/search*","*://www.google.cm/search*","*://www.google.cn/search*","*://www.google.com.co/search*","*://www.google.co.cr/search*","*://www.google.com.cu/search*","*://www.google.cv/search*","*://www.google.com.cy/search*","*://www.google.cz/search*","*://www.google.de/search*","*://www.google.dj/search*","*://www.google.dk/search*","*://www.google.dm/search*","*://www.google.com.do/search*","*://www.google.dz/search*","*://www.google.com.ec/search*","*://www.google.ee/search*","*://www.google.com.eg/search*","*://www.google.es/search*","*://www.google.com.et/search*","*://www.google.fi/search*","*://www.google.com.fj/search*","*://www.google.fm/search*","*://www.google.fr/search*","*://www.google.ga/search*","*://www.google.ge/search*","*://www.google.gg/search*","*://www.google.com.gh/search*","*://www.google.com.gi/search*","*://www.google.gl/search*","*://www.google.gm/search*","*://www.google.gp/search*","*://www.google.gr/search*","*://www.google.com.gt/search*","*://www.google.gy/search*","*://www.google.com.hk/search*","*://www.google.hn/search*","*://www.google.hr/search*","*://www.google.ht/search*","*://www.google.hu/search*","*://www.google.co.id/search*","*://www.google.ie/search*","*://www.google.co.il/search*","*://www.google.im/search*","*://www.google.co.in/search*","*://www.google.iq/search*","*://www.google.is/search*","*://www.google.it/search*","*://www.google.je/search*","*://www.google.com.jm/search*","*://www.google.jo/search*","*://www.google.co.jp/search*","*://www.google.co.ke/search*","*://www.google.com.kh/search*","*://www.google.ki/search*","*://www.google.kg/search*","*://www.google.co.kr/search*","*://www.google.com.kw/search*","*://www.google.kz/search*","*://www.google.la/search*","*://www.google.com.lb/search*","*://www.google.li/search*","*://www.google.lk/search*","*://www.google.co.ls/search*","*://www.google.lt/search*","*://www.google.lu/search*","*://www.google.lv/search*","*://www.google.com.ly/search*","*://www.google.co.ma/search*","*://www.google.md/search*","*://www.google.me/search*","*://www.google.mg/search*","*://www.google.mk/search*","*://www.google.ml/search*","*://www.google.com.mm/search*","*://www.google.mn/search*","*://www.google.ms/search*","*://www.google.com.mt/search*","*://www.google.mu/search*","*://www.google.mv/search*","*://www.google.mw/search*","*://www.google.com.mx/search*","*://www.google.com.my/search*","*://www.google.co.mz/search*","*://www.google.com.na/search*","*://www.google.com.nf/search*","*://www.google.com.ng/search*","*://www.google.com.ni/search*","*://www.google.ne/search*","*://www.google.nl/search*","*://www.google.no/search*","*://www.google.com.np/search*","*://www.google.nr/search*","*://www.google.nu/search*","*://www.google.co.nz/search*","*://www.google.com.om/search*","*://www.google.com.pa/search*","*://www.google.com.pe/search*","*://www.google.com.pg/search*","*://www.google.com.ph/search*","*://www.google.com.pk/search*","*://www.google.pl/search*","*://www.google.pn/search*","*://www.google.com.pr/search*","*://www.google.ps/search*","*://www.google.pt/search*","*://www.google.com.py/search*","*://www.google.com.qa/search*","*://www.google.ro/search*","*://www.google.ru/search*","*://www.google.rw/search*","*://www.google.com.sa/search*","*://www.google.com.sb/search*","*://www.google.sc/search*","*://www.google.se/search*","*://www.google.com.sg/search*","*://www.google.sh/search*","*://www.google.si/search*","*://www.google.sk/search*","*://www.google.com.sl/search*","*://www.google.sn/search*","*://www.google.so/search*","*://www.google.sm/search*","*://www.google.sr/search*","*://www.google.st/search*","*://www.google.com.sv/search*","*://www.google.td/search*","*://www.google.tg/search*","*://www.google.co.th/search*","*://www.google.com.tj/search*","*://www.google.tk/search*","*://www.google.tl/search*","*://www.google.tm/search*","*://www.google.tn/search*","*://www.google.to/search*","*://www.google.com.tr/search*","*://www.google.tt/search*","*://www.google.com.tw/search*","*://www.google.co.tz/search*","*://www.google.com.ua/search*","*://www.google.co.ug/search*","*://www.google.co.uk/search*","*://www.google.com.uy/search*","*://www.google.co.uz/search*","*://www.google.com.vc/search*","*://www.google.co.ve/search*","*://www.google.vg/search*","*://www.google.co.vi/search*","*://www.google.com.vn/search*","*://www.google.vu/search*","*://www.google.ws/search*","*://www.google.rs/search*","*://www.google.co.za/search*","*://www.google.co.zm/search*","*://www.google.co.zw/search*","*://www.google.cat/search*"],"css":[]}],"options_ui":{"page":"options_page.html","chrome_style":true},"browser_action":{},"page_action":{},"action":{},"icons":{"16":"icon16.png","48":"icon48.png","128":"icon128.png"},"web_accessible_resources":[],"background":{"scripts":["browser-polyfill.js","webext-dynamic-content-scripts.js","background.js"],"persistent":false},"_id":"web-search-navigator"};
 	const CONTENT_SCRIPT_CONFIGS_FOR_MATCHING = [
 	  {
 	    "matches": [
@@ -2152,6 +2111,7 @@ const e=!0,t=e=>e,s="passthrough";let o,c={createHTML:t,createScript:t,createScr
 	
 	const LOCALE_KEYS = {};
 	const USED_LOCALE = "en";
+	const CURRENT_LOCATION = window.location.href;
 	
 	const convertMatchPatternToRegExp = function convertMatchPatternToRegExp(pattern) {
 	    if (pattern === "<all_urls>")
@@ -2197,6 +2157,120 @@ const e=!0,t=e=>e,s="passthrough";let o,c={createHTML:t,createScript:t,createScr
 	      pathRegex = pathRegex + "(?:[?#]|$)";
 	    return `^${schemeRegex}:\\/\\/${hostRegex}${pathRegex}`;
 	  };
+	const ALL_PERMISSIONS = [
+	    ...(INJECTED_MANIFEST.permissions || []),
+	    ...(INJECTED_MANIFEST.optional_permissions || []),
+	    ...(INJECTED_MANIFEST.host_permissions || []),
+	    ...(INJECTED_MANIFEST.content_scripts?.map(cs => cs.matches || [])?.flat() || []),
+	  ];
+	
+	const isOrigin = (perm) => {
+	    if (perm.startsWith("*://") || perm.startsWith("http://") || perm.startsWith("https://")) {
+	        return true;
+	    }
+	    return false;
+	};
+	const ORIGIN_PERMISSIONS = ALL_PERMISSIONS.filter(isOrigin);
+	const EXTENSION_PERMISSIONS = ALL_PERMISSIONS.filter(perm => !isOrigin(perm));
+	
+	function _testBlobCSP() {
+	  try {
+	    const code = `console.log("Blob CSP test");`;
+	    const blob = new Blob([code], { type: 'application/javascript' });
+	    const blobUrl = URL.createObjectURL(blob);
+	
+	    const script = document.createElement('script');
+	    script.src = blobUrl;
+	
+	    let blocked = false;
+	    script.onerror = () => {
+	      blocked = true;
+	    };
+	
+	    document.head.appendChild(script);
+	
+	    return new Promise((resolve) => {
+	      setTimeout(() => {
+	        resolve(!blocked);
+	        document.head.removeChild(script);
+	        URL.revokeObjectURL(blobUrl);
+	      }, 100);
+	    });
+	  } catch (e) {
+	    return Promise.resolve(false);
+	  }
+	}
+	
+	let CAN_USE_BLOB_CSP = false;
+	
+	_testBlobCSP().then((result) => {
+	  CAN_USE_BLOB_CSP = result;
+	});
+	
+	function _base64ToBlob(base64, mimeType = 'application/octet-stream') {
+	  const binary = atob(base64);
+	  const len = binary.length;
+	  const bytes = new Uint8Array(len);
+	  for (let i = 0; i < len; i++) bytes[i] = binary.charCodeAt(i);
+	  return new Blob([bytes], { type: mimeType });
+	}
+	
+	function _getMimeTypeFromPath(p) {
+	  const ext = (p.split('.').pop() || '').toLowerCase();
+	  const map = {
+	    html: 'text/html',
+	    htm: 'text/html',
+	    js: 'text/javascript',
+	    css: 'text/css',
+	    json: 'application/json',
+	    png: 'image/png',
+	    jpg: 'image/jpeg',
+	    jpeg: 'image/jpeg',
+	    gif: 'image/gif',
+	    svg: 'image/svg+xml',
+	    webp: 'image/webp',
+	    ico: 'image/x-icon',
+	    woff: 'font/woff',
+	    woff2: 'font/woff2',
+	    ttf: 'font/ttf',
+	    otf: 'font/otf',
+	    eot: 'application/vnd.ms-fontobject'
+	  };
+	  return map[ext] || 'application/octet-stream';
+	}
+	
+	function _isTextAsset(ext) {
+	  return ['html','htm','js','css','json','svg','txt','xml'].includes(ext);
+	}
+	
+	function _createAssetUrl(path = '') {
+	  if (path.startsWith('/')) path = path.slice(1);
+	  const assetData = EXTENSION_ASSETS_MAP[path];
+	  if (typeof assetData === 'undefined') {
+	    console.warn('[runtime.getURL] Asset not found for', path);
+	    return path;
+	  }
+	
+	  const mime = _getMimeTypeFromPath(path);
+	  const ext = (path.split('.').pop() || '').toLowerCase();
+	
+	  if (CAN_USE_BLOB_CSP) {
+	    let blob;
+	    if (_isTextAsset(ext)) {
+	      blob = new Blob([assetData], { type: mime });
+	    } else {
+	      blob = _base64ToBlob(assetData, mime);
+	    }
+	
+	    return URL.createObjectURL(blob);
+	  } else {
+	    if (_isTextAsset(ext)) {
+	      return `data:${mime};base64,${btoa(assetData)}`;
+	    } else {
+	      return `data:${mime};base64,${assetData}`;
+	    }
+	  }
+	}
 	
 	function _matchGlobPattern(pattern, path) {
 	  if (!pattern || !path) return false;
@@ -4835,394 +4909,239 @@ const e=!0,t=e=>e,s="passthrough";let o,c={createHTML:t,createScript:t,createScr
 		  }));
 		}
 		
+		
+  // #endregion
+// #region Event Listener No changes needed here ---
+		window.addEventListener("message", (event) => {
+		    if (event.data.type === "openOptionsPage") {
+		        openOptionsPage();
+		    }
+		    if (event.data.type === "openPopupPage") {
+		        openPopupPage();
+		    }
+		    if (event.data.type === "closeOptionsPage") {
+		        closeOptionsModal();
+		    }
+		    if (event.data.type === "closePopupPage") {
+		        closePopupModal();
+		    }
+		});
+		
+		
+// #endregion
+// #region Refactored Modal Closing Functions Promise-based ---
+		
 		function closeOptionsModal() {
-		    const DURATION = 100;
-		    const backdrop = document.getElementById('extension-options-backdrop');
-		    const modal = document.getElementById('extension-options-modal');
+		    return new Promise(resolve => {
+		        const DURATION = 100;
+		        const backdrop = document.getElementById('extension-options-backdrop');
+		        const modal = document.getElementById('extension-options-modal');
 		
-		    if (!backdrop || !modal) return;
-		
-		    modal.style.animation = `modalCloseAnimation ${DURATION / 1000}s ease-out forwards`;
-		    backdrop.style.animation = `backdropFadeOut ${DURATION / 1000}s ease-out forwards`;
-		
-		    setTimeout(() => {
-		        if (confirm('Close options and reload the page?')) {
-		            window.location.reload();
-		        } else {
-		            backdrop.remove();
+		        if (!backdrop || !modal) {
+		            return resolve();
 		        }
-		    }, DURATION);
+		
+		        modal.style.animation = `modalCloseAnimation ${DURATION / 1000}s ease-out forwards`;
+		        backdrop.style.animation = `backdropFadeOut ${DURATION / 1000}s ease-out forwards`;
+		
+		        setTimeout(() => {
+		            if (confirm('Close options and reload the page?')) {
+		                window.location.reload(); // Note: This will stop further execution
+		            } else {
+		                backdrop.remove();
+		            }
+		            resolve();
+		        }, DURATION);
+		    });
 		}
 		
 		function closePopupModal() {
-		    const DURATION = 100;
-		    const backdrop = document.getElementById('extension-popup-backdrop');
-		    const modal = document.getElementById('extension-popup-modal');
+		    return new Promise(resolve => {
+		        const DURATION = 100;
+		        const backdrop = document.getElementById('extension-popup-backdrop');
+		        const modal = document.getElementById('extension-popup-modal');
 		
-		    if (!backdrop || !modal) return;
+		        if (!backdrop || !modal) {
+		            return resolve();
+		        }
 		
-		    modal.style.animation = `modalCloseAnimation ${DURATION / 1000}s ease-out forwards`;
-		    backdrop.style.animation = `backdropFadeOut ${DURATION / 1000}s ease-out forwards`;
+		        modal.style.animation = `modalCloseAnimation ${DURATION / 1000}s ease-out forwards`;
+		        backdrop.style.animation = `backdropFadeOut ${DURATION / 1000}s ease-out forwards`;
 		
-		    setTimeout(() => {
-		        backdrop.remove();
-		    }, DURATION);
+		        setTimeout(() => {
+		            backdrop.remove();
+		            resolve();
+		        }, DURATION);
+		    });
 		}
 		
-		function openPopupPage() {
+		
+// #endregion
+// #region Simplified Public API Functions ---
+		
+		async function openPopupPage() {
 		    if (!POPUP_PAGE_PATH || typeof EXTENSION_ASSETS_MAP === 'undefined') {
 		        console.warn('No popup page available.');
 		        return;
 		    }
-		    const html = EXTENSION_ASSETS_MAP[POPUP_PAGE_PATH];
-		    if (!html) { console.warn('Popup HTML not found in asset map'); return; }
-		
-		    let backdrop = document.getElementById('extension-popup-backdrop');
-		    let modal, iframe;
-		
-		    if (!backdrop) {
-		        backdrop = document.createElement('div');
-		        backdrop.id = 'extension-popup-backdrop';
-		
-		        modal = document.createElement('div');
-		        modal.id = 'extension-popup-modal';
-		
-		        const extensionName = INJECTED_MANIFEST.name || 'Extension Popup';
-		        const iconSrc = EXTENSION_ICON || 'data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSIyNCIgaGVpZ2h0PSIyNCIgdmlld0JveD0iMCAwIDI0IDI0IiBzdHJva2Utd2lkdGg9IjIiIGZpbGw9Im5vbmUiIHN0cm9rZT0iY3VycmVudENvbG9yIiBzdHJva2UtbGluZWNhcD0icm91bmQiIHN0cm9rZS1saW5lam9pbj0icm91bmQiPjxwYXRoIHN0cm9rZT0ibm9uZSIgZD0iTTAgMGgyNHYyNEgweiIgZmlsbD0ibm9uZSIvPjxwYXRoIGQ9Ik00IDdoM2ExIDEgMCAwIDAgMSAtMXYtMWEyIDIgMCAwIDEgNCAwdjFhMSAxIDAgMCAwIDEgMWgzYTEgMSAwIDAgMSAxIDF2M2ExIDEgMCAwIDAgMSAxaDFhMiAyIDAgMCAxIDAgNGgtMWExIDEgMCAwIDAgLTEgMXYzYTEgMSAwIDAgMSAtMSAxaC0zYTEgMSAwIDAgMSAtMSAtMXYtMWEyIDIgMCAwIDAgLTQgMHYxYTEgMSAwIDAgMSAtMSAxaC0zYTEgMSAwIDAgMSAtMSAtMXYtM2ExIDEgMCAwIDEgMSAtMWgxYTIgMiAwIDAgMCAwIC00aC0xYTEgMSAwIDAgMSAtMSAtMXYtM2ExIDEgMCAwIDEgMSAtMSIgLz48L3N2Zz4=';
-		
-		        backdrop.innerHTML = `
-		            <style>
-		                #extension-popup-backdrop {
-		                    position: fixed;
-		                    top: 0;
-		                    left: 0;
-		                    width: 100vw;
-		                    height: 100vh;
-		                    background: rgba(0, 0, 0, 0.13);
-		                    backdrop-filter: blur(3px);
-		                    z-index: 2147483646;
-		                    display: flex;
-		                    align-items: center;
-		                    justify-content: center;
-		                    animation: backdropFadeIn 0.3s ease-out forwards;
-		                }
-		
-		                #extension-popup-modal {
-		                    width: 400px;
-		                    height: 600px;
-		                    max-width: calc(100vw - 40px);
-		                    max-height: calc(100vh - 40px);
-		                    z-index: 2147483647;
-		                    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
-		                    --background: #ffffff;
-		                    --rad: 10px;
-		                    --border: #666;
-		                    --border-thickness: 2px;
-		                    display: flex;
-		                    flex-direction: column;
-		                    overflow: hidden;
-		                    animation: modalOpenAnimation 0.3s ease-out forwards;
-		                }
-		
-		                #extension-popup-modal .modal-header {
-		                    display: flex;
-		                    justify-content: space-between;
-		                    align-items: flex-end;
-		                    padding: 0 16px;
-		                    position: relative;
-		                    flex-shrink: 0;
-		                }
-		
-		                #extension-popup-modal .tab {
-		                    padding: 12px 16px;
-		                    color: #606266;
-		                    display: flex;
-		                    align-items: center;
-		                    gap: 8px;
-		                    font-size: 14px;
-		                    cursor: pointer;
-		                    border-radius: var(--rad) var(--rad) 0 0;
-		                    transition: background-color 0.2s ease;
-		                    user-select: none;
-		                }
-		
-		                #extension-popup-modal .tab.active, #extension-popup-modal .tab.close-button {
-		                    background-color: var(--background);
-		                    border: var(--border-thickness) solid var(--border);
-		                    border-bottom-color: var(--background);
-		                    margin-bottom: -1px;
-		                    z-index: 1;
-		                    color: #303133;
-		                    font-weight: 500;
-		                }
-		
-		                #extension-popup-modal .tab.close-button {
-		                    padding: 8px;
-		                }
-		
-		                #extension-popup-modal .tab.close-button:hover {
-		                    background-color: #f5f7fa;
-		                }
-		
-		                #extension-popup-modal .tab svg {
-		                    stroke: currentColor;
-		                }
-		
-		                #extension-popup-modal .tab.active svg {
-		                    width: 16px;
-		                    height: 16px;
-		                }
-		
-		                #extension-popup-modal .tab.close-button svg {
-		                    width: 20px;
-		                    height: 20px;
-		                }
-		
-		                #extension-popup-modal .modal-content {
-		                    flex-grow: 1;
-		                    position: relative;
-		                    border-radius: var(--rad);
-		                    overflow: hidden;
-		                    bottom: calc(var(--border-thickness) - 1px);
-		                    border: var(--border-thickness) solid var(--border);
-		                }
-		
-		                #extension-popup-modal .modal-content iframe {
-		                    width: 100%;
-		                    height: 100%;
-		                    border: 0;
-		                    background: white;
-		                }
-		            </style>
-		        `;
-		
-		        modal.innerHTML = `
-		            <div class="modal-header">
-		                <div class="tab active">
-		                    <img src="${iconSrc}" style="width: 16px; height: 16px;" onerror="this.style.display='none'">
-		                    <span>${extensionName}</span>
-		                </div>
-		                <div class="tab close-button">
-		                    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
-		                       <line x1="18" y1="6" x2="6" y2="18"></line>
-		                       <line x1="6" y1="6" x2="18" y2="18"></line>
-		                    </svg>
-		                </div>
-		            </div>
-		            <div class="modal-content">
-		                <iframe></iframe>
-		            </div>
-		        `;
-		
-		        backdrop.appendChild(modal);
-		
-		        backdrop.addEventListener('click', (e) => {
-		            if (e.target === backdrop) {
-		                closePopupModal();
-		            }
-		        });
-		        modal.querySelector('.tab.close-button').addEventListener('click', closePopupModal);
-		        document.body.appendChild(backdrop);
-		        iframe = modal.querySelector('iframe');
-		    } else {
-		        modal = backdrop.querySelector('#extension-popup-modal');
-		        iframe = modal.querySelector('iframe');
-		        if (!iframe) {
-		            iframe = document.createElement('iframe');
-		            modal.querySelector('.modal-content').appendChild(iframe);
-		        }
-		        backdrop.style.display = 'flex';
-		    }
-		
-		    try {
-		        const polyfillString = generateCompletePolyfillForIframe();
-		
-		        const doc = new DOMParser().parseFromString(html, 'text/html');
-		        const script = doc.createElement('script');
-		        script.textContent = polyfillString;
-		        doc.head.insertAdjacentElement("afterbegin", script);
-		        iframe.srcdoc = doc.documentElement.outerHTML;
-		    } catch(e) {
-		        console.error('Error generating complete polyfill for iframe', e);
-		        iframe.srcdoc = html;
-		    }
+		    await openModal({
+		        type: 'popup',
+		        pagePath: POPUP_PAGE_PATH,
+		        defaultTitle: 'Extension Popup',
+		        closeFn: closePopupModal
+		    });
 		}
 		
-		function openOptionsPage() {
+		async function openOptionsPage() {
 		    if (!OPTIONS_PAGE_PATH || typeof EXTENSION_ASSETS_MAP === 'undefined') {
 		        console.warn('No options page available.');
 		        return;
 		    }
-		    const html = EXTENSION_ASSETS_MAP[OPTIONS_PAGE_PATH];
-		    if (!html) { console.warn('Options HTML not found in asset map'); return; }
+		    await openModal({
+		        type: 'options',
+		        pagePath: OPTIONS_PAGE_PATH,
+		        defaultTitle: 'Extension Options',
+		        closeFn: closeOptionsModal
+		    });
+		}
 		
-		    let backdrop = document.getElementById('extension-options-backdrop');
+		
+// #endregion
+// #region Generic Modal Logic Style Injection ---
+		
+		let stylesInjected = false;
+		function injectGlobalStyles() {
+		    if (stylesInjected) return;
+		    stylesInjected = true;
+		
+		    const styles = `
+		        .extension-backdrop {
+		            position: fixed;
+		            top: 0; left: 0;
+		            width: 100vw; height: 100vh;
+		            background: rgba(0, 0, 0, 0.13);
+		            backdrop-filter: blur(3px);
+		            z-index: 2147483646;
+		            display: flex;
+		            align-items: center;
+		            justify-content: center;
+		            animation: backdropFadeIn 0.3s ease-out forwards;
+		        }
+		
+		        .extension-modal {
+		            z-index: 2147483647;
+		            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+		            --background: #ffffff;
+		            --rad: 10px;
+		            --border: #666;
+		            --border-thickness: 2px;
+		            display: flex;
+		            flex-direction: column;
+		            overflow: hidden;
+		            animation: modalOpenAnimation 0.3s ease-out forwards;
+		        }
+		
+		        /* Size specific styles */
+		        .extension-modal.popup-size {
+		            width: 400px; height: 600px;
+		            max-width: calc(100vw - 40px);
+		            max-height: calc(100vh - 40px);
+		        }
+		        .extension-modal.options-size {
+		            width: calc(100vw - 80px); height: calc(100vh - 80px);
+		            max-width: 1200px;
+		            max-height: 800px;
+		        }
+		
+		        /* Common modal components */
+		        .extension-modal .modal-header {
+		            display: flex; justify-content: space-between; align-items: flex-end;
+		            padding: 0 16px; position: relative; flex-shrink: 0;
+		        }
+		        .extension-modal .tab {
+		            padding: 12px 16px; color: #606266;
+		            display: flex; align-items: center; gap: 8px;
+		            font-size: 14px; cursor: pointer;
+		            border-radius: var(--rad) var(--rad) 0 0;
+		            transition: background-color 0.2s ease; user-select: none;
+		        }
+		        .extension-modal .tab.active, .extension-modal .tab.close-button {
+		            background-color: var(--background);
+		            border: var(--border-thickness) solid var(--border);
+		            border-bottom-color: var(--background);
+		            margin-bottom: -1px; z-index: 1;
+		            color: #303133; font-weight: 500;
+		        }
+		        .extension-modal .tab.close-button { padding: 8px; }
+		        .extension-modal .tab.close-button:hover { background-color: #f5f7fa; }
+		        .extension-modal .tab svg { stroke: currentColor; }
+		        .extension-modal .tab.active img { width: 16px; height: 16px; }
+		        .extension-modal .tab.close-button svg { width: 20px; height: 20px; }
+		
+		        .extension-modal .modal-content {
+		            flex-grow: 1; position: relative;
+		            border-radius: var(--rad); overflow: hidden;
+		            bottom: calc(var(--border-thickness) - 1px);
+		            border: var(--border-thickness) solid var(--border);
+		        }
+		        .extension-modal .modal-content iframe {
+		            width: 100%; height: 100%; border: 0; background: white;
+		        }
+		
+		        /* Animations */
+		        @keyframes backdropFadeIn { from { opacity: 0; backdrop-filter: blur(0px); } to { opacity: 1; backdrop-filter: blur(3px); } }
+		        @keyframes backdropFadeOut { from { opacity: 1; backdrop-filter: blur(3px); } to { opacity: 0; backdrop-filter: blur(0px); } }
+		        @keyframes modalOpenAnimation { from { transform: scaleY(0.8); opacity: 0; } to { transform: scaleY(1); opacity: 1; } }
+		        @keyframes modalCloseAnimation { from { transform: scaleY(1); opacity: 1; } to { transform: scaleY(0.8); opacity: 0; } }
+		    `;
+		    const styleSheet = document.createElement("style");
+		    styleSheet.id = "extension-global-styles";
+		    styleSheet.innerText = styles;
+		    document.head.appendChild(styleSheet);
+		}
+		
+		async function openModal(config) {
+		    injectGlobalStyles();
+		
+		    const { type, pagePath, defaultTitle, closeFn } = config;
+		    const html = EXTENSION_ASSETS_MAP[pagePath];
+		    if (!html) {
+		        console.warn(`${defaultTitle} HTML not found in asset map`);
+		        return;
+		    }
+		
+		    const backdropId = `extension-${type}-backdrop`;
+		    const modalId = `extension-${type}-modal`;
+		    const sizeClass = `${type}-size`;
+		
+// #endregion
+    // #region Smoothly close the other modal if it s open ---
+		    const otherType = type === 'popup' ? 'options' : 'popup';
+		    const otherBackdrop = document.getElementById(`extension-${otherType}-backdrop`);
+		    if (otherBackdrop) {
+		        // Await the correct close function
+		        await (otherType === 'popup' ? closePopupModal() : closeOptionsModal());
+		    }
+		
+		    let backdrop = document.getElementById(backdropId);
 		    let modal, iframe;
 		
 		    if (!backdrop) {
 		        backdrop = document.createElement('div');
-		        backdrop.id = 'extension-options-backdrop';
+		        backdrop.id = backdropId;
+		        backdrop.className = 'extension-backdrop';
 		
 		        modal = document.createElement('div');
-		        modal.id = 'extension-options-modal';
+		        modal.id = modalId;
+		        modal.className = `extension-modal ${sizeClass}`;
 		
-		        const extensionName = INJECTED_MANIFEST.name || 'Extension Options';
+		        const extensionName = INJECTED_MANIFEST.name || defaultTitle;
 		        const iconSrc = EXTENSION_ICON || 'data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSIyNCIgaGVpZ2h0PSIyNCIgdmlld0JveD0iMCAwIDI0IDI0IiBzdHJva2Utd2lkdGg9IjIiIGZpbGw9Im5vbmUiIHN0cm9rZT0iY3VycmVudENvbG9yIiBzdHJva2UtbGluZWNhcD0icm91bmQiIHN0cm9rZS1saW5lam9pbj0icm91bmQiPjxwYXRoIHN0cm9rZT0ibm9uZSIgZD0iTTAgMGgyNHYyNEgweiIgZmlsbD0ibm9uZSIvPjxwYXRoIGQ9Ik00IDdoM2ExIDEgMCAwIDAgMSAtMXYtMWEyIDIgMCAwIDEgNCAwdjFhMSAxIDAgMCAwIDEgMWgzYTEgMSAwIDAgMSAxIDF2M2ExIDEgMCAwIDAgMSAxaDFhMiAyIDAgMCAxIDAgNGgtMWExIDEgMCAwIDAgLTEgMXYzYTEgMSAwIDAgMSAtMSAxaC0zYTEgMSAwIDAgMSAtMSAtMXYtMWEyIDIgMCAwIDAgLTQgMHYxYTEgMSAwIDAgMSAtMSAxaC0zYTEgMSAwIDAgMSAtMSAtMXYtM2ExIDEgMCAwIDEgMSAtMWgxYTIgMiAwIDAgMCAwIC00aC0xYTEgMSAwIDAgMSAtMSAtMXYtM2ExIDEgMCAwIDEgMSAtMSIgLz48L3N2Zz4=';
-		
-		        backdrop.innerHTML = `
-		            <style>
-		                #extension-options-backdrop {
-		                    position: fixed;
-		                    top: 0;
-		                    left: 0;
-		                    width: 100vw;
-		                    height: 100vh;
-		                    background: rgba(0, 0, 0, 0.13);
-		                    backdrop-filter: blur(3px);
-		                    z-index: 2147483646;
-		                    display: flex;
-		                    align-items: center;
-		                    justify-content: center;
-		                    animation: backdropFadeIn 0.3s ease-out forwards;
-		                }
-		
-		                @keyframes backdropFadeIn {
-		                    from {
-		                        opacity: 0;
-		                        backdrop-filter: blur(0px);
-		                    }
-		                    to {
-		                        opacity: 1;
-		                        backdrop-filter: blur(3px);
-		                    }
-		                }
-		
-		                @keyframes backdropFadeOut {
-		                    from {
-		                        opacity: 1;
-		                        backdrop-filter: blur(3px);
-		                    }
-		                    to {
-		                        opacity: 0;
-		                        backdrop-filter: blur(0px);
-		                    }
-		                }
-		
-		                @keyframes modalOpenAnimation {
-		                    from {
-		                        transform: scaleY(0.8);
-		                        opacity: 0;
-		                    }
-		                    to {
-		                        transform: scaleY(1);
-		                        opacity: 1;
-		                    }
-		                }
-		
-		                @keyframes modalCloseAnimation {
-		                    from {
-		                        transform: scaleY(1);
-		                        opacity: 1;
-		                    }
-		                    to {
-		                        transform: scaleY(0.8);
-		                        opacity: 0;
-		                    }
-		                }
-		
-		                #extension-options-modal {
-		                    width: calc(100vw - 80px);
-		                    height: calc(100vh - 80px);
-		                    max-width: 1200px;
-		                    max-height: 800px;
-		                    z-index: 2147483647;
-		                    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
-		                    --background: #ffffff;
-		                    --rad: 10px;
-		                    --border: #666;
-		                    --border-thickness: 2px;
-		                    display: flex;
-		                    flex-direction: column;
-		                    overflow: hidden;
-		                    animation: modalOpenAnimation 0.3s ease-out forwards;
-		                }
-		
-		                #extension-options-modal .modal-header {
-		                    display: flex;
-		                    justify-content: space-between;
-		                    align-items: flex-end;
-		                    padding: 0 16px;
-		                    position: relative;
-		                    flex-shrink: 0;
-		                }
-		
-		                #extension-options-modal .tab {
-		                    padding: 12px 16px;
-		                    color: #606266;
-		                    display: flex;
-		                    align-items: center;
-		                    gap: 8px;
-		                    font-size: 14px;
-		                    cursor: pointer;
-		                    border-radius: var(--rad) var(--rad) 0 0;
-		                    transition: background-color 0.2s ease;
-		                    user-select: none;
-		                }
-		
-		                #extension-options-modal .tab.active, #extension-options-modal .tab.close-button {
-		                    background-color: var(--background);
-		                    border: var(--border-thickness) solid var(--border);
-		                    border-bottom-color: var(--background);
-		                    margin-bottom: -1px;
-		                    z-index: 1;
-		                    color: #303133;
-		                    font-weight: 500;
-		                }
-		
-		                #extension-options-modal .tab.close-button {
-		                    padding: 8px;
-		                }
-		
-		                #extension-options-modal .tab.close-button:hover {
-		                    background-color: #f5f7fa;
-		                }
-		
-		                #extension-options-modal .tab svg {
-		                    stroke: currentColor;
-		                }
-		
-		                #extension-options-modal .tab.active svg {
-		                    width: 16px;
-		                    height: 16px;
-		                }
-		
-		                #extension-options-modal .tab.close-button svg {
-		                    width: 20px;
-		                    height: 20px;
-		                }
-		
-		                #extension-options-modal .modal-content {
-		                    flex-grow: 1;
-		                    position: relative;
-		                    border-radius: var(--rad);
-		                    overflow: hidden;
-		                    bottom: calc(var(--border-thickness) - 1px);
-		                    border: var(--border-thickness) solid var(--border);
-		                }
-		
-		                #extension-options-modal .modal-content iframe {
-		                    width: 100%;
-		                    height: 100%;
-		                    border: 0;
-		                    background: white;
-		                }
-		            </style>
-		        `;
 		
 		        modal.innerHTML = `
 		            <div class="modal-header">
 		                <div class="tab active">
-		                    <img src="${iconSrc}" style="width: 16px; height: 16px;" onerror="this.style.display='none'">
+		                    <img src="${iconSrc}" onerror="this.style.display='none'">
 		                    <span>${extensionName}</span>
 		                </div>
 		                <div class="tab close-button">
@@ -5240,51 +5159,70 @@ const e=!0,t=e=>e,s="passthrough";let o,c={createHTML:t,createScript:t,createScr
 		        backdrop.appendChild(modal);
 		
 		        backdrop.addEventListener('click', (e) => {
-		            if (e.target === backdrop) {
-		                closeOptionsModal();
-		            }
+		            if (e.target === backdrop) closeFn();
 		        });
-		        modal.querySelector('.tab.close-button').addEventListener('click', closeOptionsModal);
+		        modal.querySelector('.close-button').addEventListener('click', closeFn);
+		        
 		        document.body.appendChild(backdrop);
 		        iframe = modal.querySelector('iframe');
+		
 		    } else {
-		        modal = backdrop.querySelector('#extension-options-modal');
-		        iframe = modal.querySelector('iframe');
-		        if (!iframe) {
-		            iframe = document.createElement('iframe');
-		            modal.querySelector('.modal-content').appendChild(iframe);
-		        }
+		        // If it already exists, just make sure it's visible
 		        backdrop.style.display = 'flex';
+		        modal = backdrop.querySelector('.extension-modal');
+		        iframe = modal.querySelector('iframe');
 		    }
 		
+		    // Load content into iframe
 		    try {
 		        const polyfillString = generateCompletePolyfillForIframe();
-		
 		        const doc = new DOMParser().parseFromString(html, 'text/html');
 		        const script = doc.createElement('script');
 		        script.textContent = polyfillString;
 		        doc.head.insertAdjacentElement("afterbegin", script);
 		        iframe.srcdoc = doc.documentElement.outerHTML;
-		    } catch(e) {
+		    } catch (e) {
 		        console.error('Error generating complete polyfill for iframe', e);
 		        iframe.srcdoc = html;
 		    }
 		}
 		
 		function generateCompletePolyfillForIframe() {
-		    const polyfillString = "\n// -- Messaging implementation\n\nfunction createEventBus(\n  scopeId,\n  type = \"page\", // \"page\" or \"iframe\"\n  { allowedOrigin = \"*\", children = [], parentWindow = null } = {},\n) {\n  if (!scopeId) throw new Error(\"createEventBus requires a scopeId\");\n\n  const handlers = {};\n\n  function handleIncoming(ev) {\n    if (allowedOrigin !== \"*\" && ev.origin !== allowedOrigin) return;\n\n    const msg = ev.data;\n    if (!msg || msg.__eventBus !== true || msg.scopeId !== scopeId) return;\n\n    const { event, payload } = msg;\n\n    // PAGE: if it's an INIT from an iframe, adopt it\n    if (type === \"page\" && event === \"__INIT__\") {\n      const win = ev.source;\n      if (win && !children.includes(win)) {\n        children.push(win);\n      }\n      return;\n    }\n\n    (handlers[event] || []).forEach((fn) =>\n      fn(payload, { origin: ev.origin, source: ev.source }),\n    );\n  }\n\n  window.addEventListener(\"message\", handleIncoming);\n\n  function emitTo(win, event, payload) {\n    const envelope = {\n      __eventBus: true,\n      scopeId,\n      event,\n      payload,\n    };\n    win.postMessage(envelope, allowedOrigin);\n  }\n\n  // IFRAME: announce to page on startup\n  if (type === \"iframe\") {\n    setTimeout(() => {\n      const pw = parentWindow || window.parent;\n      if (pw && pw.postMessage) {\n        emitTo(pw, \"__INIT__\", null);\n      }\n    }, 0);\n  }\n\n  return {\n    on(event, fn) {\n      handlers[event] = handlers[event] || [];\n      handlers[event].push(fn);\n    },\n    off(event, fn) {\n      if (!handlers[event]) return;\n      handlers[event] = handlers[event].filter((h) => h !== fn);\n    },\n    /**\n     * Emits an event.\n     * @param {string} event - The event name.\n     * @param {any} payload - The event payload.\n     * @param {object} [options] - Emission options.\n     * @param {Window} [options.to] - A specific window to target. If provided, message is ONLY sent to the target.\n     */\n    emit(event, payload, { to } = {}) {\n      // If a specific target window is provided, send only to it and DO NOT dispatch locally.\n      // This prevents a port from receiving its own messages.\n      if (to) {\n        if (to && typeof to.postMessage === \"function\") {\n          emitTo(to, event, payload);\n        }\n        return; // Exit after targeted send.\n      }\n\n      // For broadcast messages (no 'to' target), dispatch locally first.\n      (handlers[event] || []).forEach((fn) =>\n        fn(payload, { origin: location.origin, source: window }),\n      );\n\n      // Then propagate the broadcast to other windows.\n      if (type === \"page\") {\n        children.forEach((win) => emitTo(win, event, payload));\n      } else {\n        const pw = parentWindow || window.parent;\n        if (pw && pw.postMessage) {\n          emitTo(pw, event, payload);\n        }\n      }\n    },\n  };\n}\n\nfunction createRuntime(type = \"background\", bus) {\n  let nextId = 1;\n  const pending = {};\n  const msgListeners = [];\n\n  let nextPortId = 1;\n  const ports = {};\n  const onConnectListeners = [];\n\n  function parseArgs(args) {\n    let target, message, options, callback;\n    const arr = [...args];\n    if (arr.length === 0) {\n      throw new Error(\"sendMessage requires at least one argument\");\n    }\n    if (arr.length === 1) {\n      return { message: arr[0] };\n    }\n    // last object could be options\n    if (\n      arr.length &&\n      typeof arr[arr.length - 1] === \"object\" &&\n      !Array.isArray(arr[arr.length - 1])\n    ) {\n      options = arr.pop();\n    }\n    // last function is callback\n    if (arr.length && typeof arr[arr.length - 1] === \"function\") {\n      callback = arr.pop();\n    }\n    if (\n      arr.length === 2 &&\n      (typeof arr[0] === \"string\" || typeof arr[0] === \"number\")\n    ) {\n      [target, message] = arr;\n    } else {\n      [message] = arr;\n    }\n    return { target, message, options, callback };\n  }\n\n  if (type === \"background\") {\n    bus.on(\"__REQUEST__\", ({ id, message }, { source }) => {\n      let responded = false,\n        isAsync = false;\n      function sendResponse(resp) {\n        if (responded) return;\n        responded = true;\n        // Target the response directly back to the window that sent the request.\n        bus.emit(\"__RESPONSE__\", { id, response: resp }, { to: source });\n      }\n      const results = msgListeners\n        .map((fn) => {\n          try {\n            // msg, sender, sendResponse\n            const ret = fn(message, { id, tab: { id: source } }, sendResponse);\n            if (ret === true || (ret && typeof ret.then === \"function\")) {\n              isAsync = true;\n              return ret;\n            }\n            return ret;\n          } catch (e) {\n            console.error(e);\n          }\n        })\n        .filter((r) => r !== undefined);\n\n      const promises = results.filter((r) => r && typeof r.then === \"function\");\n      if (!isAsync && promises.length === 0) {\n        const out = results.length === 1 ? results[0] : results;\n        sendResponse(out);\n      } else if (promises.length) {\n        Promise.all(promises).then((vals) => {\n          if (!responded) {\n            const out = vals.length === 1 ? vals[0] : vals;\n            sendResponse(out);\n          }\n        });\n      }\n    });\n  }\n\n  if (type !== \"background\") {\n    bus.on(\"__RESPONSE__\", ({ id, response }) => {\n      const entry = pending[id];\n      if (!entry) return;\n      entry.resolve(response);\n      if (entry.callback) entry.callback(response);\n      delete pending[id];\n    });\n  }\n\n  function sendMessage(...args) {\n    if (type === \"background\") {\n      throw new Error(\"Background cannot sendMessage to itself\");\n    }\n    const { target, message, callback } = parseArgs(args);\n    const id = nextId++;\n    const promise = new Promise((resolve) => {\n      pending[id] = { resolve, callback };\n      bus.emit(\"__REQUEST__\", { id, message });\n    });\n    return promise;\n  }\n\n  bus.on(\"__PORT_CONNECT__\", ({ portId, name }, { source }) => {\n    if (type !== \"background\") return;\n    const backgroundPort = makePort(\"background\", portId, name, source);\n    ports[portId] = backgroundPort;\n\n    onConnectListeners.forEach((fn) => fn(backgroundPort));\n\n    // send back a CONNECT_ACK so the client can\n    // start listening on its end:\n    bus.emit(\"__PORT_CONNECT_ACK__\", { portId, name }, { to: source });\n  });\n\n  // Clients handle the ACK and finalize their Port object by learning the remote window.\n  bus.on(\"__PORT_CONNECT_ACK__\", ({ portId, name }, { source }) => {\n    if (type === \"background\") return; // ignore\n    const p = ports[portId];\n    if (!p) return;\n    // Call the port's internal finalize method to complete the handshake\n    if (p._finalize) {\n      p._finalize(source);\n    }\n  });\n\n  // Any port message travels via \"__PORT_MESSAGE__\"\n  bus.on(\"__PORT_MESSAGE__\", (envelope, { source }) => {\n    const { portId } = envelope;\n    const p = ports[portId];\n    if (!p) return;\n    p._receive(envelope, source);\n  });\n\n  // Any port disconnect:\n  bus.on(\"__PORT_DISCONNECT__\", ({ portId }) => {\n    const p = ports[portId];\n    if (!p) return;\n    p._disconnect();\n    delete ports[portId];\n  });\n\n  // Refactored makePort to correctly manage internal state and the connection handshake.\n  function makePort(side, portId, name, remoteWindow) {\n    let onMessageHandlers = [];\n    let onDisconnectHandlers = [];\n    let buffer = [];\n    // Unique instance ID for this port instance\n    const instanceId = Math.random().toString(36).slice(2) + Date.now();\n    // These state variables are part of the closure and are updated by _finalize\n    let _ready = side === \"background\";\n\n    function _drainBuffer() {\n      buffer.forEach((m) => _post(m));\n      buffer = [];\n    }\n\n    function _post(msg) {\n      // Always use the 'to' parameter for port messages, making them directional.\n      // Include senderInstanceId\n      bus.emit(\n        \"__PORT_MESSAGE__\",\n        { portId, msg, senderInstanceId: instanceId },\n        { to: remoteWindow },\n      );\n    }\n\n    function postMessage(msg) {\n      if (!_ready) {\n        buffer.push(msg);\n      } else {\n        _post(msg);\n      }\n    }\n\n    function _receive(envelope, source) {\n      // envelope: { msg, senderInstanceId }\n      if (envelope.senderInstanceId === instanceId) return; // Don't dispatch to self\n      onMessageHandlers.forEach((fn) =>\n        fn(envelope.msg, { id: portId, tab: { id: source } }),\n      );\n    }\n\n    function disconnect() {\n      // Also use the 'to' parameter for disconnect messages\n      bus.emit(\"__PORT_DISCONNECT__\", { portId }, { to: remoteWindow });\n      _disconnect();\n      delete ports[portId];\n    }\n\n    function _disconnect() {\n      onDisconnectHandlers.forEach((fn) => fn());\n      onMessageHandlers = [];\n      onDisconnectHandlers = [];\n    }\n\n    // This function is called on the client port when the ACK is received from background.\n    // It updates the port's state, completing the connection.\n    function _finalize(win) {\n      remoteWindow = win; // <-- This is the crucial part: learn the destination\n      _ready = true;\n      _drainBuffer();\n    }\n\n    return {\n      name,\n      sender: {\n        id: portId,\n      },\n      onMessage: {\n        addListener(fn) {\n          onMessageHandlers.push(fn);\n        },\n        removeListener(fn) {\n          onMessageHandlers = onMessageHandlers.filter((x) => x !== fn);\n        },\n      },\n      onDisconnect: {\n        addListener(fn) {\n          onDisconnectHandlers.push(fn);\n        },\n        removeListener(fn) {\n          onDisconnectHandlers = onDisconnectHandlers.filter((x) => x !== fn);\n        },\n      },\n      postMessage,\n      disconnect,\n      // Internal methods used by the runtime\n      _receive,\n      _disconnect,\n      _finalize, // Expose the finalizer for the ACK handler\n    };\n  }\n\n  function connect(connectInfo = {}) {\n    if (type === \"background\") {\n      throw new Error(\"Background must use onConnect, not connect()\");\n    }\n    const name = connectInfo.name || \"\";\n    const portId = nextPortId++;\n    // create the client side port\n    // remoteWindow is initially null; it will be set by _finalize upon ACK.\n    const clientPort = makePort(\"client\", portId, name, null);\n    ports[portId] = clientPort;\n\n    // fire the connect event across the bus\n    bus.emit(\"__PORT_CONNECT__\", { portId, name });\n    return clientPort;\n  }\n\n  function onConnect(fn) {\n    if (type !== \"background\") {\n      throw new Error(\"connect event only fires in background\");\n    }\n    onConnectListeners.push(fn);\n  }\n\n  return {\n    // rpc:\n    sendMessage,\n    onMessage: {\n      addListener(fn) {\n        msgListeners.push(fn);\n      },\n      removeListener(fn) {\n        const i = msgListeners.indexOf(fn);\n        if (i >= 0) msgListeners.splice(i, 1);\n      },\n    },\n\n    // port API:\n    connect,\n    onConnect: {\n      addListener(fn) {\n        onConnect(fn);\n      },\n      removeListener(fn) {\n        const i = onConnectListeners.indexOf(fn);\n        if (i >= 0) onConnectListeners.splice(i, 1);\n      },\n    },\n  };\n}\n\n\n// --- Abstraction Layer: PostMessage Target\n\nlet nextRequestId = 1;\nconst pendingRequests = new Map(); // requestId -> { resolve, reject, timeout }\n\nfunction sendAbstractionRequest(method, args = []) {\n  return new Promise((resolve, reject) => {\n    const requestId = nextRequestId++;\n\n    const timeout = setTimeout(() => {\n      pendingRequests.delete(requestId);\n      reject(new Error(`PostMessage request timeout for method: ${method}`));\n    }, 10000);\n\n    pendingRequests.set(requestId, { resolve, reject, timeout });\n\n    window.parent.postMessage({\n      type: \"abstraction-request\",\n      requestId,\n      method,\n      args,\n    });\n  });\n}\n\nwindow.addEventListener(\"message\", (event) => {\n  const { type, requestId, success, result, error } = event.data;\n\n  if (type === \"abstraction-response\") {\n    const pending = pendingRequests.get(requestId);\n    if (pending) {\n      clearTimeout(pending.timeout);\n      pendingRequests.delete(requestId);\n\n      if (success) {\n        pending.resolve(result);\n      } else {\n        const err = new Error(error.message);\n        err.stack = error.stack;\n        pending.reject(err);\n      }\n    }\n  }\n});\n\nasync function _storageSet(items) {\n  return sendAbstractionRequest(\"_storageSet\", [items]);\n}\n\nasync function _storageGet(keys) {\n  return sendAbstractionRequest(\"_storageGet\", [keys]);\n}\n\nasync function _storageRemove(keysToRemove) {\n  return sendAbstractionRequest(\"_storageRemove\", [keysToRemove]);\n}\n\nasync function _storageClear() {\n  return sendAbstractionRequest(\"_storageClear\");\n}\n\nasync function _fetch(url, options) {\n  return sendAbstractionRequest(\"_fetch\", [url, options]);\n}\n\nfunction _registerMenuCommand(name, func) {\n  console.warn(\"_registerMenuCommand called from iframe context:\", name);\n  return sendAbstractionRequest(\"_registerMenuCommand\", [\n    name,\n    func.toString(),\n  ]);\n}\n\nfunction _openTab(url) {\n  return sendAbstractionRequest(\"_openTab\", [url]);\n}\n\nasync function _initStorage() {\n  return sendAbstractionRequest(\"_initStorage\");\n}\n\n\n// --- Extension Assets Map & Helper Functions ---\nconst EXTENSION_ASSETS_MAP = {{EXTENSION_ASSETS_MAP}};\n\nfunction _testBlobCSP() {\n  try {\n    const code = `console.log(\"Blob CSP test\");`;\n    const blob = new Blob([code], { type: 'application/javascript' });\n    const blobUrl = URL.createObjectURL(blob);\n\n    const script = document.createElement('script');\n    script.src = blobUrl;\n\n    let blocked = false;\n    script.onerror = () => {\n      blocked = true;\n    };\n\n    document.head.appendChild(script);\n\n    return new Promise((resolve) => {\n      setTimeout(() => {\n        resolve(!blocked);\n        document.head.removeChild(script);\n        URL.revokeObjectURL(blobUrl);\n      }, 100);\n    });\n  } catch (e) {\n    return Promise.resolve(false);\n  }\n}\n\nlet CAN_USE_BLOB_CSP = false;\n\n_testBlobCSP().then((result) => {\n  CAN_USE_BLOB_CSP = result;\n});\n\nfunction _base64ToBlob(base64, mimeType = 'application/octet-stream') {\n  const binary = atob(base64);\n  const len = binary.length;\n  const bytes = new Uint8Array(len);\n  for (let i = 0; i < len; i++) bytes[i] = binary.charCodeAt(i);\n  return new Blob([bytes], { type: mimeType });\n}\n\nfunction _getMimeTypeFromPath(p) {\n  const ext = (p.split('.').pop() || '').toLowerCase();\n  const map = {\n    html: 'text/html',\n    htm: 'text/html',\n    js: 'text/javascript',\n    css: 'text/css',\n    json: 'application/json',\n    png: 'image/png',\n    jpg: 'image/jpeg',\n    jpeg: 'image/jpeg',\n    gif: 'image/gif',\n    svg: 'image/svg+xml',\n    webp: 'image/webp',\n    ico: 'image/x-icon',\n    woff: 'font/woff',\n    woff2: 'font/woff2',\n    ttf: 'font/ttf',\n    otf: 'font/otf',\n    eot: 'application/vnd.ms-fontobject'\n  };\n  return map[ext] || 'application/octet-stream';\n}\n\nfunction _isTextAsset(ext) {\n  return ['html','htm','js','css','json','svg','txt','xml'].includes(ext);\n}\n\nfunction _createAssetUrl(path = '') {\n  if (path.startsWith('/')) path = path.slice(1);\n  const assetData = EXTENSION_ASSETS_MAP[path];\n  if (typeof assetData === 'undefined') {\n    console.warn('[runtime.getURL] Asset not found for', path);\n    return path;\n  }\n\n  const mime = _getMimeTypeFromPath(path);\n  const ext = (path.split('.').pop() || '').toLowerCase();\n\n  if (CAN_USE_BLOB_CSP) {\n    let blob;\n    if (_isTextAsset(ext)) {\n      blob = new Blob([assetData], { type: mime });\n    } else {\n      blob = _base64ToBlob(assetData, mime);\n    }\n\n    return URL.createObjectURL(blob);\n  } else {\n    if (_isTextAsset(ext)) {\n      return `data:${mime};base64,${btoa(assetData)}`;\n    } else {\n      return `data:${mime};base64,${assetData}`;\n    }\n  }\n}\n\n// -- Polyfill Implementation\nfunction buildPolyfill({ isBackground = false, isOtherPage = false } = {}) {\n  // Generate a unique context ID for this polyfill instance\n  const contextType = isBackground\n    ? \"background\"\n    : isOtherPage\n      ? \"options\"\n      : \"content\";\n  const contextId = `${contextType}_${Math.random()\n    .toString(36)\n    .substring(2, 15)}`;\n\n  const IS_IFRAME = \"true\" === \"true\";\n  const BUS = (function () {\n    if (globalThis.__BUS) {\n      return globalThis.__BUS;\n    }\n    globalThis.__BUS = createEventBus(\n      \"web-search-navigator\",\n      IS_IFRAME ? \"iframe\" : \"page\"\n    );\n    return globalThis.__BUS;\n  })();\n  const RUNTIME = createRuntime(isBackground ? \"background\" : \"tab\", BUS);\n  const createNoopListeners = () => ({\n    addListener: (callback) => {\n      console.log(\"addListener\", callback);\n    },\n    removeListener: (callback) => {\n      console.log(\"removeListener\", callback);\n    },\n  });\n  // TODO: Stub\n  const storageChangeListeners = new Set();\n  function broadcastStorageChange(changes, areaName) {\n    storageChangeListeners.forEach((listener) => {\n      listener(changes, areaName);\n    });\n  }\n\n  // --- Chrome polyfill\n  let chrome = {\n    extension: {\n      isAllowedIncognitoAccess: () => Promise.resolve(true),\n      sendMessage: (...args) => _messagingHandler.sendMessage(...args),\n    },\n    permissions: {\n      request: (permissions, callback) => {\n        if (typeof callback === \"function\") {\n          callback(permissions);\n        }\n        return Promise.resolve(permissions);\n      },\n      contains: (permissions, callback) => {\n        if (typeof callback === \"function\") {\n          callback(true);\n        }\n        return Promise.resolve(true);\n      },\n    },\n    i18n: {\n      getUILanguage: () => {\n        return USED_LOCALE || \"en\";\n      },\n      getMessage: (key) => {\n        if (typeof LOCALE_KEYS !== \"undefined\" && LOCALE_KEYS[key]) {\n          return LOCALE_KEYS[key].message;\n        }\n        return key;\n      },\n    },\n    alarms: {\n      onAlarm: createNoopListeners(),\n      create: () => {\n        console.log(\"alarms.create\", arguments);\n      },\n      get: () => {\n        console.log(\"alarms.get\", arguments);\n      },\n    },\n    runtime: {\n      ...RUNTIME,\n      onInstalled: createNoopListeners(),\n      onStartup: createNoopListeners(),\n      openOptionsPage: () => {\n        const url = chrome.runtime.getURL(OPTIONS_PAGE_PATH);\n        console.log(\"openOptionsPage\", _openTab, url);\n        _openTab(url);\n      },\n      getManifest: () => {\n        // The manifest object will be injected into the scope where buildPolyfill is called\n        if (typeof INJECTED_MANIFEST !== \"undefined\") {\n          return JSON.parse(JSON.stringify(INJECTED_MANIFEST)); // Return deep copy\n        }\n        console.warn(\n          \"INJECTED_MANIFEST not found for chrome.runtime.getManifest\"\n        );\n        return { name: \"Unknown\", version: \"0.0\", manifest_version: 2 };\n      },\n      getURL: (path) => {\n        if (!path) return \"\";\n        if (path.startsWith(\"/\")) {\n          path = path.substring(1);\n        }\n\n        if (typeof _createAssetUrl === \"function\") {\n          return _createAssetUrl(path);\n        }\n\n        console.warn(\n          `chrome.runtime.getURL fallback for '${path}'. Assets may not be available.`\n        );\n        // Attempt a relative path resolution (highly context-dependent and likely wrong)\n        try {\n          if (window.location.protocol.startsWith(\"http\")) {\n            return new URL(path, window.location.href).toString();\n          }\n        } catch (e) {\n          /* ignore error, fallback */\n        }\n        return path;\n      },\n      id: \"polyfilled-extension-\" + Math.random().toString(36).substring(2, 15),\n      lastError: null,\n      getPlatformInfo: async () => {\n        const platform = {\n          os: \"unknown\",\n          arch: \"unknown\",\n          nacl_arch: \"unknown\",\n        };\n\n        if (typeof navigator !== \"undefined\") {\n          const userAgent = navigator.userAgent.toLowerCase();\n          if (userAgent.includes(\"mac\")) platform.os = \"mac\";\n          else if (userAgent.includes(\"win\")) platform.os = \"win\";\n          else if (userAgent.includes(\"linux\")) platform.os = \"linux\";\n          else if (userAgent.includes(\"android\")) platform.os = \"android\";\n          else if (userAgent.includes(\"ios\")) platform.os = \"ios\";\n\n          if (userAgent.includes(\"x86_64\") || userAgent.includes(\"amd64\")) {\n            platform.arch = \"x86-64\";\n          } else if (userAgent.includes(\"i386\") || userAgent.includes(\"i686\")) {\n            platform.arch = \"x86-32\";\n          } else if (userAgent.includes(\"arm\")) {\n            platform.arch = \"arm\";\n          }\n        }\n\n        return platform;\n      },\n      getBrowserInfo: async () => {\n        const info = {\n          name: \"unknown\",\n          version: \"unknown\",\n          buildID: \"unknown\",\n        };\n\n        if (typeof navigator !== \"undefined\") {\n          const userAgent = navigator.userAgent;\n          if (userAgent.includes(\"Chrome\")) {\n            info.name = \"Chrome\";\n            const match = userAgent.match(/Chrome\\/([0-9.]+)/);\n            if (match) info.version = match[1];\n          } else if (userAgent.includes(\"Firefox\")) {\n            info.name = \"Firefox\";\n            const match = userAgent.match(/Firefox\\/([0-9.]+)/);\n            if (match) info.version = match[1];\n          } else if (userAgent.includes(\"Safari\")) {\n            info.name = \"Safari\";\n            const match = userAgent.match(/Version\\/([0-9.]+)/);\n            if (match) info.version = match[1];\n          }\n        }\n\n        return info;\n      },\n    },\n    storage: {\n      local: {\n        get: function (keys, callback) {\n          if (typeof _storageGet !== \"function\")\n            throw new Error(\"_storageGet not defined\");\n\n          const promise = _storageGet(keys);\n\n          if (typeof callback === \"function\") {\n            promise\n              .then((result) => {\n                try {\n                  callback(result);\n                } catch (e) {\n                  console.error(\"Error in storage.get callback:\", e);\n                }\n              })\n              .catch((error) => {\n                console.error(\"Storage.get error:\", error);\n                callback({});\n              });\n            return;\n          }\n\n          return promise;\n        },\n        set: function (items, callback) {\n          if (typeof _storageSet !== \"function\")\n            throw new Error(\"_storageSet not defined\");\n\n          const promise = _storageSet(items).then((result) => {\n            broadcastStorageChange(items, \"local\");\n            return result;\n          });\n\n          if (typeof callback === \"function\") {\n            promise\n              .then((result) => {\n                try {\n                  callback(result);\n                } catch (e) {\n                  console.error(\"Error in storage.set callback:\", e);\n                }\n              })\n              .catch((error) => {\n                console.error(\"Storage.set error:\", error);\n                callback();\n              });\n            return;\n          }\n\n          return promise;\n        },\n        remove: function (keys, callback) {\n          if (typeof _storageRemove !== \"function\")\n            throw new Error(\"_storageRemove not defined\");\n\n          const promise = _storageRemove(keys).then((result) => {\n            const changes = {};\n            const keyList = Array.isArray(keys) ? keys : [keys];\n            keyList.forEach((key) => {\n              changes[key] = { oldValue: undefined, newValue: undefined };\n            });\n            broadcastStorageChange(changes, \"local\");\n            return result;\n          });\n\n          if (typeof callback === \"function\") {\n            promise\n              .then((result) => {\n                try {\n                  callback(result);\n                } catch (e) {\n                  console.error(\"Error in storage.remove callback:\", e);\n                }\n              })\n              .catch((error) => {\n                console.error(\"Storage.remove error:\", error);\n                callback();\n              });\n            return;\n          }\n\n          return promise;\n        },\n        clear: function (callback) {\n          if (typeof _storageClear !== \"function\")\n            throw new Error(\"_storageClear not defined\");\n\n          const promise = _storageClear().then((result) => {\n            broadcastStorageChange({}, \"local\");\n            return result;\n          });\n\n          if (typeof callback === \"function\") {\n            promise\n              .then((result) => {\n                try {\n                  callback(result);\n                } catch (e) {\n                  console.error(\"Error in storage.clear callback:\", e);\n                }\n              })\n              .catch((error) => {\n                console.error(\"Storage.clear error:\", error);\n                callback();\n              });\n            return;\n          }\n\n          return promise;\n        },\n        onChanged: {\n          addListener: (callback) => {\n            storageChangeListeners.add(callback);\n          },\n          removeListener: (callback) => {\n            storageChangeListeners.delete(callback);\n          },\n        },\n      },\n      sync: {\n        get: function (keys, callback) {\n          console.warn(\"chrome.storage.sync polyfill maps to local\");\n          return chrome.storage.local.get(keys, callback);\n        },\n        set: function (items, callback) {\n          console.warn(\"chrome.storage.sync polyfill maps to local\");\n\n          const promise = chrome.storage.local.set(items).then((result) => {\n            broadcastStorageChange(items, \"sync\");\n            return result;\n          });\n\n          if (typeof callback === \"function\") {\n            promise\n              .then((result) => {\n                try {\n                  callback(result);\n                } catch (e) {\n                  console.error(\"Error in storage.sync.set callback:\", e);\n                }\n              })\n              .catch((error) => {\n                console.error(\"Storage.sync.set error:\", error);\n                callback();\n              });\n            return;\n          }\n\n          return promise;\n        },\n        remove: function (keys, callback) {\n          console.warn(\"chrome.storage.sync polyfill maps to local\");\n\n          const promise = chrome.storage.local.remove(keys).then((result) => {\n            const changes = {};\n            const keyList = Array.isArray(keys) ? keys : [keys];\n            keyList.forEach((key) => {\n              changes[key] = { oldValue: undefined, newValue: undefined };\n            });\n            broadcastStorageChange(changes, \"sync\");\n            return result;\n          });\n\n          if (typeof callback === \"function\") {\n            promise\n              .then((result) => {\n                try {\n                  callback(result);\n                } catch (e) {\n                  console.error(\"Error in storage.sync.remove callback:\", e);\n                }\n              })\n              .catch((error) => {\n                console.error(\"Storage.sync.remove error:\", error);\n                callback();\n              });\n            return;\n          }\n\n          return promise;\n        },\n        clear: function (callback) {\n          console.warn(\"chrome.storage.sync polyfill maps to local\");\n\n          const promise = chrome.storage.local.clear().then((result) => {\n            broadcastStorageChange({}, \"sync\");\n            return result;\n          });\n\n          if (typeof callback === \"function\") {\n            promise\n              .then((result) => {\n                try {\n                  callback(result);\n                } catch (e) {\n                  console.error(\"Error in storage.sync.clear callback:\", e);\n                }\n              })\n              .catch((error) => {\n                console.error(\"Storage.sync.clear error:\", error);\n                callback();\n              });\n            return;\n          }\n\n          return promise;\n        },\n        onChanged: {\n          addListener: (callback) => {\n            storageChangeListeners.add(callback);\n          },\n          removeListener: (callback) => {\n            storageChangeListeners.delete(callback);\n          },\n        },\n      },\n      onChanged: {\n        addListener: (callback) => {\n          storageChangeListeners.add(callback);\n        },\n        removeListener: (callback) => {\n          storageChangeListeners.delete(callback);\n        },\n      },\n      managed: {\n        get: function (keys, callback) {\n          console.warn(\"chrome.storage.managed polyfill is read-only empty.\");\n\n          const promise = Promise.resolve({});\n\n          if (typeof callback === \"function\") {\n            promise.then((result) => {\n              try {\n                callback(result);\n              } catch (e) {\n                console.error(\"Error in storage.managed.get callback:\", e);\n              }\n            });\n            return;\n          }\n\n          return promise;\n        },\n      },\n    },\n    tabs: {\n      query: async (queryInfo) => {\n        console.warn(\n          \"chrome.tabs.query polyfill only returns current tab info.\"\n        );\n        const dummyId = Math.floor(Math.random() * 1000) + 1;\n        return [\n          {\n            id: dummyId,\n            url: window.location.href,\n            active: true,\n            windowId: 1,\n            status: \"complete\",\n          },\n        ];\n      },\n      create: async ({ url }) => {\n        console.log(`[Polyfill tabs.create] URL: ${url}`);\n        if (typeof _openTab !== \"function\")\n          throw new Error(\"_openTab not defined\");\n        _openTab(url);\n        const dummyId = Math.floor(Math.random() * 1000) + 1001;\n        return Promise.resolve({\n          id: dummyId,\n          url: url,\n          active: true,\n          windowId: 1,\n        });\n      },\n      sendMessage: async (tabId, message) => {\n        console.warn(\n          `chrome.tabs.sendMessage polyfill (to tab ${tabId}) redirects to runtime.sendMessage (current context).`\n        );\n        return chrome.runtime.sendMessage(message);\n      },\n    },\n    notifications: {\n      create: async (notificationId, options) => {\n        try {\n          let id = notificationId;\n          let notificationOptions = options;\n\n          if (typeof notificationId === \"object\" && notificationId !== null) {\n            notificationOptions = notificationId;\n            id = \"notification_\" + Math.random().toString(36).substring(2, 15);\n          } else if (typeof notificationId === \"string\" && options) {\n            id = notificationId;\n            notificationOptions = options;\n          } else {\n            throw new Error(\"Invalid parameters for notifications.create\");\n          }\n\n          if (!notificationOptions || typeof notificationOptions !== \"object\") {\n            throw new Error(\"Notification options must be an object\");\n          }\n\n          const {\n            title,\n            message,\n            iconUrl,\n            type = \"basic\",\n          } = notificationOptions;\n\n          if (!title || !message) {\n            throw new Error(\"Notification must have title and message\");\n          }\n\n          if (\"Notification\" in window) {\n            if (Notification.permission === \"granted\") {\n              const notification = new Notification(title, {\n                body: message,\n                icon: iconUrl,\n                tag: id,\n              });\n\n              console.log(`[Notifications] Created notification: ${id}`);\n              return id;\n            } else if (Notification.permission === \"default\") {\n              const permission = await Notification.requestPermission();\n              if (permission === \"granted\") {\n                const notification = new Notification(title, {\n                  body: message,\n                  icon: iconUrl,\n                  tag: id,\n                });\n                console.log(\n                  `[Notifications] Created notification after permission: ${id}`\n                );\n                return id;\n              } else {\n                console.warn(\n                  \"[Notifications] Permission denied for notifications\"\n                );\n                return id;\n              }\n            } else {\n              console.warn(\"[Notifications] Notifications are blocked\");\n              return id;\n            }\n          } else {\n            console.warn(\n              \"[Notifications] Native notifications not supported, using console fallback\"\n            );\n            console.log(`[Notification] ${title}: ${message}`);\n            return id;\n          }\n        } catch (error) {\n          console.error(\n            \"[Notifications] Error creating notification:\",\n            error.message\n          );\n          throw error;\n        }\n      },\n      clear: async (notificationId) => {\n        console.log(`[Notifications] Clear notification: ${notificationId}`);\n        // For native notifications, there's no direct way to clear by ID\n        // This is a limitation of the Web Notifications API\n        return true;\n      },\n      getAll: async () => {\n        console.warn(\"[Notifications] getAll not fully supported in polyfill\");\n        return {};\n      },\n      getPermissionLevel: async () => {\n        if (\"Notification\" in window) {\n          const permission = Notification.permission;\n          return { level: permission === \"granted\" ? \"granted\" : \"denied\" };\n        }\n        return { level: \"denied\" };\n      },\n    },\n    contextMenus: {\n      create: (createProperties, callback) => {\n        try {\n          if (!createProperties || typeof createProperties !== \"object\") {\n            throw new Error(\"Context menu create properties must be an object\");\n          }\n\n          const { id, title, contexts = [\"page\"], onclick } = createProperties;\n          const menuId =\n            id || `menu_${Math.random().toString(36).substring(2, 15)}`;\n\n          if (!title || typeof title !== \"string\") {\n            throw new Error(\"Context menu must have a title\");\n          }\n\n          // Store menu items for potential use\n          if (!window._polyfillContextMenus) {\n            window._polyfillContextMenus = new Map();\n          }\n\n          window._polyfillContextMenus.set(menuId, {\n            id: menuId,\n            title,\n            contexts,\n            onclick,\n            enabled: createProperties.enabled !== false,\n          });\n\n          console.log(\n            `[ContextMenus] Created context menu item: ${title} (${menuId})`\n          );\n\n          // Try to register a menu command as fallback\n          if (typeof _registerMenuCommand === \"function\") {\n            try {\n              _registerMenuCommand(\n                title,\n                onclick ||\n                  (() => {\n                    console.log(`Context menu clicked: ${title}`);\n                  })\n              );\n            } catch (e) {\n              console.warn(\n                \"[ContextMenus] Failed to register as menu command:\",\n                e.message\n              );\n            }\n          }\n\n          if (callback && typeof callback === \"function\") {\n            setTimeout(() => callback(), 0);\n          }\n\n          return menuId;\n        } catch (error) {\n          console.error(\n            \"[ContextMenus] Error creating context menu:\",\n            error.message\n          );\n          if (callback && typeof callback === \"function\") {\n            setTimeout(() => callback(), 0);\n          }\n          throw error;\n        }\n      },\n      update: (id, updateProperties, callback) => {\n        try {\n          if (\n            !window._polyfillContextMenus ||\n            !window._polyfillContextMenus.has(id)\n          ) {\n            throw new Error(`Context menu item not found: ${id}`);\n          }\n\n          const menuItem = window._polyfillContextMenus.get(id);\n          Object.assign(menuItem, updateProperties);\n\n          console.log(`[ContextMenus] Updated context menu item: ${id}`);\n\n          if (callback && typeof callback === \"function\") {\n            setTimeout(() => callback(), 0);\n          }\n        } catch (error) {\n          console.error(\n            \"[ContextMenus] Error updating context menu:\",\n            error.message\n          );\n          if (callback && typeof callback === \"function\") {\n            setTimeout(() => callback(), 0);\n          }\n        }\n      },\n      remove: (menuItemId, callback) => {\n        try {\n          if (\n            window._polyfillContextMenus &&\n            window._polyfillContextMenus.has(menuItemId)\n          ) {\n            window._polyfillContextMenus.delete(menuItemId);\n            console.log(\n              `[ContextMenus] Removed context menu item: ${menuItemId}`\n            );\n          } else {\n            console.warn(\n              `[ContextMenus] Context menu item not found for removal: ${menuItemId}`\n            );\n          }\n\n          if (callback && typeof callback === \"function\") {\n            setTimeout(() => callback(), 0);\n          }\n        } catch (error) {\n          console.error(\n            \"[ContextMenus] Error removing context menu:\",\n            error.message\n          );\n          if (callback && typeof callback === \"function\") {\n            setTimeout(() => callback(), 0);\n          }\n        }\n      },\n      removeAll: (callback) => {\n        try {\n          if (window._polyfillContextMenus) {\n            const count = window._polyfillContextMenus.size;\n            window._polyfillContextMenus.clear();\n            console.log(\n              `[ContextMenus] Removed all ${count} context menu items`\n            );\n          }\n\n          if (callback && typeof callback === \"function\") {\n            setTimeout(() => callback(), 0);\n          }\n        } catch (error) {\n          console.error(\n            \"[ContextMenus] Error removing all context menus:\",\n            error.message\n          );\n          if (callback && typeof callback === \"function\") {\n            setTimeout(() => callback(), 0);\n          }\n        }\n      },\n      onClicked: {\n        addListener: (callback) => {\n          if (!window._polyfillContextMenuListeners) {\n            window._polyfillContextMenuListeners = new Set();\n          }\n          window._polyfillContextMenuListeners.add(callback);\n          console.log(\"[ContextMenus] Added click listener\");\n        },\n        removeListener: (callback) => {\n          if (window._polyfillContextMenuListeners) {\n            window._polyfillContextMenuListeners.delete(callback);\n            console.log(\"[ContextMenus] Removed click listener\");\n          }\n        },\n      },\n    },\n  };\n\n  const tc = (fn) => {\n    try {\n      fn();\n    } catch (e) {}\n  };\n  const loggingProxyHandler = (_key) => ({\n    get(target, key, receiver) {\n      tc(() =>\n        console.log(`[${contextType}] [CHROME - ${_key}] Getting ${key}`)\n      );\n      return Reflect.get(target, key, receiver);\n    },\n    set(target, key, value, receiver) {\n      tc(() =>\n        console.log(\n          `[${contextType}] [CHROME - ${_key}] Setting ${key} to ${value}`\n        )\n      );\n      return Reflect.set(target, key, value, receiver);\n    },\n    has(target, key) {\n      tc(() =>\n        console.log(\n          `[${contextType}] [CHROME - ${_key}] Checking if ${key} exists`\n        )\n      );\n      return Reflect.has(target, key);\n    },\n  });\n  chrome = Object.fromEntries(\n    Object.entries(chrome).map(([key, value]) => [\n      key,\n      new Proxy(value, loggingProxyHandler(key)),\n    ])\n  );\n\n  // Alias browser to chrome for common Firefox pattern\n  const browser = new Proxy(chrome, loggingProxyHandler);\n\n  const oldGlobalThis = globalThis;\n  const oldWindow = window;\n  const oldSelf = self;\n  const oldGlobal = globalThis;\n  const __globalsStorage = {};\n\n  const TO_MODIFY = [oldGlobalThis, oldWindow, oldSelf, oldGlobal];\n  const set = (k, v) => {\n    __globalsStorage[k] = v;\n    TO_MODIFY.forEach((target) => {\n      target[k] = v;\n    });\n  };\n  const proxyHandler = {\n    get(target, key, receiver) {\n      return __globalsStorage[key] || Reflect.get(target, key, receiver);\n    },\n    set(target, key, value, receiver) {\n      tc(() => console.log(`[${contextType}] Setting ${key} to ${value}`));\n      set(key, value);\n      return Reflect.set(target, key, value, receiver);\n    },\n    has(target, key) {\n      return key in __globalsStorage || key in target;\n    },\n    getOwnPropertyDescriptor(target, key) {\n      if (key in __globalsStorage) {\n        return {\n          configurable: true,\n          enumerable: true,\n          writable: true,\n          value: __globalsStorage[key],\n        };\n      }\n      // fall back to the real globalThis\n      const desc = Reflect.getOwnPropertyDescriptor(target, key);\n      // ensure it's configurable so the with‑scope binding logic can override it\n      if (desc && !desc.configurable) {\n        desc.configurable = true;\n      }\n      return desc;\n    },\n\n    defineProperty(target, key, descriptor) {\n      // Normalize descriptor to avoid mixed accessor & data attributes\n      const hasAccessor = \"get\" in descriptor || \"set\" in descriptor;\n\n      if (hasAccessor) {\n        // Build a clean descriptor without value/writable when accessors present\n        const normalized = {\n          configurable:\n            \"configurable\" in descriptor ? descriptor.configurable : true,\n          enumerable:\n            \"enumerable\" in descriptor ? descriptor.enumerable : false,\n        };\n        if (\"get\" in descriptor) normalized.get = descriptor.get;\n        if (\"set\" in descriptor) normalized.set = descriptor.set;\n\n        // Store accessor references for inspection but avoid breaking invariants\n        set(key, {\n          get: descriptor.get,\n          set: descriptor.set,\n        });\n\n        return Reflect.defineProperty(target, key, normalized);\n      }\n\n      // Data descriptor path\n      set(key, descriptor.value);\n      return Reflect.defineProperty(target, key, descriptor);\n    },\n  };\n\n  // Create proxies once proxyHandler is defined\n  const proxyWindow = new Proxy(oldWindow, proxyHandler);\n  const proxyGlobalThis = new Proxy(oldGlobalThis, proxyHandler);\n  const proxyGlobal = new Proxy(oldGlobal, proxyHandler);\n  const proxySelf = new Proxy(oldSelf, proxyHandler);\n\n  // Seed storage with core globals so lookups succeed inside `with` blocks\n  Object.assign(__globalsStorage, {\n    chrome,\n    browser,\n    window: proxyWindow,\n    globalThis: proxyGlobalThis,\n    global: proxyGlobal,\n    self: proxySelf,\n  });\n\n  const __globals = {\n    chrome,\n    browser,\n    window: proxyWindow,\n    globalThis: proxyGlobalThis,\n    global: proxyGlobal,\n    self: proxySelf,\n    __globals: __globalsStorage,\n  };\n\n  __globalsStorage.contextId = contextId;\n  __globalsStorage.contextType = contextType;\n  __globalsStorage.module = undefined;\n  __globalsStorage.amd = undefined;\n  __globalsStorage.define = undefined;\n\n  return __globals;\n}\n\n\nif (typeof window !== 'undefined') {\n    window.buildPolyfill = buildPolyfill;\n}\n"
+		    const polyfillString = "\n// -- Messaging implementation\n\nfunction createEventBus(\n  scopeId,\n  type = \"page\", // \"page\" or \"iframe\"\n  { allowedOrigin = \"*\", children = [], parentWindow = null } = {},\n) {\n  if (!scopeId) throw new Error(\"createEventBus requires a scopeId\");\n\n  const handlers = {};\n\n  function handleIncoming(ev) {\n    if (allowedOrigin !== \"*\" && ev.origin !== allowedOrigin) return;\n\n    const msg = ev.data;\n    if (!msg || msg.__eventBus !== true || msg.scopeId !== scopeId) return;\n\n    const { event, payload } = msg;\n\n    // PAGE: if it's an INIT from an iframe, adopt it\n    if (type === \"page\" && event === \"__INIT__\") {\n      const win = ev.source;\n      if (win && !children.includes(win)) {\n        children.push(win);\n      }\n      return;\n    }\n\n    (handlers[event] || []).forEach((fn) =>\n      fn(payload, { origin: ev.origin, source: ev.source }),\n    );\n  }\n\n  window.addEventListener(\"message\", handleIncoming);\n\n  function emitTo(win, event, payload) {\n    const envelope = {\n      __eventBus: true,\n      scopeId,\n      event,\n      payload,\n    };\n    win.postMessage(envelope, allowedOrigin);\n  }\n\n  // IFRAME: announce to page on startup\n  if (type === \"iframe\") {\n    setTimeout(() => {\n      const pw = parentWindow || window.parent;\n      if (pw && pw.postMessage) {\n        emitTo(pw, \"__INIT__\", null);\n      }\n    }, 0);\n  }\n\n  return {\n    on(event, fn) {\n      handlers[event] = handlers[event] || [];\n      handlers[event].push(fn);\n    },\n    off(event, fn) {\n      if (!handlers[event]) return;\n      handlers[event] = handlers[event].filter((h) => h !== fn);\n    },\n    /**\n     * Emits an event.\n     * @param {string} event - The event name.\n     * @param {any} payload - The event payload.\n     * @param {object} [options] - Emission options.\n     * @param {Window} [options.to] - A specific window to target. If provided, message is ONLY sent to the target.\n     */\n    emit(event, payload, { to } = {}) {\n      // If a specific target window is provided, send only to it and DO NOT dispatch locally.\n      // This prevents a port from receiving its own messages.\n      if (to) {\n        if (to && typeof to.postMessage === \"function\") {\n          emitTo(to, event, payload);\n        }\n        return; // Exit after targeted send.\n      }\n\n      // For broadcast messages (no 'to' target), dispatch locally first.\n      (handlers[event] || []).forEach((fn) =>\n        fn(payload, { origin: location.origin, source: window }),\n      );\n\n      // Then propagate the broadcast to other windows.\n      if (type === \"page\") {\n        children.forEach((win) => emitTo(win, event, payload));\n      } else {\n        const pw = parentWindow || window.parent;\n        if (pw && pw.postMessage) {\n          emitTo(pw, event, payload);\n        }\n      }\n    },\n  };\n}\n\nfunction createRuntime(type = \"background\", bus) {\n  let nextId = 1;\n  const pending = {};\n  const msgListeners = [];\n\n  let nextPortId = 1;\n  const ports = {};\n  const onConnectListeners = [];\n\n  function parseArgs(args) {\n    let target, message, options, callback;\n    const arr = [...args];\n    if (arr.length === 0) {\n      throw new Error(\"sendMessage requires at least one argument\");\n    }\n    if (arr.length === 1) {\n      return { message: arr[0] };\n    }\n    // last object could be options\n    if (\n      arr.length &&\n      typeof arr[arr.length - 1] === \"object\" &&\n      !Array.isArray(arr[arr.length - 1])\n    ) {\n      options = arr.pop();\n    }\n    // last function is callback\n    if (arr.length && typeof arr[arr.length - 1] === \"function\") {\n      callback = arr.pop();\n    }\n    if (\n      arr.length === 2 &&\n      (typeof arr[0] === \"string\" || typeof arr[0] === \"number\")\n    ) {\n      [target, message] = arr;\n    } else {\n      [message] = arr;\n    }\n    return { target, message, options, callback };\n  }\n\n  if (type === \"background\") {\n    bus.on(\"__REQUEST__\", ({ id, message }, { source }) => {\n      let responded = false,\n        isAsync = false;\n      function sendResponse(resp) {\n        if (responded) return;\n        responded = true;\n        // Target the response directly back to the window that sent the request.\n        bus.emit(\"__RESPONSE__\", { id, response: resp }, { to: source });\n      }\n      const results = msgListeners\n        .map((fn) => {\n          try {\n            // msg, sender, sendResponse\n            const ret = fn(message, { id, tab: { id: source } }, sendResponse);\n            if (ret === true || (ret && typeof ret.then === \"function\")) {\n              isAsync = true;\n              return ret;\n            }\n            return ret;\n          } catch (e) {\n            console.error(e);\n          }\n        })\n        .filter((r) => r !== undefined);\n\n      const promises = results.filter((r) => r && typeof r.then === \"function\");\n      if (!isAsync && promises.length === 0) {\n        const out = results.length === 1 ? results[0] : results;\n        sendResponse(out);\n      } else if (promises.length) {\n        Promise.all(promises).then((vals) => {\n          if (!responded) {\n            const out = vals.length === 1 ? vals[0] : vals;\n            sendResponse(out);\n          }\n        });\n      }\n    });\n  }\n\n  if (type !== \"background\") {\n    bus.on(\"__RESPONSE__\", ({ id, response }) => {\n      const entry = pending[id];\n      if (!entry) return;\n      entry.resolve(response);\n      if (entry.callback) entry.callback(response);\n      delete pending[id];\n    });\n  }\n\n  function sendMessage(...args) {\n    // Background should be able to send message to itself\n    // if (type === \"background\") {\n    //   throw new Error(\"Background cannot sendMessage to itself\");\n    // }\n    const { target, message, callback } = parseArgs(args);\n    const id = nextId++;\n    const promise = new Promise((resolve) => {\n      pending[id] = { resolve, callback };\n      bus.emit(\"__REQUEST__\", { id, message });\n    });\n    return promise;\n  }\n\n  bus.on(\"__PORT_CONNECT__\", ({ portId, name }, { source }) => {\n    if (type !== \"background\") return;\n    const backgroundPort = makePort(\"background\", portId, name, source);\n    ports[portId] = backgroundPort;\n\n    onConnectListeners.forEach((fn) => fn(backgroundPort));\n\n    // send back a CONNECT_ACK so the client can\n    // start listening on its end:\n    bus.emit(\"__PORT_CONNECT_ACK__\", { portId, name }, { to: source });\n  });\n\n  // Clients handle the ACK and finalize their Port object by learning the remote window.\n  bus.on(\"__PORT_CONNECT_ACK__\", ({ portId, name }, { source }) => {\n    if (type === \"background\") return; // ignore\n    const p = ports[portId];\n    if (!p) return;\n    // Call the port's internal finalize method to complete the handshake\n    if (p._finalize) {\n      p._finalize(source);\n    }\n  });\n\n  // Any port message travels via \"__PORT_MESSAGE__\"\n  bus.on(\"__PORT_MESSAGE__\", (envelope, { source }) => {\n    const { portId } = envelope;\n    const p = ports[portId];\n    if (!p) return;\n    p._receive(envelope, source);\n  });\n\n  // Any port disconnect:\n  bus.on(\"__PORT_DISCONNECT__\", ({ portId }) => {\n    const p = ports[portId];\n    if (!p) return;\n    p._disconnect();\n    delete ports[portId];\n  });\n\n  // Refactored makePort to correctly manage internal state and the connection handshake.\n  function makePort(side, portId, name, remoteWindow) {\n    let onMessageHandlers = [];\n    let onDisconnectHandlers = [];\n    let buffer = [];\n    // Unique instance ID for this port instance\n    const instanceId = Math.random().toString(36).slice(2) + Date.now();\n    // These state variables are part of the closure and are updated by _finalize\n    let _ready = side === \"background\";\n\n    function _drainBuffer() {\n      buffer.forEach((m) => _post(m));\n      buffer = [];\n    }\n\n    function _post(msg) {\n      // Always use the 'to' parameter for port messages, making them directional.\n      // Include senderInstanceId\n      bus.emit(\n        \"__PORT_MESSAGE__\",\n        { portId, msg, senderInstanceId: instanceId },\n        { to: remoteWindow },\n      );\n    }\n\n    function postMessage(msg) {\n      if (!_ready) {\n        buffer.push(msg);\n      } else {\n        _post(msg);\n      }\n    }\n\n    function _receive(envelope, source) {\n      // envelope: { msg, senderInstanceId }\n      if (envelope.senderInstanceId === instanceId) return; // Don't dispatch to self\n      onMessageHandlers.forEach((fn) =>\n        fn(envelope.msg, { id: portId, tab: { id: source } }),\n      );\n    }\n\n    function disconnect() {\n      // Also use the 'to' parameter for disconnect messages\n      bus.emit(\"__PORT_DISCONNECT__\", { portId }, { to: remoteWindow });\n      _disconnect();\n      delete ports[portId];\n    }\n\n    function _disconnect() {\n      onDisconnectHandlers.forEach((fn) => fn());\n      onMessageHandlers = [];\n      onDisconnectHandlers = [];\n    }\n\n    // This function is called on the client port when the ACK is received from background.\n    // It updates the port's state, completing the connection.\n    function _finalize(win) {\n      remoteWindow = win; // <-- This is the crucial part: learn the destination\n      _ready = true;\n      _drainBuffer();\n    }\n\n    return {\n      name,\n      sender: {\n        id: portId,\n      },\n      onMessage: {\n        addListener(fn) {\n          onMessageHandlers.push(fn);\n        },\n        removeListener(fn) {\n          onMessageHandlers = onMessageHandlers.filter((x) => x !== fn);\n        },\n      },\n      onDisconnect: {\n        addListener(fn) {\n          onDisconnectHandlers.push(fn);\n        },\n        removeListener(fn) {\n          onDisconnectHandlers = onDisconnectHandlers.filter((x) => x !== fn);\n        },\n      },\n      postMessage,\n      disconnect,\n      // Internal methods used by the runtime\n      _receive,\n      _disconnect,\n      _finalize, // Expose the finalizer for the ACK handler\n    };\n  }\n\n  function connect(connectInfo = {}) {\n    if (type === \"background\") {\n      throw new Error(\"Background must use onConnect, not connect()\");\n    }\n    const name = connectInfo.name || \"\";\n    const portId = nextPortId++;\n    // create the client side port\n    // remoteWindow is initially null; it will be set by _finalize upon ACK.\n    const clientPort = makePort(\"client\", portId, name, null);\n    ports[portId] = clientPort;\n\n    // fire the connect event across the bus\n    bus.emit(\"__PORT_CONNECT__\", { portId, name });\n    return clientPort;\n  }\n\n  function onConnect(fn) {\n    if (type !== \"background\") {\n      throw new Error(\"connect event only fires in background\");\n    }\n    onConnectListeners.push(fn);\n  }\n\n  return {\n    // rpc:\n    sendMessage,\n    onMessage: {\n      addListener(fn) {\n        msgListeners.push(fn);\n      },\n      removeListener(fn) {\n        const i = msgListeners.indexOf(fn);\n        if (i >= 0) msgListeners.splice(i, 1);\n      },\n    },\n\n    // port API:\n    connect,\n    onConnect: {\n      addListener(fn) {\n        onConnect(fn);\n      },\n      removeListener(fn) {\n        const i = onConnectListeners.indexOf(fn);\n        if (i >= 0) onConnectListeners.splice(i, 1);\n      },\n    },\n  };\n}\n\n\n// --- Abstraction Layer: PostMessage Target\n\nlet nextRequestId = 1;\nconst pendingRequests = new Map(); // requestId -> { resolve, reject, timeout }\n\nfunction sendAbstractionRequest(method, args = []) {\n  return new Promise((resolve, reject) => {\n    const requestId = nextRequestId++;\n\n    const timeout = setTimeout(() => {\n      pendingRequests.delete(requestId);\n      reject(new Error(`PostMessage request timeout for method: ${method}`));\n    }, 10000);\n\n    pendingRequests.set(requestId, { resolve, reject, timeout });\n\n    window.parent.postMessage({\n      type: \"abstraction-request\",\n      requestId,\n      method,\n      args,\n    });\n  });\n}\n\nwindow.addEventListener(\"message\", (event) => {\n  const { type, requestId, success, result, error } = event.data;\n\n  if (type === \"abstraction-response\") {\n    const pending = pendingRequests.get(requestId);\n    if (pending) {\n      clearTimeout(pending.timeout);\n      pendingRequests.delete(requestId);\n\n      if (success) {\n        pending.resolve(result);\n      } else {\n        const err = new Error(error.message);\n        err.stack = error.stack;\n        pending.reject(err);\n      }\n    }\n  }\n});\n\nasync function _storageSet(items) {\n  return sendAbstractionRequest(\"_storageSet\", [items]);\n}\n\nasync function _storageGet(keys) {\n  return sendAbstractionRequest(\"_storageGet\", [keys]);\n}\n\nasync function _storageRemove(keysToRemove) {\n  return sendAbstractionRequest(\"_storageRemove\", [keysToRemove]);\n}\n\nasync function _storageClear() {\n  return sendAbstractionRequest(\"_storageClear\");\n}\n\nasync function _fetch(url, options) {\n  return sendAbstractionRequest(\"_fetch\", [url, options]);\n}\n\nfunction _registerMenuCommand(name, func) {\n  console.warn(\"_registerMenuCommand called from iframe context:\", name);\n  return sendAbstractionRequest(\"_registerMenuCommand\", [\n    name,\n    func.toString(),\n  ]);\n}\n\nfunction _openTab(url) {\n  return sendAbstractionRequest(\"_openTab\", [url]);\n}\n\nasync function _initStorage() {\n  return sendAbstractionRequest(\"_initStorage\");\n}\n\n\nconst EXTENSION_ASSETS_MAP = {{EXTENSION_ASSETS_MAP}};\n\n// -- Polyfill Implementation\nfunction buildPolyfill({ isBackground = false, isOtherPage = false } = {}) {\n  // Generate a unique context ID for this polyfill instance\n  const contextType = isBackground\n    ? \"background\"\n    : isOtherPage\n      ? \"options\"\n      : \"content\";\n  const contextId = `${contextType}_${Math.random()\n    .toString(36)\n    .substring(2, 15)}`;\n\n  const IS_IFRAME = \"true\" === \"true\";\n  const BUS = (function () {\n    if (globalThis.__BUS) {\n      return globalThis.__BUS;\n    }\n    globalThis.__BUS = createEventBus(\n      \"web-search-navigator\",\n      IS_IFRAME ? \"iframe\" : \"page\"\n    );\n    return globalThis.__BUS;\n  })();\n  const RUNTIME = createRuntime(isBackground ? \"background\" : \"tab\", BUS);\n  const createNoopListeners = () => ({\n    addListener: (callback) => {\n      console.log(\"addListener\", callback);\n    },\n    removeListener: (callback) => {\n      console.log(\"removeListener\", callback);\n    },\n  });\n  // TODO: Stub\n  const storageChangeListeners = new Set();\n  function broadcastStorageChange(changes, areaName) {\n    storageChangeListeners.forEach((listener) => {\n      listener(changes, areaName);\n    });\n  }\n\n  let REQ_PERMS = [];\n\n  // --- Chrome polyfill\n  let chrome = {\n    extension: {\n      isAllowedIncognitoAccess: () => Promise.resolve(true),\n      sendMessage: (...args) => _messagingHandler.sendMessage(...args),\n    },\n    permissions: {\n      // TODO: Remove origin permission means exclude from origin in startup\n      request: (permissions, callback) => {\n        console.log(\"permissions.request\", permissions, callback);\n        if (Array.isArray(permissions)) {\n          REQ_PERMS = [...REQ_PERMS, ...permissions];\n        }\n        if (typeof callback === \"function\") {\n          callback(permissions);\n        }\n        return Promise.resolve(permissions);\n      },\n      contains: (permissions, callback) => {\n        if (typeof callback === \"function\") {\n          callback(true);\n        }\n        return Promise.resolve(true);\n      },\n      getAll: () => {\n        return Promise.resolve({\n          permissions: EXTENSION_PERMISSIONS,\n          origins: ORIGIN_PERMISSIONS,\n        });\n      },\n      onAdded: createNoopListeners(),\n      onRemoved: createNoopListeners(),\n    },\n    i18n: {\n      getUILanguage: () => {\n        return USED_LOCALE || \"en\";\n      },\n      getMessage: (key, substitutions = []) => {\n        if (typeof substitutions === \"string\") {\n          substitutions = [substitutions];\n        }\n        if (typeof LOCALE_KEYS !== \"undefined\" && LOCALE_KEYS[key]) {\n          return LOCALE_KEYS[key].message?.replace(\n            /\\$(\\d+)/g,\n            (match, p1) => substitutions[p1 - 1] || match\n          );\n        }\n        return key;\n      },\n    },\n    alarms: {\n      onAlarm: createNoopListeners(),\n      create: () => {\n        console.log(\"alarms.create\", arguments);\n      },\n      get: () => {\n        console.log(\"alarms.get\", arguments);\n      },\n    },\n    runtime: {\n      ...RUNTIME,\n      onInstalled: createNoopListeners(),\n      onStartup: createNoopListeners(),\n      // TODO: Postmessage to parent to open options page or call openOptionsPage\n      openOptionsPage: () => {\n        // const url = chrome.runtime.getURL(OPTIONS_PAGE_PATH);\n        // console.log(\"openOptionsPage\", _openTab, url, EXTENSION_ASSETS_MAP);\n        // _openTab(url);\n        if (typeof openOptionsPage === \"function\") {\n          openOptionsPage();\n        } else if (window.parent) {\n          window.parent.postMessage({ type: \"openOptionsPage\" }, \"*\");\n        } else {\n          console.warn(\"openOptionsPage not available.\");\n        }\n      },\n      getManifest: () => {\n        // The manifest object will be injected into the scope where buildPolyfill is called\n        if (typeof INJECTED_MANIFEST !== \"undefined\") {\n          return JSON.parse(JSON.stringify(INJECTED_MANIFEST)); // Return deep copy\n        }\n        console.warn(\n          \"INJECTED_MANIFEST not found for chrome.runtime.getManifest\"\n        );\n        return { name: \"Unknown\", version: \"0.0\", manifest_version: 2 };\n      },\n      getURL: (path) => {\n        if (!path) return \"\";\n        if (path.startsWith(\"/\")) {\n          path = path.substring(1);\n        }\n\n        if (typeof _createAssetUrl === \"function\") {\n          return _createAssetUrl(path);\n        }\n\n        console.warn(\n          `chrome.runtime.getURL fallback for '${path}'. Assets may not be available.`\n        );\n        // Attempt a relative path resolution (highly context-dependent and likely wrong)\n        try {\n          if (window.location.protocol.startsWith(\"http\")) {\n            return new URL(path, window.location.href).toString();\n          }\n        } catch (e) {\n          /* ignore error, fallback */\n        }\n        return path;\n      },\n      id: \"polyfilled-extension-\" + Math.random().toString(36).substring(2, 15),\n      lastError: null,\n      getPlatformInfo: async () => {\n        const platform = {\n          os: \"unknown\",\n          arch: \"unknown\",\n          nacl_arch: \"unknown\",\n        };\n\n        if (typeof navigator !== \"undefined\") {\n          const userAgent = navigator.userAgent.toLowerCase();\n          if (userAgent.includes(\"mac\")) platform.os = \"mac\";\n          else if (userAgent.includes(\"win\")) platform.os = \"win\";\n          else if (userAgent.includes(\"linux\")) platform.os = \"linux\";\n          else if (userAgent.includes(\"android\")) platform.os = \"android\";\n          else if (userAgent.includes(\"ios\")) platform.os = \"ios\";\n\n          if (userAgent.includes(\"x86_64\") || userAgent.includes(\"amd64\")) {\n            platform.arch = \"x86-64\";\n          } else if (userAgent.includes(\"i386\") || userAgent.includes(\"i686\")) {\n            platform.arch = \"x86-32\";\n          } else if (userAgent.includes(\"arm\")) {\n            platform.arch = \"arm\";\n          }\n        }\n\n        return platform;\n      },\n      getBrowserInfo: async () => {\n        const info = {\n          name: \"unknown\",\n          version: \"unknown\",\n          buildID: \"unknown\",\n        };\n\n        if (typeof navigator !== \"undefined\") {\n          const userAgent = navigator.userAgent;\n          if (userAgent.includes(\"Chrome\")) {\n            info.name = \"Chrome\";\n            const match = userAgent.match(/Chrome\\/([0-9.]+)/);\n            if (match) info.version = match[1];\n          } else if (userAgent.includes(\"Firefox\")) {\n            info.name = \"Firefox\";\n            const match = userAgent.match(/Firefox\\/([0-9.]+)/);\n            if (match) info.version = match[1];\n          } else if (userAgent.includes(\"Safari\")) {\n            info.name = \"Safari\";\n            const match = userAgent.match(/Version\\/([0-9.]+)/);\n            if (match) info.version = match[1];\n          }\n        }\n\n        return info;\n      },\n    },\n    storage: {\n      local: {\n        get: function (keys, callback) {\n          if (typeof _storageGet !== \"function\")\n            throw new Error(\"_storageGet not defined\");\n\n          const promise = _storageGet(keys);\n\n          if (typeof callback === \"function\") {\n            promise\n              .then((result) => {\n                try {\n                  callback(result);\n                } catch (e) {\n                  console.error(\"Error in storage.get callback:\", e);\n                }\n              })\n              .catch((error) => {\n                console.error(\"Storage.get error:\", error);\n                callback({});\n              });\n            return;\n          }\n\n          return promise;\n        },\n        set: function (items, callback) {\n          if (typeof _storageSet !== \"function\")\n            throw new Error(\"_storageSet not defined\");\n\n          const promise = _storageSet(items).then((result) => {\n            broadcastStorageChange(items, \"local\");\n            return result;\n          });\n\n          if (typeof callback === \"function\") {\n            promise\n              .then((result) => {\n                try {\n                  callback(result);\n                } catch (e) {\n                  console.error(\"Error in storage.set callback:\", e);\n                }\n              })\n              .catch((error) => {\n                console.error(\"Storage.set error:\", error);\n                callback();\n              });\n            return;\n          }\n\n          return promise;\n        },\n        remove: function (keys, callback) {\n          if (typeof _storageRemove !== \"function\")\n            throw new Error(\"_storageRemove not defined\");\n\n          const promise = _storageRemove(keys).then((result) => {\n            const changes = {};\n            const keyList = Array.isArray(keys) ? keys : [keys];\n            keyList.forEach((key) => {\n              changes[key] = { oldValue: undefined, newValue: undefined };\n            });\n            broadcastStorageChange(changes, \"local\");\n            return result;\n          });\n\n          if (typeof callback === \"function\") {\n            promise\n              .then((result) => {\n                try {\n                  callback(result);\n                } catch (e) {\n                  console.error(\"Error in storage.remove callback:\", e);\n                }\n              })\n              .catch((error) => {\n                console.error(\"Storage.remove error:\", error);\n                callback();\n              });\n            return;\n          }\n\n          return promise;\n        },\n        clear: function (callback) {\n          if (typeof _storageClear !== \"function\")\n            throw new Error(\"_storageClear not defined\");\n\n          const promise = _storageClear().then((result) => {\n            broadcastStorageChange({}, \"local\");\n            return result;\n          });\n\n          if (typeof callback === \"function\") {\n            promise\n              .then((result) => {\n                try {\n                  callback(result);\n                } catch (e) {\n                  console.error(\"Error in storage.clear callback:\", e);\n                }\n              })\n              .catch((error) => {\n                console.error(\"Storage.clear error:\", error);\n                callback();\n              });\n            return;\n          }\n\n          return promise;\n        },\n        onChanged: {\n          addListener: (callback) => {\n            storageChangeListeners.add(callback);\n          },\n          removeListener: (callback) => {\n            storageChangeListeners.delete(callback);\n          },\n        },\n      },\n      sync: {\n        get: function (keys, callback) {\n          console.warn(\"chrome.storage.sync polyfill maps to local\");\n          return chrome.storage.local.get(keys, callback);\n        },\n        set: function (items, callback) {\n          console.warn(\"chrome.storage.sync polyfill maps to local\");\n\n          const promise = chrome.storage.local.set(items).then((result) => {\n            broadcastStorageChange(items, \"sync\");\n            return result;\n          });\n\n          if (typeof callback === \"function\") {\n            promise\n              .then((result) => {\n                try {\n                  callback(result);\n                } catch (e) {\n                  console.error(\"Error in storage.sync.set callback:\", e);\n                }\n              })\n              .catch((error) => {\n                console.error(\"Storage.sync.set error:\", error);\n                callback();\n              });\n            return;\n          }\n\n          return promise;\n        },\n        remove: function (keys, callback) {\n          console.warn(\"chrome.storage.sync polyfill maps to local\");\n\n          const promise = chrome.storage.local.remove(keys).then((result) => {\n            const changes = {};\n            const keyList = Array.isArray(keys) ? keys : [keys];\n            keyList.forEach((key) => {\n              changes[key] = { oldValue: undefined, newValue: undefined };\n            });\n            broadcastStorageChange(changes, \"sync\");\n            return result;\n          });\n\n          if (typeof callback === \"function\") {\n            promise\n              .then((result) => {\n                try {\n                  callback(result);\n                } catch (e) {\n                  console.error(\"Error in storage.sync.remove callback:\", e);\n                }\n              })\n              .catch((error) => {\n                console.error(\"Storage.sync.remove error:\", error);\n                callback();\n              });\n            return;\n          }\n\n          return promise;\n        },\n        clear: function (callback) {\n          console.warn(\"chrome.storage.sync polyfill maps to local\");\n\n          const promise = chrome.storage.local.clear().then((result) => {\n            broadcastStorageChange({}, \"sync\");\n            return result;\n          });\n\n          if (typeof callback === \"function\") {\n            promise\n              .then((result) => {\n                try {\n                  callback(result);\n                } catch (e) {\n                  console.error(\"Error in storage.sync.clear callback:\", e);\n                }\n              })\n              .catch((error) => {\n                console.error(\"Storage.sync.clear error:\", error);\n                callback();\n              });\n            return;\n          }\n\n          return promise;\n        },\n        onChanged: {\n          addListener: (callback) => {\n            storageChangeListeners.add(callback);\n          },\n          removeListener: (callback) => {\n            storageChangeListeners.delete(callback);\n          },\n        },\n      },\n      onChanged: {\n        addListener: (callback) => {\n          storageChangeListeners.add(callback);\n        },\n        removeListener: (callback) => {\n          storageChangeListeners.delete(callback);\n        },\n      },\n      managed: {\n        get: function (keys, callback) {\n          console.warn(\"chrome.storage.managed polyfill is read-only empty.\");\n\n          const promise = Promise.resolve({});\n\n          if (typeof callback === \"function\") {\n            promise.then((result) => {\n              try {\n                callback(result);\n              } catch (e) {\n                console.error(\"Error in storage.managed.get callback:\", e);\n              }\n            });\n            return;\n          }\n\n          return promise;\n        },\n      },\n    },\n    tabs: {\n      query: async (queryInfo) => {\n        console.warn(\n          \"chrome.tabs.query polyfill only returns current tab info.\"\n        );\n        const dummyId = Math.floor(Math.random() * 1000) + 1;\n        return [\n          {\n            id: dummyId,\n            url: CURRENT_LOCATION,\n            active: true,\n            windowId: 1,\n            status: \"complete\",\n          },\n        ];\n      },\n      create: async ({ url }) => {\n        console.log(`[Polyfill tabs.create] URL: ${url}`);\n        if (typeof _openTab !== \"function\")\n          throw new Error(\"_openTab not defined\");\n        _openTab(url);\n        const dummyId = Math.floor(Math.random() * 1000) + 1001;\n        return Promise.resolve({\n          id: dummyId,\n          url: url,\n          active: true,\n          windowId: 1,\n        });\n      },\n      sendMessage: async (tabId, message) => {\n        console.warn(\n          `chrome.tabs.sendMessage polyfill (to tab ${tabId}) redirects to runtime.sendMessage (current context).`\n        );\n        return chrome.runtime.sendMessage(message);\n      },\n    },\n    notifications: {\n      create: async (notificationId, options) => {\n        try {\n          let id = notificationId;\n          let notificationOptions = options;\n\n          if (typeof notificationId === \"object\" && notificationId !== null) {\n            notificationOptions = notificationId;\n            id = \"notification_\" + Math.random().toString(36).substring(2, 15);\n          } else if (typeof notificationId === \"string\" && options) {\n            id = notificationId;\n            notificationOptions = options;\n          } else {\n            throw new Error(\"Invalid parameters for notifications.create\");\n          }\n\n          if (!notificationOptions || typeof notificationOptions !== \"object\") {\n            throw new Error(\"Notification options must be an object\");\n          }\n\n          const {\n            title,\n            message,\n            iconUrl,\n            type = \"basic\",\n          } = notificationOptions;\n\n          if (!title || !message) {\n            throw new Error(\"Notification must have title and message\");\n          }\n\n          if (\"Notification\" in window) {\n            if (Notification.permission === \"granted\") {\n              const notification = new Notification(title, {\n                body: message,\n                icon: iconUrl,\n                tag: id,\n              });\n\n              console.log(`[Notifications] Created notification: ${id}`);\n              return id;\n            } else if (Notification.permission === \"default\") {\n              const permission = await Notification.requestPermission();\n              if (permission === \"granted\") {\n                const notification = new Notification(title, {\n                  body: message,\n                  icon: iconUrl,\n                  tag: id,\n                });\n                console.log(\n                  `[Notifications] Created notification after permission: ${id}`\n                );\n                return id;\n              } else {\n                console.warn(\n                  \"[Notifications] Permission denied for notifications\"\n                );\n                return id;\n              }\n            } else {\n              console.warn(\"[Notifications] Notifications are blocked\");\n              return id;\n            }\n          } else {\n            console.warn(\n              \"[Notifications] Native notifications not supported, using console fallback\"\n            );\n            console.log(`[Notification] ${title}: ${message}`);\n            return id;\n          }\n        } catch (error) {\n          console.error(\n            \"[Notifications] Error creating notification:\",\n            error.message\n          );\n          throw error;\n        }\n      },\n      clear: async (notificationId) => {\n        console.log(`[Notifications] Clear notification: ${notificationId}`);\n        // For native notifications, there's no direct way to clear by ID\n        // This is a limitation of the Web Notifications API\n        return true;\n      },\n      getAll: async () => {\n        console.warn(\"[Notifications] getAll not fully supported in polyfill\");\n        return {};\n      },\n      getPermissionLevel: async () => {\n        if (\"Notification\" in window) {\n          const permission = Notification.permission;\n          return { level: permission === \"granted\" ? \"granted\" : \"denied\" };\n        }\n        return { level: \"denied\" };\n      },\n    },\n    contextMenus: {\n      create: (createProperties, callback) => {\n        try {\n          if (!createProperties || typeof createProperties !== \"object\") {\n            throw new Error(\"Context menu create properties must be an object\");\n          }\n\n          const { id, title, contexts = [\"page\"], onclick } = createProperties;\n          const menuId =\n            id || `menu_${Math.random().toString(36).substring(2, 15)}`;\n\n          if (!title || typeof title !== \"string\") {\n            throw new Error(\"Context menu must have a title\");\n          }\n\n          // Store menu items for potential use\n          if (!window._polyfillContextMenus) {\n            window._polyfillContextMenus = new Map();\n          }\n\n          window._polyfillContextMenus.set(menuId, {\n            id: menuId,\n            title,\n            contexts,\n            onclick,\n            enabled: createProperties.enabled !== false,\n          });\n\n          console.log(\n            `[ContextMenus] Created context menu item: ${title} (${menuId})`\n          );\n\n          // Try to register a menu command as fallback\n          if (typeof _registerMenuCommand === \"function\") {\n            try {\n              _registerMenuCommand(\n                title,\n                onclick ||\n                  (() => {\n                    console.log(`Context menu clicked: ${title}`);\n                  })\n              );\n            } catch (e) {\n              console.warn(\n                \"[ContextMenus] Failed to register as menu command:\",\n                e.message\n              );\n            }\n          }\n\n          if (callback && typeof callback === \"function\") {\n            setTimeout(() => callback(), 0);\n          }\n\n          return menuId;\n        } catch (error) {\n          console.error(\n            \"[ContextMenus] Error creating context menu:\",\n            error.message\n          );\n          if (callback && typeof callback === \"function\") {\n            setTimeout(() => callback(), 0);\n          }\n          throw error;\n        }\n      },\n      update: (id, updateProperties, callback) => {\n        try {\n          if (\n            !window._polyfillContextMenus ||\n            !window._polyfillContextMenus.has(id)\n          ) {\n            throw new Error(`Context menu item not found: ${id}`);\n          }\n\n          const menuItem = window._polyfillContextMenus.get(id);\n          Object.assign(menuItem, updateProperties);\n\n          console.log(`[ContextMenus] Updated context menu item: ${id}`);\n\n          if (callback && typeof callback === \"function\") {\n            setTimeout(() => callback(), 0);\n          }\n        } catch (error) {\n          console.error(\n            \"[ContextMenus] Error updating context menu:\",\n            error.message\n          );\n          if (callback && typeof callback === \"function\") {\n            setTimeout(() => callback(), 0);\n          }\n        }\n      },\n      remove: (menuItemId, callback) => {\n        try {\n          if (\n            window._polyfillContextMenus &&\n            window._polyfillContextMenus.has(menuItemId)\n          ) {\n            window._polyfillContextMenus.delete(menuItemId);\n            console.log(\n              `[ContextMenus] Removed context menu item: ${menuItemId}`\n            );\n          } else {\n            console.warn(\n              `[ContextMenus] Context menu item not found for removal: ${menuItemId}`\n            );\n          }\n\n          if (callback && typeof callback === \"function\") {\n            setTimeout(() => callback(), 0);\n          }\n        } catch (error) {\n          console.error(\n            \"[ContextMenus] Error removing context menu:\",\n            error.message\n          );\n          if (callback && typeof callback === \"function\") {\n            setTimeout(() => callback(), 0);\n          }\n        }\n      },\n      removeAll: (callback) => {\n        try {\n          if (window._polyfillContextMenus) {\n            const count = window._polyfillContextMenus.size;\n            window._polyfillContextMenus.clear();\n            console.log(\n              `[ContextMenus] Removed all ${count} context menu items`\n            );\n          }\n\n          if (callback && typeof callback === \"function\") {\n            setTimeout(() => callback(), 0);\n          }\n        } catch (error) {\n          console.error(\n            \"[ContextMenus] Error removing all context menus:\",\n            error.message\n          );\n          if (callback && typeof callback === \"function\") {\n            setTimeout(() => callback(), 0);\n          }\n        }\n      },\n      onClicked: {\n        addListener: (callback) => {\n          if (!window._polyfillContextMenuListeners) {\n            window._polyfillContextMenuListeners = new Set();\n          }\n          window._polyfillContextMenuListeners.add(callback);\n          console.log(\"[ContextMenus] Added click listener\");\n        },\n        removeListener: (callback) => {\n          if (window._polyfillContextMenuListeners) {\n            window._polyfillContextMenuListeners.delete(callback);\n            console.log(\"[ContextMenus] Removed click listener\");\n          }\n        },\n      },\n    },\n  };\n\n  const tc = (fn) => {\n    try {\n      fn();\n    } catch (e) {}\n  };\n  const loggingProxyHandler = (_key) => ({\n    get(target, key, receiver) {\n      tc(() =>\n        console.log(`[${contextType}] [CHROME - ${_key}] Getting ${key}`)\n      );\n      return Reflect.get(target, key, receiver);\n    },\n    set(target, key, value, receiver) {\n      tc(() =>\n        console.log(\n          `[${contextType}] [CHROME - ${_key}] Setting ${key} to ${value}`\n        )\n      );\n      return Reflect.set(target, key, value, receiver);\n    },\n    has(target, key) {\n      tc(() =>\n        console.log(\n          `[${contextType}] [CHROME - ${_key}] Checking if ${key} exists`\n        )\n      );\n      return Reflect.has(target, key);\n    },\n  });\n  chrome = Object.fromEntries(\n    Object.entries(chrome).map(([key, value]) => [\n      key,\n      new Proxy(value, loggingProxyHandler(key)),\n    ])\n  );\n\n  // Alias browser to chrome for common Firefox pattern\n  const browser = new Proxy(chrome, loggingProxyHandler);\n\n  const oldGlobalThis = globalThis;\n  const oldWindow = window;\n  const oldSelf = self;\n  const oldGlobal = globalThis;\n  const __globalsStorage = {};\n\n  const TO_MODIFY = [oldGlobalThis, oldWindow, oldSelf, oldGlobal];\n  const set = (k, v) => {\n    __globalsStorage[k] = v;\n    TO_MODIFY.forEach((target) => {\n      target[k] = v;\n    });\n  };\n  const proxyHandler = {\n    get(target, key, receiver) {\n      try {\n        return __globalsStorage[key] || Reflect.get(target, key, receiver);\n      } catch (e) {\n        console.error(\"Error getting\", key, e);\n        return undefined;\n      }\n    },\n    set(target, key, value, receiver) {\n      try {\n        tc(() => console.log(`[${contextType}] Setting ${key} to ${value}`));\n        set(key, value);\n        return Reflect.set(target, key, value, receiver);\n      } catch (e) {\n        console.error(\"Error setting\", key, value, e);\n        return false;\n      }\n    },\n    has(target, key) {\n      try {\n        return key in __globalsStorage || key in target;\n      } catch (e) {\n        console.error(\"Error has\", key, e);\n        return false;\n      }\n    },\n    getOwnPropertyDescriptor(target, key) {\n      try {\n        if (key in __globalsStorage) {\n          return {\n            configurable: true,\n            enumerable: true,\n            writable: true,\n            value: __globalsStorage[key],\n          };\n        }\n        // fall back to the real globalThis\n        const desc = Reflect.getOwnPropertyDescriptor(target, key);\n        // ensure it's configurable so the with‑scope binding logic can override it\n        if (desc && !desc.configurable) {\n          desc.configurable = true;\n        }\n        return desc;\n      } catch (e) {\n        console.error(\"Error getOwnPropertyDescriptor\", key, e);\n        return {\n          configurable: true,\n          enumerable: true,\n          writable: true,\n          value: undefined,\n        };\n      }\n    },\n\n    defineProperty(target, key, descriptor) {\n      try {\n        // Normalize descriptor to avoid mixed accessor & data attributes\n        const hasAccessor = \"get\" in descriptor || \"set\" in descriptor;\n\n        if (hasAccessor) {\n          // Build a clean descriptor without value/writable when accessors present\n          const normalized = {\n            configurable:\n              \"configurable\" in descriptor ? descriptor.configurable : true,\n            enumerable:\n              \"enumerable\" in descriptor ? descriptor.enumerable : false,\n          };\n          if (\"get\" in descriptor) normalized.get = descriptor.get;\n          if (\"set\" in descriptor) normalized.set = descriptor.set;\n\n          // Store accessor references for inspection but avoid breaking invariants\n          set(key, {\n            get: descriptor.get,\n            set: descriptor.set,\n          });\n\n          return Reflect.defineProperty(target, key, normalized);\n        }\n\n        // Data descriptor path\n        set(key, descriptor.value);\n        return Reflect.defineProperty(target, key, descriptor);\n      } catch (e) {\n        console.error(\"Error defineProperty\", key, descriptor, e);\n        return false;\n      }\n    },\n  };\n\n  // Create proxies once proxyHandler is defined\n  const proxyWindow = new Proxy(oldWindow, proxyHandler);\n  const proxyGlobalThis = new Proxy(oldGlobalThis, proxyHandler);\n  const proxyGlobal = new Proxy(oldGlobal, proxyHandler);\n  const proxySelf = new Proxy(oldSelf, proxyHandler);\n\n  // Seed storage with core globals so lookups succeed inside `with` blocks\n  Object.assign(__globalsStorage, {\n    chrome,\n    browser,\n    window: proxyWindow,\n    globalThis: proxyGlobalThis,\n    global: proxyGlobal,\n    self: proxySelf,\n  });\n\n  const __globals = {\n    chrome,\n    browser,\n    window: proxyWindow,\n    globalThis: proxyGlobalThis,\n    global: proxyGlobal,\n    self: proxySelf,\n    __globals: __globalsStorage,\n  };\n\n  __globalsStorage.contextId = contextId;\n  __globalsStorage.contextType = contextType;\n  __globalsStorage.module = undefined;\n  __globalsStorage.amd = undefined;\n  __globalsStorage.define = undefined;\n\n  return __globals;\n}\n\n\nif (typeof window !== 'undefined') {\n    window.buildPolyfill = buildPolyfill;\n}\n"
 		    let newMap = JSON.parse(JSON.stringify(EXTENSION_ASSETS_MAP));
 		    delete newMap[OPTIONS_PAGE_PATH];
-		    const PASS_ON = {
+		    const PASS_ON = Object.fromEntries(Object.entries({
 		        LOCALE_KEYS,
 		        INJECTED_MANIFEST,
 		        USED_LOCALE,
 		        EXTENSION_ICON,
-		    }
+		        CURRENT_LOCATION,
+		        OPTIONS_PAGE_PATH,
+		        CAN_USE_BLOB_CSP,
+		        ALL_PERMISSIONS,
+		        ORIGIN_PERMISSIONS,
+		        EXTENSION_PERMISSIONS,
+		        _base64ToBlob,
+		        _getMimeTypeFromPath,
+		        _isTextAsset,
+		        _createAssetUrl,
+		        _matchGlobPattern,
+		        _isWebAccessibleResource,
+		    }).map(i => {
+		      let out = [...i];
+		      if (typeof i[1] === 'function'){
+		        out[1] = i[1].toString();
+		      } else {
+		        out[1] = JSON.stringify(i[1])
+		      }
+		      return out;
+		    }))
+		    console.log(PASS_ON);
 		    return `
-		        ${Object.entries(PASS_ON).map(i => `const ${i[0]} = ${JSON.stringify(i[1])};`).join('\n')}
+		    ${Object.entries(PASS_ON).map(i => `const ${i[0]} = ${i[1]};\nwindow[${JSON.stringify(i[0])}] = ${i[0]}`).join('\n')}
 		
-		        ${polyfillString.replaceAll("{{EXTENSION_ASSETS_MAP}}", `atob("${btoa(EXTENSION_ASSETS_MAP)}")`)}
+		        console.log("Initialized polyfill", {${Object.keys(PASS_ON).join(', ')}})
+		        ${polyfillString.replaceAll("{{EXTENSION_ASSETS_MAP}}", `JSON.parse(atob("${btoa(JSON.stringify(EXTENSION_ASSETS_MAP))}"))`)}
 		
 		        // Initialize the polyfill context for options page
 		        const polyfillCtx = buildPolyfill({ isOtherPage: true });
@@ -5396,5 +5334,5 @@ const e=!0,t=e=>e,s="passthrough";let o,c={createHTML:t,createScript:t,createScr
 		
 		
 		})();
-  // #endregion
+    // #endregion
     // #endregion

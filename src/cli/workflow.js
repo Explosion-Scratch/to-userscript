@@ -40,7 +40,7 @@ async function determineSourceType(source) {
         return { type: "archive", path: path.resolve(source) };
       } else {
         throw new Error(
-          `Unsupported file type: ${ext}. Supported types: .crx, .xpi, .zip`
+          `Unsupported file type: ${ext}. Supported types: .crx, .xpi, .zip`,
         );
       }
     }
@@ -80,7 +80,7 @@ async function checkOutputFile(outputPath, force) {
     await fs.access(outputPath);
     if (!force) {
       throw new Error(
-        `Output file already exists: ${outputPath}. Use --force to overwrite.`
+        `Output file already exists: ${outputPath}. Use --force to overwrite.`,
       );
     }
     debug("Output file exists, will be overwritten due to --force flag");
@@ -105,7 +105,7 @@ async function createTempDirectory(customTempDir) {
     tmp.dir(tempDirOptions, (err, tmpPath, cleanupCallback) => {
       if (err) {
         reject(
-          new Error(`Failed to create temporary directory: ${err.message}`)
+          new Error(`Failed to create temporary directory: ${err.message}`),
         );
       } else {
         debug("Created temporary directory: %s", tmpPath);
@@ -201,7 +201,7 @@ async function runDownload(config) {
 
     const stats = await fs.stat(outputPath);
     const sizeKB = Math.round(stats.size / 1024);
-    console.log(chalk.blue("📊 Size:"), `${sizeKB} KB`);
+    console.log(chalk.blue("📊 Size:"), humanFileSize(sizeKB));
 
     return { success: true, outputFile: outputPath };
   } catch (error) {
@@ -225,7 +225,7 @@ async function run(config) {
 
     // Create temporary directory
     const { tmpPath, cleanupCallback } = await createTempDirectory(
-      config.tempDir
+      config.tempDir,
     );
     tempCleanup = cleanupCallback;
 
@@ -240,10 +240,10 @@ async function run(config) {
       spinner.text = "Extracting archive...";
       inputDir = await unpack.unpack(
         sourceInfo.path,
-        path.join(tmpPath, "unpacked")
+        path.join(tmpPath, "unpacked"),
       );
       spinner.succeed(
-        `Source: Archive file (${path.basename(sourceInfo.path)})`
+        `Source: Archive file (${path.basename(sourceInfo.path)})`,
       );
     } else if (
       sourceInfo.type === "chrome-store" ||
@@ -255,7 +255,7 @@ async function run(config) {
       const downloadPath = path.join(tmpPath, "download");
       downloadedFile = await download.downloadExtension(
         sourceInfo,
-        downloadPath
+        downloadPath,
       );
 
       debug("Downloaded file: %s", downloadedFile);
@@ -263,10 +263,10 @@ async function run(config) {
 
       inputDir = await unpack.unpack(
         downloadedFile,
-        path.join(tmpPath, "unpacked")
+        path.join(tmpPath, "unpacked"),
       );
       spinner.succeed(
-        `Source: Downloaded from ${sourceInfo.type} (${path.basename(downloadedFile)})`
+        `Source: Downloaded from ${sourceInfo.type} (${path.basename(downloadedFile)})`,
       );
     }
 
@@ -276,7 +276,7 @@ async function run(config) {
       await fs.access(manifestPath);
     } catch (error) {
       throw new Error(
-        `No manifest.json found in extracted extension at: ${manifestPath}`
+        `No manifest.json found in extracted extension at: ${manifestPath}`,
       );
     }
 
@@ -296,7 +296,7 @@ async function run(config) {
     const outputPath = await generateOutputPath(
       config,
       manifest,
-      localizedName
+      localizedName,
     );
     debug("Output path: %s", outputPath);
 
@@ -337,11 +337,11 @@ async function run(config) {
 
     console.log(
       chalk.blue("📦 Extension:"),
-      chalk.bold(result.extension.name || "Unknown")
+      chalk.bold(result.extension.name || "Unknown"),
     );
     console.log(
       chalk.blue("📋 Version:"),
-      result.extension.version || "Unknown"
+      result.extension.version || "Unknown",
     );
     if (result.extension.description) {
       console.log(chalk.blue("📝 Description:"), result.extension.description);
@@ -351,7 +351,7 @@ async function run(config) {
       console.log(chalk.blue("🌐 Locale:"), config.locale);
     }
     console.log(chalk.blue("📄 Output:"), outputPath);
-    console.log(chalk.blue("📊 Size:"), `${sizeKB} KB`);
+    console.log(chalk.blue("📊 Size:"), humanFileSize(sizeKB));
 
     if (config.minify) {
       console.log(chalk.blue("🗜️  Minified:"), "Yes");
@@ -371,16 +371,51 @@ async function run(config) {
       } catch (cleanupError) {
         console.warn(
           chalk.yellow("Warning: Failed to clean up temporary files:"),
-          cleanupError.message
+          cleanupError.message,
         );
       }
     } else if (config.keepTemp && tempCleanup) {
       console.log(
         chalk.yellow("Temporary files preserved for debugging:"),
-        tempCleanup.path
+        tempCleanup.path,
       );
     }
   }
 }
 
 module.exports = { run, runDownload };
+
+/**
+ * Format bytes as human-readable text.
+ *
+ * @param bytes Number of bytes.
+ * @param si True to use metric (SI) units, aka powers of 1000. False to use
+ *           binary (IEC), aka powers of 1024.
+ * @param dp Number of decimal places to display.
+ *
+ * @return Formatted string.
+ */
+function humanFileSize(bytes, si = false, dp = 1) {
+  bytes = bytes * 1024;
+  const thresh = si ? 1000 : 1024;
+
+  if (Math.abs(bytes) < thresh) {
+    return bytes + " B";
+  }
+
+  const units = si
+    ? ["kB", "MB", "GB", "TB", "PB", "EB", "ZB", "YB"]
+    : ["KiB", "MiB", "GiB", "TiB", "PiB", "EiB", "ZiB", "YiB"];
+  let u = -1;
+  const r = 10 ** dp;
+
+  do {
+    bytes /= thresh;
+    ++u;
+  } while (
+    Math.round(Math.abs(bytes) * r) / r >= thresh &&
+    u < units.length - 1
+  );
+
+  return bytes.toFixed(dp) + " " + units[u];
+}
