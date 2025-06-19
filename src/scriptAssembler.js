@@ -68,7 +68,7 @@ async function executeAllScripts(globalThis, extensionCssData) {
       _log(\`Skipping document-start phase (no document).\`);
   }
 
-  /*
+  
   // --- Wait for Document End (DOMContentLoaded) ---
   if (typeof document !== 'undefined' && document.readyState === 'loading') {
     _log(\`Waiting for DOMContentLoaded...\`);
@@ -77,7 +77,7 @@ async function executeAllScripts(globalThis, extensionCssData) {
   } else if (typeof document !== 'undefined') {
     _log(\`DOMContentLoaded already passed or not applicable.\`);
   }
-  */
+  
 
   // --- Document End
    if (typeof document !== 'undefined') {

@@ -3307,7 +3307,7 @@ console.log("Script start:",performance.now());const e=!0,t=e=>e,o="passthrough"
 			      _log(`Skipping document-start phase (no document).`);
 			  }
 			
-			  /*
+			  
   // #endregion
   // #region Wait for Document End DOMContentLoaded ---
 			  if (typeof document !== 'undefined' && document.readyState === 'loading') {
@@ -3317,7 +3317,7 @@ console.log("Script start:",performance.now());const e=!0,t=e=>e,o="passthrough"
 			  } else if (typeof document !== 'undefined') {
 			    _log(`DOMContentLoaded already passed or not applicable.`);
 			  }
-			  */
+			  
 			
   // #endregion
   // #region Document End
