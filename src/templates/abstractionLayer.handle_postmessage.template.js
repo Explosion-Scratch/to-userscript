@@ -68,7 +68,5 @@
     }
   });
 
-  console.log(
-    "[PostMessage Handler] Abstraction layer message handler initialized"
-  );
+  _log("[PostMessage Handler] Abstraction layer message handler initialized");
 })();

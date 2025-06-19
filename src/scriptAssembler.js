@@ -16,13 +16,13 @@ function generateCombinedExecutionLogic(scriptsToRun, cssToInject, scriptName) {
         const cssKey_${idx} = ${JSON.stringify(cssPath)};
     try {
       if (extensionCssData[cssKey_${idx}]) {
-        console.log(\`  Injecting CSS (${phaseName}): \${cssKey_${idx}}\`);
+        _log(\`  Injecting CSS (${phaseName}): \${cssKey_${idx}}\`);
         const style = document.createElement('style');
         style.textContent = extensionCssData[cssKey_${idx}];
         (document.head || document.documentElement).appendChild(style);
       } else { console.warn(\`  CSS not found (${phaseName}): \${cssKey_${idx}}\`); }
-    } catch(e) { console.error(\`  Failed injecting CSS (\${cssKey_${idx}}) in phase ${phaseName}\`, e, extensionCssData); }
-  `,
+    } catch(e) { _error(\`  Failed injecting CSS (\${cssKey_${idx}}) in phase ${phaseName}\`, e, extensionCssData); }
+  `
       )
       .join("\n");
   };
@@ -34,9 +34,9 @@ function generateCombinedExecutionLogic(scriptsToRun, cssToInject, scriptName) {
     const getContent = (content) =>
       content.trim().replace(/^['"]use strict['"];?/, "");
     return `const scriptPaths = ${JSON.stringify(
-      allScripts.map((script) => script.path),
+      allScripts.map((script) => script.path)
     )};
-   console.log(\`  Executing JS (${phaseName}): \${scriptPaths}\`);
+   _log(\`  Executing JS (${phaseName}): \${scriptPaths}\`);
 
    try {
        // Keep variables from being redeclared for global scope, but also make them apply to global scope. (Theoretically)
@@ -45,10 +45,10 @@ function generateCombinedExecutionLogic(scriptsToRun, cssToInject, scriptName) {
           (script) =>
             `// START: ${script.path}\n${getContent(script.content)}\n// END: ${
               script.path
-            }`,
+            }`
         )
         .join("\n\n")}\n;}
-   } catch(e) { console.error(\`  Error executing scripts \${scriptPaths}\`, e); }
+   } catch(e) { _error(\`  Error executing scripts \${scriptPaths}\`, e); }
   `;
   };
 
@@ -57,60 +57,60 @@ function generateCombinedExecutionLogic(scriptsToRun, cssToInject, scriptName) {
 async function executeAllScripts(globalThis, extensionCssData) {
   const {chrome, browser, global, window, self} = globalThis;
   const scriptName = ${JSON.stringify(scriptName)};
-  console.log(\`[\${scriptName}] Starting execution phases...\`);
+  _log(\`Starting execution phases...\`);
 
   // --- Document Start
   if (typeof document !== 'undefined') {
-    console.log(\`[\${scriptName}] Executing document-start phase...\`);
+    _log(\`Executing document-start phase...\`);
     ${generateCssInjection("document-start", "start")}
     ${generateJsExecution("document-start", "start")}
   } else {
-      console.log(\`[\${scriptName}] Skipping document-start phase (no document).\`);
+      _log(\`Skipping document-start phase (no document).\`);
   }
 
   /*
   // --- Wait for Document End (DOMContentLoaded) ---
   if (typeof document !== 'undefined' && document.readyState === 'loading') {
-    console.log(\`[\${scriptName}] Waiting for DOMContentLoaded...\`);
+    _log(\`Waiting for DOMContentLoaded...\`);
     await new Promise(resolve => document.addEventListener('DOMContentLoaded', resolve, { once: true }));
-    console.log(\`[\${scriptName}] DOMContentLoaded fired.\`);
+    _log(\`DOMContentLoaded fired.\`);
   } else if (typeof document !== 'undefined') {
-    console.log(\`[\${scriptName}] DOMContentLoaded already passed or not applicable.\`);
+    _log(\`DOMContentLoaded already passed or not applicable.\`);
   }
   */
 
   // --- Document End
    if (typeof document !== 'undefined') {
-    console.log(\`[\${scriptName}] Executing document-end phase...\`);
+    _log(\`Executing document-end phase...\`);
     ${generateCssInjection("document-end", "end")}
     ${generateJsExecution("document-end", "end")}
   } else {
-      console.log(\`[\${scriptName}] Skipping document-end phase (no document).\`);
+      _log(\`Skipping document-end phase (no document).\`);
   }
 
-  /*
+  
   // --- Wait for Document Idle
-  console.log(\`[\${scriptName}] Waiting for document idle state...\`);
+  _log(\`Waiting for document idle state...\`);
   if (typeof window !== 'undefined' && typeof window.requestIdleCallback === 'function') {
       await new Promise(resolve => window.requestIdleCallback(resolve, { timeout: 2000 })); // 2-second timeout fallback
-      console.log(\`[\${scriptName}] requestIdleCallback fired or timed out.\`);
+      _log(\`requestIdleCallback fired or timed out.\`);
   } else {
       // Fallback: wait a short period after DOMContentLoaded/current execution if requestIdleCallback is unavailable
       await new Promise(resolve => setTimeout(resolve, 50));
-      console.log(\`[\${scriptName}] Idle fallback timer completed.\`);
+      _log(\`Idle fallback timer completed.\`);
   }
-  */
+  
 
   // --- Document Idle
    if (typeof document !== 'undefined') {
-    console.log(\`[\${scriptName}] Executing document-idle phase...\`);
+    _log(\`Executing document-idle phase...\`);
     ${generateCssInjection("document-idle", "idle")}
     ${generateJsExecution("document-idle", "idle")}
   } else {
-      console.log(\`[\${scriptName}] Skipping document-idle phase (no document).\`);
+      _log(\`Skipping document-idle phase (no document).\`);
   }
 
-  console.log(\`[\${scriptName}] All execution phases complete, re-firing load events.\`);
+  _log(\`All execution phases complete, re-firing load events.\`);
   document.dispatchEvent(new Event("DOMContentLoaded", {
     bubbles: true,
     cancelable: true

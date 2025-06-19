@@ -9,7 +9,7 @@ async function _storageSet(items) {
     }
     return Promise.resolve();
   } catch (e) {
-    console.error("GM_setValue error:", e);
+    _error("GM_setValue error:", e);
     return Promise.reject(e);
   }
 }
@@ -44,7 +44,7 @@ async function _storageGet(keys) {
       requestedKeys = [...keyList];
       defaults = keys;
     } else {
-      console.error("_storageGet error: Invalid keys format", keys);
+      _error("_storageGet error: Invalid keys format", keys);
       return Promise.reject(new Error("Invalid keys format for get"));
     }
 
@@ -67,7 +67,7 @@ async function _storageGet(keys) {
 
     return Promise.resolve(finalResult);
   } catch (e) {
-    console.error("GM_getValue/GM_listValues error:", e);
+    _error("GM_getValue/GM_listValues error:", e);
     return Promise.reject(e);
   }
 }
@@ -80,7 +80,7 @@ async function _storageRemove(keysToRemove) {
     } else if (Array.isArray(keysToRemove)) {
       keyList = keysToRemove;
     } else {
-      console.error("_storageRemove error: Invalid keys format", keysToRemove);
+      _error("_storageRemove error: Invalid keys format", keysToRemove);
       return Promise.reject(new Error("Invalid keys format for remove"));
     }
 
@@ -89,7 +89,7 @@ async function _storageRemove(keysToRemove) {
     }
     return Promise.resolve();
   } catch (e) {
-    console.error("GM_deleteValue error:", e);
+    _error("GM_deleteValue error:", e);
     return Promise.reject(e);
   }
 }
@@ -100,7 +100,7 @@ async function _storageClear() {
     await Promise.all(keys.map((key) => GM_deleteValue(key)));
     return Promise.resolve();
   } catch (e) {
-    console.error("GM_listValues/GM_deleteValue error during clear:", e);
+    _error("GM_listValues/GM_deleteValue error during clear:", e);
     return Promise.reject(e);
   }
 }
@@ -243,7 +243,7 @@ async function _fetch(url, options = {}) {
         },
       });
     } catch (e) {
-      console.error("_fetch (GM_xmlhttpRequest) error:", e);
+      _error("_fetch (GM_xmlhttpRequest) error:", e);
       reject(e);
     }
   });
@@ -254,10 +254,10 @@ function _registerMenuCommand(name, func) {
     try {
       GM_registerMenuCommand(name, func);
     } catch (e) {
-      console.error("GM_registerMenuCommand failed:", e);
+      _error("GM_registerMenuCommand failed:", e);
     }
   } else {
-    console.warn("GM_registerMenuCommand not available.");
+    _warn("GM_registerMenuCommand not available.");
   }
 }
 
@@ -266,14 +266,14 @@ function _openTab(url, active) {
     try {
       GM_openInTab(url, { loadInBackground: !active });
     } catch (e) {
-      console.error("GM_openInTab failed:", e);
+      _error("GM_openInTab failed:", e);
     }
   } else {
-    console.warn("GM_openInTab not available, using window.open as fallback.");
+    _warn("GM_openInTab not available, using window.open as fallback.");
     try {
       window.open(url);
     } catch (e) {
-      console.error("window.open fallback failed:", e);
+      _error("window.open fallback failed:", e);
     }
   }
 }

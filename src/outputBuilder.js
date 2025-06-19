@@ -109,7 +109,7 @@ const START_BACKGROUND_SCRIPT = (function(){
   const backgroundPolyfill = buildPolyfill({ isBackground: true });
   const scriptName = ${JSON.stringify(scriptName)};
   const debug = ${JSON.stringify(`[${scriptName}]`)};
-  console.log(debug + ' Executing background scripts...');
+  _log(debug + ' Executing background scripts...');
 
   function executeBackgroundScripts(){
     with(backgroundPolyfill){
@@ -121,14 +121,14 @@ const START_BACKGROUND_SCRIPT = (function(){
 
   executeBackgroundScripts.call(backgroundPolyfill);
 
-  console.log(debug + ' Background scripts execution complete.');
+  _log(debug + ' Background scripts execution complete.');
 });
 
 setTimeout(() => {
   // Wait for things to be defined
   START_BACKGROUND_SCRIPT();
 }, 10);
-console.log("START_BACKGROUND_SCRIPT", START_BACKGROUND_SCRIPT);
+_log("START_BACKGROUND_SCRIPT", START_BACKGROUND_SCRIPT);
 // End background script environment
 `;
 }
@@ -209,6 +209,32 @@ async function buildUserScript({
   const orchestrationTemplate =
     await templateManager.getOrchestrationTemplate();
 
+  const VERBOSE = false;
+  const loggingString = VERBOSE
+    ? `
+  const SCRIPT_NAME = ${JSON.stringify(scriptName)};
+  let lastTime = performance.now();
+  const __timeWrap = (func) => (...args) => { 
+    const now = performance.now(); 
+    if (now - lastTime > 100){
+      // debugger; 
+      lastTime = performance.now();
+    }
+    func(...args); 
+    console.log(\`\${now - lastTime}ms\`);
+    lastTime = performance.now();
+    return func(...args);
+  };
+  const _log = __timeWrap((...args) => console.log(\`[\${typeof SCRIPT_NAME === 'string' ? SCRIPT_NAME : '[USERSCRIPT_CONVERTED]'}]\`, ...args));
+  const _warn = __timeWrap((...args) => console.warn(\`[\${typeof SCRIPT_NAME === 'string' ? SCRIPT_NAME : '[USERSCRIPT_CONVERTED]'}]\`, ...args));
+  const _error = __timeWrap((...args) => console.error(\`[\${typeof SCRIPT_NAME === 'string' ? SCRIPT_NAME : '[USERSCRIPT_CONVERTED]'}]\`, ...args));
+  `
+    : `
+  const SCRIPT_NAME = ${JSON.stringify(scriptName)};
+  const _log = (...args) => {};
+  const _warn = (...args) => console.warn(\`[\${typeof SCRIPT_NAME === 'string' ? SCRIPT_NAME : '[USERSCRIPT_CONVERTED]'}]\`, ...args);
+  const _error = (...args) => console.error(\`[\${typeof SCRIPT_NAME === 'string' ? SCRIPT_NAME : '[USERSCRIPT_CONVERTED]'}]\`, ...args);
+  `;
   const replacements = {
     "{{SCRIPT_NAME}}": JSON.stringify(scriptName),
     "{{INJECTED_MANIFEST}}": injectedManifestString,
@@ -250,6 +276,8 @@ async function buildUserScript({
   let finalScript = [
     metadataBlock,
     "(function() {",
+    "    // - Logging",
+    loggingString,
     "    // - Unified Polyfill",
     polyfillString,
     "   // - Background Script Environment",

@@ -3,7 +3,7 @@
 function createEventBus(
   scopeId,
   type = "page", // "page" or "iframe"
-  { allowedOrigin = "*", children = [], parentWindow = null } = {},
+  { allowedOrigin = "*", children = [], parentWindow = null } = {}
 ) {
   if (!scopeId) throw new Error("createEventBus requires a scopeId");
 
@@ -27,7 +27,7 @@ function createEventBus(
     }
 
     (handlers[event] || []).forEach((fn) =>
-      fn(payload, { origin: ev.origin, source: ev.source }),
+      fn(payload, { origin: ev.origin, source: ev.source })
     );
   }
 
@@ -81,7 +81,7 @@ function createEventBus(
 
       // For broadcast messages (no 'to' target), dispatch locally first.
       (handlers[event] || []).forEach((fn) =>
-        fn(payload, { origin: location.origin, source: window }),
+        fn(payload, { origin: location.origin, source: window })
       );
 
       // Then propagate the broadcast to other windows.
@@ -159,7 +159,7 @@ function createRuntime(type = "background", bus) {
             }
             return ret;
           } catch (e) {
-            console.error(e);
+            _error(e);
           }
         })
         .filter((r) => r !== undefined);
@@ -263,7 +263,7 @@ function createRuntime(type = "background", bus) {
       bus.emit(
         "__PORT_MESSAGE__",
         { portId, msg, senderInstanceId: instanceId },
-        { to: remoteWindow },
+        { to: remoteWindow }
       );
     }
 
@@ -279,7 +279,7 @@ function createRuntime(type = "background", bus) {
       // envelope: { msg, senderInstanceId }
       if (envelope.senderInstanceId === instanceId) return; // Don't dispatch to self
       onMessageHandlers.forEach((fn) =>
-        fn(envelope.msg, { id: portId, tab: { id: source } }),
+        fn(envelope.msg, { id: portId, tab: { id: source } })
       );
     }
 

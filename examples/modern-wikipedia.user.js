@@ -16,9 +16,17 @@
 // @run-at      document-start
 // ==/UserScript==
 
-const e=!0,t=e=>e,s="passthrough";let o,c={createHTML:t,createScript:t,createScriptURL:t},i=!1;const r=()=>{try{void 0!==window.isSecureContext&&window.isSecureContext&&window.trustedTypes&&window.trustedTypes.createPolicy&&(i=!0,trustedTypes.defaultPolicy?(d("TT Default Policy exists"),c=window.trustedTypes.createPolicy("default",c),o=trustedTypes.defaultPolicy,d(`Created custom passthrough policy, in case the default policy is too restrictive: Use Policy '${s}' in var 'TTP':`,c)):o=c=window.trustedTypes.createPolicy("default",c),d("Trusted-Type Policies: TTP:",c,"TTP_default:",o))}catch(e){d(e)}},d=(...e)=>{console.log(...e)};r();
+console.log("Script start:",performance.now());const e=!0,t=e=>e,o="passthrough";let s,c={createHTML:t,createScript:t,createScriptURL:t},i=!1;const r=()=>{try{void 0!==window.isSecureContext&&window.isSecureContext&&window.trustedTypes&&window.trustedTypes.createPolicy&&(i=!0,trustedTypes.defaultPolicy?(l("TT Default Policy exists"),c=window.trustedTypes.createPolicy("default",c),s=trustedTypes.defaultPolicy,l(`Created custom passthrough policy, in case the default policy is too restrictive: Use Policy '${o}' in var 'TTP':`,c)):s=c=window.trustedTypes.createPolicy("default",c),l("Trusted-Type Policies: TTP:",c,"TTP_default:",s))}catch(e){l(e)}},l=(...e)=>{console.log(...e)};r();
 
 (function() {
+    // #region Logging
+	
+	  const SCRIPT_NAME = "Modern for Wikipedia";
+	  const _log = (...args) => {};
+	  const _warn = (...args) => console.warn(`[${typeof SCRIPT_NAME === 'string' ? SCRIPT_NAME : '[USERSCRIPT_CONVERTED]'}]`, ...args);
+	  const _error = (...args) => console.error(`[${typeof SCRIPT_NAME === 'string' ? SCRIPT_NAME : '[USERSCRIPT_CONVERTED]'}]`, ...args);
+	  
+    // #endregion
     // #region Unified Polyfill
 	
 // #region Messaging implementation
@@ -26,7 +34,7 @@ const e=!0,t=e=>e,s="passthrough";let o,c={createHTML:t,createScript:t,createScr
 		function createEventBus(
 		  scopeId,
 		  type = "page", // "page" or "iframe"
-		  { allowedOrigin = "*", children = [], parentWindow = null } = {},
+		  { allowedOrigin = "*", children = [], parentWindow = null } = {}
 		) {
 		  if (!scopeId) throw new Error("createEventBus requires a scopeId");
 		
@@ -50,7 +58,7 @@ const e=!0,t=e=>e,s="passthrough";let o,c={createHTML:t,createScript:t,createScr
 		    }
 		
 		    (handlers[event] || []).forEach((fn) =>
-		      fn(payload, { origin: ev.origin, source: ev.source }),
+		      fn(payload, { origin: ev.origin, source: ev.source })
 		    );
 		  }
 		
@@ -104,7 +112,7 @@ const e=!0,t=e=>e,s="passthrough";let o,c={createHTML:t,createScript:t,createScr
 		
 		      // For broadcast messages (no 'to' target), dispatch locally first.
 		      (handlers[event] || []).forEach((fn) =>
-		        fn(payload, { origin: location.origin, source: window }),
+		        fn(payload, { origin: location.origin, source: window })
 		      );
 		
 		      // Then propagate the broadcast to other windows.
@@ -182,7 +190,7 @@ const e=!0,t=e=>e,s="passthrough";let o,c={createHTML:t,createScript:t,createScr
 		            }
 		            return ret;
 		          } catch (e) {
-		            console.error(e);
+		            _error(e);
 		          }
 		        })
 		        .filter((r) => r !== undefined);
@@ -286,7 +294,7 @@ const e=!0,t=e=>e,s="passthrough";let o,c={createHTML:t,createScript:t,createScr
 		      bus.emit(
 		        "__PORT_MESSAGE__",
 		        { portId, msg, senderInstanceId: instanceId },
-		        { to: remoteWindow },
+		        { to: remoteWindow }
 		      );
 		    }
 		
@@ -302,7 +310,7 @@ const e=!0,t=e=>e,s="passthrough";let o,c={createHTML:t,createScript:t,createScr
 		      // envelope: { msg, senderInstanceId }
 		      if (envelope.senderInstanceId === instanceId) return; // Don't dispatch to self
 		      onMessageHandlers.forEach((fn) =>
-		        fn(envelope.msg, { id: portId, tab: { id: source } }),
+		        fn(envelope.msg, { id: portId, tab: { id: source } })
 		      );
 		    }
 		
@@ -478,9 +486,7 @@ const e=!0,t=e=>e,s="passthrough";let o,c={createHTML:t,createScript:t,createScr
 			    }
 			  });
 			
-			  console.log(
-			    "[PostMessage Handler] Abstraction layer message handler initialized"
-			  );
+			  _log("[PostMessage Handler] Abstraction layer message handler initialized");
 			})();
 			
 			
@@ -496,7 +502,7 @@ const e=!0,t=e=>e,s="passthrough";let o,c={createHTML:t,createScript:t,createScr
 			    }
 			    return Promise.resolve();
 			  } catch (e) {
-			    console.error("GM_setValue error:", e);
+			    _error("GM_setValue error:", e);
 			    return Promise.reject(e);
 			  }
 			}
@@ -531,7 +537,7 @@ const e=!0,t=e=>e,s="passthrough";let o,c={createHTML:t,createScript:t,createScr
 			      requestedKeys = [...keyList];
 			      defaults = keys;
 			    } else {
-			      console.error("_storageGet error: Invalid keys format", keys);
+			      _error("_storageGet error: Invalid keys format", keys);
 			      return Promise.reject(new Error("Invalid keys format for get"));
 			    }
 			
@@ -554,7 +560,7 @@ const e=!0,t=e=>e,s="passthrough";let o,c={createHTML:t,createScript:t,createScr
 			
 			    return Promise.resolve(finalResult);
 			  } catch (e) {
-			    console.error("GM_getValue/GM_listValues error:", e);
+			    _error("GM_getValue/GM_listValues error:", e);
 			    return Promise.reject(e);
 			  }
 			}
@@ -567,7 +573,7 @@ const e=!0,t=e=>e,s="passthrough";let o,c={createHTML:t,createScript:t,createScr
 			    } else if (Array.isArray(keysToRemove)) {
 			      keyList = keysToRemove;
 			    } else {
-			      console.error("_storageRemove error: Invalid keys format", keysToRemove);
+			      _error("_storageRemove error: Invalid keys format", keysToRemove);
 			      return Promise.reject(new Error("Invalid keys format for remove"));
 			    }
 			
@@ -576,7 +582,7 @@ const e=!0,t=e=>e,s="passthrough";let o,c={createHTML:t,createScript:t,createScr
 			    }
 			    return Promise.resolve();
 			  } catch (e) {
-			    console.error("GM_deleteValue error:", e);
+			    _error("GM_deleteValue error:", e);
 			    return Promise.reject(e);
 			  }
 			}
@@ -587,7 +593,7 @@ const e=!0,t=e=>e,s="passthrough";let o,c={createHTML:t,createScript:t,createScr
 			    await Promise.all(keys.map((key) => GM_deleteValue(key)));
 			    return Promise.resolve();
 			  } catch (e) {
-			    console.error("GM_listValues/GM_deleteValue error during clear:", e);
+			    _error("GM_listValues/GM_deleteValue error during clear:", e);
 			    return Promise.reject(e);
 			  }
 			}
@@ -730,7 +736,7 @@ const e=!0,t=e=>e,s="passthrough";let o,c={createHTML:t,createScript:t,createScr
 			        },
 			      });
 			    } catch (e) {
-			      console.error("_fetch (GM_xmlhttpRequest) error:", e);
+			      _error("_fetch (GM_xmlhttpRequest) error:", e);
 			      reject(e);
 			    }
 			  });
@@ -741,10 +747,10 @@ const e=!0,t=e=>e,s="passthrough";let o,c={createHTML:t,createScript:t,createScr
 			    try {
 			      GM_registerMenuCommand(name, func);
 			    } catch (e) {
-			      console.error("GM_registerMenuCommand failed:", e);
+			      _error("GM_registerMenuCommand failed:", e);
 			    }
 			  } else {
-			    console.warn("GM_registerMenuCommand not available.");
+			    _warn("GM_registerMenuCommand not available.");
 			  }
 			}
 			
@@ -753,14 +759,14 @@ const e=!0,t=e=>e,s="passthrough";let o,c={createHTML:t,createScript:t,createScr
 			    try {
 			      GM_openInTab(url, { loadInBackground: !active });
 			    } catch (e) {
-			      console.error("GM_openInTab failed:", e);
+			      _error("GM_openInTab failed:", e);
 			    }
 			  } else {
-			    console.warn("GM_openInTab not available, using window.open as fallback.");
+			    _warn("GM_openInTab not available, using window.open as fallback.");
 			    try {
 			      window.open(url);
 			    } catch (e) {
-			      console.error("window.open fallback failed:", e);
+			      _error("window.open fallback failed:", e);
 			    }
 			  }
 			}
@@ -833,10 +839,10 @@ const e=!0,t=e=>e,s="passthrough";let o,c={createHTML:t,createScript:t,createScr
 		  const RUNTIME = createRuntime(isBackground ? "background" : "tab", BUS);
 		  const createNoopListeners = () => ({
 		    addListener: (callback) => {
-		      console.log("addListener", callback);
+		      _log("addListener", callback);
 		    },
 		    removeListener: (callback) => {
-		      console.log("removeListener", callback);
+		      _log("removeListener", callback);
 		    },
 		  });
 		  // TODO: Stub
@@ -858,7 +864,7 @@ const e=!0,t=e=>e,s="passthrough";let o,c={createHTML:t,createScript:t,createScr
 			    permissions: {
 			      // TODO: Remove origin permission means exclude from origin in startup
 			      request: (permissions, callback) => {
-			        console.log("permissions.request", permissions, callback);
+			        _log("permissions.request", permissions, callback);
 			        if (Array.isArray(permissions)) {
 			          REQ_PERMS = [...REQ_PERMS, ...permissions];
 			        }
@@ -902,10 +908,10 @@ const e=!0,t=e=>e,s="passthrough";let o,c={createHTML:t,createScript:t,createScr
 			    alarms: {
 			      onAlarm: createNoopListeners(),
 			      create: () => {
-			        console.log("alarms.create", arguments);
+			        _log("alarms.create", arguments);
 			      },
 			      get: () => {
-			        console.log("alarms.get", arguments);
+			        _log("alarms.get", arguments);
 			      },
 			    },
 			    runtime: {
@@ -922,7 +928,7 @@ const e=!0,t=e=>e,s="passthrough";let o,c={createHTML:t,createScript:t,createScr
 			        } else if (window.parent) {
 			          window.parent.postMessage({ type: "openOptionsPage" }, "*");
 			        } else {
-			          console.warn("openOptionsPage not available.");
+			          _warn("openOptionsPage not available.");
 			        }
 			      },
 			      getManifest: () => {
@@ -930,9 +936,7 @@ const e=!0,t=e=>e,s="passthrough";let o,c={createHTML:t,createScript:t,createScr
 			        if (typeof INJECTED_MANIFEST !== "undefined") {
 			          return JSON.parse(JSON.stringify(INJECTED_MANIFEST)); // Return deep copy
 			        }
-			        console.warn(
-			          "INJECTED_MANIFEST not found for chrome.runtime.getManifest"
-			        );
+			        _warn("INJECTED_MANIFEST not found for chrome.runtime.getManifest");
 			        return { name: "Unknown", version: "0.0", manifest_version: 2 };
 			      },
 			      getURL: (path) => {
@@ -945,7 +949,7 @@ const e=!0,t=e=>e,s="passthrough";let o,c={createHTML:t,createScript:t,createScr
 			          return _createAssetUrl(path);
 			        }
 			
-			        console.warn(
+			        _warn(
 			          `chrome.runtime.getURL fallback for '${path}'. Assets may not be available.`
 			        );
 			        // Attempt a relative path resolution (highly context-dependent and likely wrong)
@@ -1027,11 +1031,11 @@ const e=!0,t=e=>e,s="passthrough";let o,c={createHTML:t,createScript:t,createScr
 			                try {
 			                  callback(result);
 			                } catch (e) {
-			                  console.error("Error in storage.get callback:", e);
+			                  _error("Error in storage.get callback:", e);
 			                }
 			              })
 			              .catch((error) => {
-			                console.error("Storage.get error:", error);
+			                _error("Storage.get error:", error);
 			                callback({});
 			              });
 			            return;
@@ -1054,11 +1058,11 @@ const e=!0,t=e=>e,s="passthrough";let o,c={createHTML:t,createScript:t,createScr
 			                try {
 			                  callback(result);
 			                } catch (e) {
-			                  console.error("Error in storage.set callback:", e);
+			                  _error("Error in storage.set callback:", e);
 			                }
 			              })
 			              .catch((error) => {
-			                console.error("Storage.set error:", error);
+			                _error("Storage.set error:", error);
 			                callback();
 			              });
 			            return;
@@ -1086,11 +1090,11 @@ const e=!0,t=e=>e,s="passthrough";let o,c={createHTML:t,createScript:t,createScr
 			                try {
 			                  callback(result);
 			                } catch (e) {
-			                  console.error("Error in storage.remove callback:", e);
+			                  _error("Error in storage.remove callback:", e);
 			                }
 			              })
 			              .catch((error) => {
-			                console.error("Storage.remove error:", error);
+			                _error("Storage.remove error:", error);
 			                callback();
 			              });
 			            return;
@@ -1113,11 +1117,11 @@ const e=!0,t=e=>e,s="passthrough";let o,c={createHTML:t,createScript:t,createScr
 			                try {
 			                  callback(result);
 			                } catch (e) {
-			                  console.error("Error in storage.clear callback:", e);
+			                  _error("Error in storage.clear callback:", e);
 			                }
 			              })
 			              .catch((error) => {
-			                console.error("Storage.clear error:", error);
+			                _error("Storage.clear error:", error);
 			                callback();
 			              });
 			            return;
@@ -1136,11 +1140,11 @@ const e=!0,t=e=>e,s="passthrough";let o,c={createHTML:t,createScript:t,createScr
 			      },
 			      sync: {
 			        get: function (keys, callback) {
-			          console.warn("chrome.storage.sync polyfill maps to local");
+			          _warn("chrome.storage.sync polyfill maps to local");
 			          return chrome.storage.local.get(keys, callback);
 			        },
 			        set: function (items, callback) {
-			          console.warn("chrome.storage.sync polyfill maps to local");
+			          _warn("chrome.storage.sync polyfill maps to local");
 			
 			          const promise = chrome.storage.local.set(items).then((result) => {
 			            broadcastStorageChange(items, "sync");
@@ -1153,11 +1157,11 @@ const e=!0,t=e=>e,s="passthrough";let o,c={createHTML:t,createScript:t,createScr
 			                try {
 			                  callback(result);
 			                } catch (e) {
-			                  console.error("Error in storage.sync.set callback:", e);
+			                  _error("Error in storage.sync.set callback:", e);
 			                }
 			              })
 			              .catch((error) => {
-			                console.error("Storage.sync.set error:", error);
+			                _error("Storage.sync.set error:", error);
 			                callback();
 			              });
 			            return;
@@ -1166,7 +1170,7 @@ const e=!0,t=e=>e,s="passthrough";let o,c={createHTML:t,createScript:t,createScr
 			          return promise;
 			        },
 			        remove: function (keys, callback) {
-			          console.warn("chrome.storage.sync polyfill maps to local");
+			          _warn("chrome.storage.sync polyfill maps to local");
 			
 			          const promise = chrome.storage.local.remove(keys).then((result) => {
 			            const changes = {};
@@ -1184,11 +1188,11 @@ const e=!0,t=e=>e,s="passthrough";let o,c={createHTML:t,createScript:t,createScr
 			                try {
 			                  callback(result);
 			                } catch (e) {
-			                  console.error("Error in storage.sync.remove callback:", e);
+			                  _error("Error in storage.sync.remove callback:", e);
 			                }
 			              })
 			              .catch((error) => {
-			                console.error("Storage.sync.remove error:", error);
+			                _error("Storage.sync.remove error:", error);
 			                callback();
 			              });
 			            return;
@@ -1197,7 +1201,7 @@ const e=!0,t=e=>e,s="passthrough";let o,c={createHTML:t,createScript:t,createScr
 			          return promise;
 			        },
 			        clear: function (callback) {
-			          console.warn("chrome.storage.sync polyfill maps to local");
+			          _warn("chrome.storage.sync polyfill maps to local");
 			
 			          const promise = chrome.storage.local.clear().then((result) => {
 			            broadcastStorageChange({}, "sync");
@@ -1210,11 +1214,11 @@ const e=!0,t=e=>e,s="passthrough";let o,c={createHTML:t,createScript:t,createScr
 			                try {
 			                  callback(result);
 			                } catch (e) {
-			                  console.error("Error in storage.sync.clear callback:", e);
+			                  _error("Error in storage.sync.clear callback:", e);
 			                }
 			              })
 			              .catch((error) => {
-			                console.error("Storage.sync.clear error:", error);
+			                _error("Storage.sync.clear error:", error);
 			                callback();
 			              });
 			            return;
@@ -1241,7 +1245,7 @@ const e=!0,t=e=>e,s="passthrough";let o,c={createHTML:t,createScript:t,createScr
 			      },
 			      managed: {
 			        get: function (keys, callback) {
-			          console.warn("chrome.storage.managed polyfill is read-only empty.");
+			          _warn("chrome.storage.managed polyfill is read-only empty.");
 			
 			          const promise = Promise.resolve({});
 			
@@ -1250,7 +1254,7 @@ const e=!0,t=e=>e,s="passthrough";let o,c={createHTML:t,createScript:t,createScr
 			              try {
 			                callback(result);
 			              } catch (e) {
-			                console.error("Error in storage.managed.get callback:", e);
+			                _error("Error in storage.managed.get callback:", e);
 			              }
 			            });
 			            return;
@@ -1267,7 +1271,7 @@ const e=!0,t=e=>e,s="passthrough";let o,c={createHTML:t,createScript:t,createScr
 			          try {
 			            listener(changeInfo);
 			          } catch (e) {
-			            console.error("Error in cookies.onChanged listener:", e);
+			            _error("Error in cookies.onChanged listener:", e);
 			          }
 			        });
 			      }
@@ -1278,7 +1282,7 @@ const e=!0,t=e=>e,s="passthrough";let o,c={createHTML:t,createScript:t,createScr
 			            .then((result) => callback(result))
 			            .catch((error) => {
 			              // chrome.runtime.lastError = { message: error.message }; // TODO: Implement lastError
-			              console.error(error);
+			              _error(error);
 			              callback(); // Call with undefined on error
 			            });
 			          return;
@@ -1322,7 +1326,7 @@ const e=!0,t=e=>e,s="passthrough";let o,c={createHTML:t,createScript:t,createScr
 			            );
 			          }
 			          if (details.partitionKey) {
-			            console.warn(
+			            _warn(
 			              "cookies.getAll: partitionKey is not fully supported in this environment."
 			            );
 			          }
@@ -1339,7 +1343,7 @@ const e=!0,t=e=>e,s="passthrough";let o,c={createHTML:t,createScript:t,createScr
 			              throw new Error("_cookieSet or _cookieList not defined");
 			            }
 			            if (details.partitionKey) {
-			              console.warn(
+			              _warn(
 			                "cookies.set: partitionKey is not fully supported in this environment."
 			              );
 			            }
@@ -1415,7 +1419,7 @@ const e=!0,t=e=>e,s="passthrough";let o,c={createHTML:t,createScript:t,createScr
 			        },
 			
 			        getPartitionKey: function (details, callback) {
-			          console.warn(
+			          _warn(
 			            "chrome.cookies.getPartitionKey is not supported in this environment."
 			          );
 			          const promise = Promise.resolve({ partitionKey: {} }); // Return empty partition key
@@ -1436,9 +1440,7 @@ const e=!0,t=e=>e,s="passthrough";let o,c={createHTML:t,createScript:t,createScr
 			    })(),
 			    tabs: {
 			      query: async (queryInfo) => {
-			        console.warn(
-			          "chrome.tabs.query polyfill only returns current tab info."
-			        );
+			        _warn("chrome.tabs.query polyfill only returns current tab info.");
 			        const dummyId = Math.floor(Math.random() * 1000) + 1;
 			        return [
 			          {
@@ -1451,7 +1453,7 @@ const e=!0,t=e=>e,s="passthrough";let o,c={createHTML:t,createScript:t,createScr
 			        ];
 			      },
 			      create: async ({ url, active = true }) => {
-			        console.log(`[Polyfill tabs.create] URL: ${url}`);
+			        _log(`[Polyfill tabs.create] URL: ${url}`);
 			        if (typeof _openTab !== "function")
 			          throw new Error("_openTab not defined");
 			        _openTab(url, active);
@@ -1464,7 +1466,7 @@ const e=!0,t=e=>e,s="passthrough";let o,c={createHTML:t,createScript:t,createScr
 			        });
 			      },
 			      sendMessage: async (tabId, message) => {
-			        console.warn(
+			        _warn(
 			          `chrome.tabs.sendMessage polyfill (to tab ${tabId}) redirects to runtime.sendMessage (current context).`
 			        );
 			        return chrome.runtime.sendMessage(message);
@@ -1509,7 +1511,7 @@ const e=!0,t=e=>e,s="passthrough";let o,c={createHTML:t,createScript:t,createScr
 			                tag: id,
 			              });
 			
-			              console.log(`[Notifications] Created notification: ${id}`);
+			              _log(`[Notifications] Created notification: ${id}`);
 			              return id;
 			            } else if (Notification.permission === "default") {
 			              const permission = await Notification.requestPermission();
@@ -1519,43 +1521,38 @@ const e=!0,t=e=>e,s="passthrough";let o,c={createHTML:t,createScript:t,createScr
 			                  icon: iconUrl,
 			                  tag: id,
 			                });
-			                console.log(
+			                _log(
 			                  `[Notifications] Created notification after permission: ${id}`
 			                );
 			                return id;
 			              } else {
-			                console.warn(
-			                  "[Notifications] Permission denied for notifications"
-			                );
+			                _warn("[Notifications] Permission denied for notifications");
 			                return id;
 			              }
 			            } else {
-			              console.warn("[Notifications] Notifications are blocked");
+			              _warn("[Notifications] Notifications are blocked");
 			              return id;
 			            }
 			          } else {
-			            console.warn(
+			            _warn(
 			              "[Notifications] Native notifications not supported, using console fallback"
 			            );
-			            console.log(`[Notification] ${title}: ${message}`);
+			            _log(`[Notification] ${title}: ${message}`);
 			            return id;
 			          }
 			        } catch (error) {
-			          console.error(
-			            "[Notifications] Error creating notification:",
-			            error.message
-			          );
+			          _error("[Notifications] Error creating notification:", error.message);
 			          throw error;
 			        }
 			      },
 			      clear: async (notificationId) => {
-			        console.log(`[Notifications] Clear notification: ${notificationId}`);
+			        _log(`[Notifications] Clear notification: ${notificationId}`);
 			        // For native notifications, there's no direct way to clear by ID
 			        // This is a limitation of the Web Notifications API
 			        return true;
 			      },
 			      getAll: async () => {
-			        console.warn("[Notifications] getAll not fully supported in polyfill");
+			        _warn("[Notifications] getAll not fully supported in polyfill");
 			        return {};
 			      },
 			      getPermissionLevel: async () => {
@@ -1594,7 +1591,7 @@ const e=!0,t=e=>e,s="passthrough";let o,c={createHTML:t,createScript:t,createScr
 			            enabled: createProperties.enabled !== false,
 			          });
 			
-			          console.log(
+			          _log(
 			            `[ContextMenus] Created context menu item: ${title} (${menuId})`
 			          );
 			
@@ -1605,11 +1602,11 @@ const e=!0,t=e=>e,s="passthrough";let o,c={createHTML:t,createScript:t,createScr
 			                title,
 			                onclick ||
 			                  (() => {
-			                    console.log(`Context menu clicked: ${title}`);
+			                    _log(`Context menu clicked: ${title}`);
 			                  })
 			              );
 			            } catch (e) {
-			              console.warn(
+			              _warn(
 			                "[ContextMenus] Failed to register as menu command:",
 			                e.message
 			              );
@@ -1622,10 +1619,7 @@ const e=!0,t=e=>e,s="passthrough";let o,c={createHTML:t,createScript:t,createScr
 			
 			          return menuId;
 			        } catch (error) {
-			          console.error(
-			            "[ContextMenus] Error creating context menu:",
-			            error.message
-			          );
+			          _error("[ContextMenus] Error creating context menu:", error.message);
 			          if (callback && typeof callback === "function") {
 			            setTimeout(() => callback(), 0);
 			          }
@@ -1644,16 +1638,13 @@ const e=!0,t=e=>e,s="passthrough";let o,c={createHTML:t,createScript:t,createScr
 			          const menuItem = window._polyfillContextMenus.get(id);
 			          Object.assign(menuItem, updateProperties);
 			
-			          console.log(`[ContextMenus] Updated context menu item: ${id}`);
+			          _log(`[ContextMenus] Updated context menu item: ${id}`);
 			
 			          if (callback && typeof callback === "function") {
 			            setTimeout(() => callback(), 0);
 			          }
 			        } catch (error) {
-			          console.error(
-			            "[ContextMenus] Error updating context menu:",
-			            error.message
-			          );
+			          _error("[ContextMenus] Error updating context menu:", error.message);
 			          if (callback && typeof callback === "function") {
 			            setTimeout(() => callback(), 0);
 			          }
@@ -1666,11 +1657,9 @@ const e=!0,t=e=>e,s="passthrough";let o,c={createHTML:t,createScript:t,createScr
 			            window._polyfillContextMenus.has(menuItemId)
 			          ) {
 			            window._polyfillContextMenus.delete(menuItemId);
-			            console.log(
-			              `[ContextMenus] Removed context menu item: ${menuItemId}`
-			            );
+			            _log(`[ContextMenus] Removed context menu item: ${menuItemId}`);
 			          } else {
-			            console.warn(
+			            _warn(
 			              `[ContextMenus] Context menu item not found for removal: ${menuItemId}`
 			            );
 			          }
@@ -1679,10 +1668,7 @@ const e=!0,t=e=>e,s="passthrough";let o,c={createHTML:t,createScript:t,createScr
 			            setTimeout(() => callback(), 0);
 			          }
 			        } catch (error) {
-			          console.error(
-			            "[ContextMenus] Error removing context menu:",
-			            error.message
-			          );
+			          _error("[ContextMenus] Error removing context menu:", error.message);
 			          if (callback && typeof callback === "function") {
 			            setTimeout(() => callback(), 0);
 			          }
@@ -1693,16 +1679,14 @@ const e=!0,t=e=>e,s="passthrough";let o,c={createHTML:t,createScript:t,createScr
 			          if (window._polyfillContextMenus) {
 			            const count = window._polyfillContextMenus.size;
 			            window._polyfillContextMenus.clear();
-			            console.log(
-			              `[ContextMenus] Removed all ${count} context menu items`
-			            );
+			            _log(`[ContextMenus] Removed all ${count} context menu items`);
 			          }
 			
 			          if (callback && typeof callback === "function") {
 			            setTimeout(() => callback(), 0);
 			          }
 			        } catch (error) {
-			          console.error(
+			          _error(
 			            "[ContextMenus] Error removing all context menus:",
 			            error.message
 			          );
@@ -1717,12 +1701,12 @@ const e=!0,t=e=>e,s="passthrough";let o,c={createHTML:t,createScript:t,createScr
 			            window._polyfillContextMenuListeners = new Set();
 			          }
 			          window._polyfillContextMenuListeners.add(callback);
-			          console.log("[ContextMenus] Added click listener");
+			          _log("[ContextMenus] Added click listener");
 			        },
 			        removeListener: (callback) => {
 			          if (window._polyfillContextMenuListeners) {
 			            window._polyfillContextMenuListeners.delete(callback);
-			            console.log("[ContextMenus] Removed click listener");
+			            _log("[ContextMenus] Removed click listener");
 			          }
 			        },
 			      },
@@ -1736,24 +1720,18 @@ const e=!0,t=e=>e,s="passthrough";let o,c={createHTML:t,createScript:t,createScr
 			  };
 			  const loggingProxyHandler = (_key) => ({
 			    get(target, key, receiver) {
-			      tc(() =>
-			        console.log(`[${contextType}] [CHROME - ${_key}] Getting ${key}`)
-			      );
+			      tc(() => _log(`[${contextType}] [CHROME - ${_key}] Getting ${key}`));
 			      return Reflect.get(target, key, receiver);
 			    },
 			    set(target, key, value, receiver) {
 			      tc(() =>
-			        console.log(
-			          `[${contextType}] [CHROME - ${_key}] Setting ${key} to ${value}`
-			        )
+			        _log(`[${contextType}] [CHROME - ${_key}] Setting ${key} to ${value}`)
 			      );
 			      return Reflect.set(target, key, value, receiver);
 			    },
 			    has(target, key) {
 			      tc(() =>
-			        console.log(
-			          `[${contextType}] [CHROME - ${_key}] Checking if ${key} exists`
-			        )
+			        _log(`[${contextType}] [CHROME - ${_key}] Checking if ${key} exists`)
 			      );
 			      return Reflect.has(target, key);
 			    },
@@ -1786,17 +1764,17 @@ const e=!0,t=e=>e,s="passthrough";let o,c={createHTML:t,createScript:t,createScr
 			      try {
 			        return __globalsStorage[key] || Reflect.get(target, key, receiver);
 			      } catch (e) {
-			        console.error("Error getting", key, e);
+			        _error("Error getting", key, e);
 			        return undefined;
 			      }
 			    },
 			    set(target, key, value, receiver) {
 			      try {
-			        tc(() => console.log(`[${contextType}] Setting ${key} to ${value}`));
+			        tc(() => _log(`[${contextType}] Setting ${key} to ${value}`));
 			        set(key, value);
 			        return Reflect.set(target, key, value, receiver);
 			      } catch (e) {
-			        console.error("Error setting", key, value, e);
+			        _error("Error setting", key, value, e);
 			        return false;
 			      }
 			    },
@@ -1804,7 +1782,7 @@ const e=!0,t=e=>e,s="passthrough";let o,c={createHTML:t,createScript:t,createScr
 			      try {
 			        return key in __globalsStorage || key in target;
 			      } catch (e) {
-			        console.error("Error has", key, e);
+			        _error("Error has", key, e);
 			        return false;
 			      }
 			    },
@@ -1826,7 +1804,7 @@ const e=!0,t=e=>e,s="passthrough";let o,c={createHTML:t,createScript:t,createScr
 			        }
 			        return desc;
 			      } catch (e) {
-			        console.error("Error getOwnPropertyDescriptor", key, e);
+			        _error("Error getOwnPropertyDescriptor", key, e);
 			        return {
 			          configurable: true,
 			          enumerable: true,
@@ -1865,7 +1843,7 @@ const e=!0,t=e=>e,s="passthrough";let o,c={createHTML:t,createScript:t,createScr
 			        set(key, descriptor.value);
 			        return Reflect.defineProperty(target, key, descriptor);
 			      } catch (e) {
-			        console.error("Error defineProperty", key, descriptor, e);
+			        _error("Error defineProperty", key, descriptor, e);
 			        return false;
 			      }
 			    },
@@ -1919,8 +1897,7 @@ const e=!0,t=e=>e,s="passthrough";let o,c={createHTML:t,createScript:t,createScr
 	
    // #endregion
     // #region Orchestration Logic
-	const SCRIPT_NAME = "Modern for Wikipedia";
-	
+	// Other globals currently defined at this spot: SCRIPT_NAME, _log, _warn, _error
 	const INJECTED_MANIFEST = {"manifest_version":3,"name":"Modern for Wikipedia","version":"1.41","description":"Wikipedia gets a beautiful, clean, modern interface.","permissions":["storage","tabs"],"optional_permissions":[],"content_scripts":[{"matches":["*://*.wikipedia.org/*"],"js":["content_start.js"],"run_at":"document_start","css":[]},{"matches":["*://*.wikipedia.org/*"],"js":["jquery-3.5.1.min.js","content.js"],"run_at":"document_end","css":[]}],"options_ui":{},"browser_action":{},"page_action":{},"action":{"default_title":"Modern for Wikipedia","default_icon":{"16":"images/icon_16.png","48":"images/icon_48.png","96":"images/icon_96.png","128":"images/icon_128.png","256":"images/icon_256.png"},"default_popup":"popup.html"},"icons":{"16":"images/icon_16.png","48":"images/icon_48.png","96":"images/icon_96.png","128":"images/icon_128.png","256":"images/icon_256.png"},"web_accessible_resources":[{"resources":["images/*","content.css"],"matches":["*://*.wikipedia.org/*"]}],"background":{},"_id":"modern-for-wikipedia"};
 	const CONTENT_SCRIPT_CONFIGS_FOR_MATCHING = [
 	  {
@@ -2033,8 +2010,17 @@ const e=!0,t=e=>e,s="passthrough";let o,c={createHTML:t,createScript:t,createScr
 	
 	let CAN_USE_BLOB_CSP = false;
 	
-	_testBlobCSP().then((result) => {
-	  CAN_USE_BLOB_CSP = result;
+	const waitForDOMEnd = () => {
+	    if (document.readyState === 'loading') {
+	      return new Promise(resolve => document.addEventListener('DOMContentLoaded', resolve, { once: true }));
+	    }
+	    return Promise.resolve();
+	};
+	
+	waitForDOMEnd().then(() => {
+	  _testBlobCSP().then((result) => {
+	    CAN_USE_BLOB_CSP = result;
+	  });
 	});
 	
 	function _base64ToBlob(base64, mimeType = 'application/octet-stream') {
@@ -2077,7 +2063,7 @@ const e=!0,t=e=>e,s="passthrough";let o,c={createHTML:t,createScript:t,createScr
 	  if (path.startsWith('/')) path = path.slice(1);
 	  const assetData = EXTENSION_ASSETS_MAP[path];
 	  if (typeof assetData === 'undefined') {
-	    console.warn('[runtime.getURL] Asset not found for', path);
+	    _warn('[runtime.getURL] Asset not found for', path);
 	    return path;
 	  }
 	
@@ -2122,7 +2108,7 @@ const e=!0,t=e=>e,s="passthrough";let o,c={createHTML:t,createScript:t,createScr
 	    const regex = new RegExp(regexPattern);
 	    return regex.test(path);
 	  } catch (e) {
-	    console.error(`Invalid glob pattern: ${pattern}`, e);
+	    _error(`Invalid glob pattern: ${pattern}`, e);
 	    return false;
 	  }
 	}
@@ -2168,14 +2154,14 @@ const e=!0,t=e=>e,s="passthrough";let o,c={createHTML:t,createScript:t,createScr
 		async function executeAllScripts(globalThis, extensionCssData) {
 		  const {chrome, browser, global, window, self} = globalThis;
 		  const scriptName = "Modern for Wikipedia";
-		  console.log(`[${scriptName}] Starting execution phases...`);
+		  _log(`Starting execution phases...`);
 		
   // #region Document Start
 			  if (typeof document !== 'undefined') {
-			    console.log(`[${scriptName}] Executing document-start phase...`);
+			    _log(`Executing document-start phase...`);
 			    
 			    const scriptPaths = ["content_start.js"];
-			   console.log(`  Executing JS (start): ${scriptPaths}`);
+			   _log(`  Executing JS (start): ${scriptPaths}`);
 			
 			   try {
 			       // Keep variables from being redeclared for global scope, but also make them apply to global scope. (Theoretically)
@@ -2256,31 +2242,31 @@ const e=!0,t=e=>e,s="passthrough";let o,c={createHTML:t,createScript:t,createScr
 			})();
 			// END: content_start.js
 			;}
-			   } catch(e) { console.error(`  Error executing scripts ${scriptPaths}`, e); }
+			   } catch(e) { _error(`  Error executing scripts ${scriptPaths}`, e); }
 			  
 			  } else {
-			      console.log(`[${scriptName}] Skipping document-start phase (no document).`);
+			      _log(`Skipping document-start phase (no document).`);
 			  }
 			
 			  /*
   // #endregion
   // #region Wait for Document End DOMContentLoaded ---
 			  if (typeof document !== 'undefined' && document.readyState === 'loading') {
-			    console.log(`[${scriptName}] Waiting for DOMContentLoaded...`);
+			    _log(`Waiting for DOMContentLoaded...`);
 			    await new Promise(resolve => document.addEventListener('DOMContentLoaded', resolve, { once: true }));
-			    console.log(`[${scriptName}] DOMContentLoaded fired.`);
+			    _log(`DOMContentLoaded fired.`);
 			  } else if (typeof document !== 'undefined') {
-			    console.log(`[${scriptName}] DOMContentLoaded already passed or not applicable.`);
+			    _log(`DOMContentLoaded already passed or not applicable.`);
 			  }
 			  */
 			
   // #endregion
   // #region Document End
 			   if (typeof document !== 'undefined') {
-			    console.log(`[${scriptName}] Executing document-end phase...`);
+			    _log(`Executing document-end phase...`);
 			    
 			    const scriptPaths = ["jquery-3.5.1.min.js","content.js"];
-			   console.log(`  Executing JS (end): ${scriptPaths}`);
+			   _log(`  Executing JS (end): ${scriptPaths}`);
 			
 			   try {
 			       // Keep variables from being redeclared for global scope, but also make them apply to global scope. (Theoretically)
@@ -2294,46 +2280,46 @@ const e=!0,t=e=>e,s="passthrough";let o,c={createHTML:t,createScript:t,createScr
 			var wiki={version:"1.41",browser:"chrome",test:!1,log:!1,settings:{version:"1.41",font:"sans",font_size:3,line_height:2,width:2,justify:!1,language:"en",theme:"light",contents:!0,contents_font_size:3,contents_line_height:5,contents_width:4,contents_bullets:!1,fixed_header:!0,auto_theme:!1,auto_theme_light:"light",auto_theme_dark:"black",links_new:!1,hide_links:!1},history:[],mostread:{articles:[],date:"",language:"en"}};function wikiLog(e){1==wiki.log&&console.log(e)}function wikiStartup(){var e,t=window.location.href;-1!=t.indexOf("//www.wikipedia.org")?hideLoadingOverlay():-1!=t.indexOf(".m.wikipedia.org")?window.location.replace(t.replace(".m.wikipedia.org",".wikipedia.org")):(t=!1,0==(t=1==(e=new URLSearchParams(window.location.search)).has("useskin")&&"vector"==e.get("useskin")?!0:t)?((e=new URL(window.location.href)).searchParams.set("useskin","vector"),window.location.replace(e)):(chrome.storage.local.get(["enabled"],function(e){void 0!==e.enabled&&1!=e.enabled||(e=getImageUrl("content.css"),document.head.insertAdjacentHTML("beforeend",'<link rel="stylesheet" type="text/css" href="'+e+'">'),wikiSetup())}),window.matchMedia("(prefers-color-scheme: dark)").addListener(function(e){1==wiki.settings.auto_theme&&(e.matches?updateSettingTheme(wiki.settings.auto_theme_dark):updateSettingTheme(wiki.settings.auto_theme_light))})))}function wikiSetup(){$("body").addClass("theme-not-mac"),loadSettings(),loadHistory(),loadMostRead(),wikiDrawHeader(),wikiDrawContents(),wikiDrawTopButton(),wikiSetupArticle(),wikiSetupSearch(),wikiSetupCollapsed(),wikiSetupEvents(),wikiSetupImages()}function loadMostRead(){chrome.storage.local.get(["mostread"],function(e){var t,i,n,s;void 0===e.mostread||(t=wikiGetLanguage(),i=(s=new Date).getFullYear(),(n=s.getMonth()+1)<10&&(n="0"+n),(s=s.getDate())<10&&(s="0"+s),(e=JSON.parse(e.mostread)).date!=i+"-"+n+"-"+s)||e.language!=t?grabMostRead():wiki.mostread=e})}function grabMostRead(){var e=wikiGetLanguage(),t=new Date,i=t.getFullYear(),n=t.getMonth()+1,t=t.getDate();wiki.mostread.date==i+"-"+(n=n<10?"0"+n:n)+"-"+(t=t<10?"0"+t:t)&&wiki.mostread.language==e||$.ajax({url:"https://"+e+".wikipedia.org/api/rest_v1/feed/featured/"+i+"/"+n+"/"+t,type:"GET",data:{},timeout:15e3,dataType:"json",success:function(e){if(void 0!==e.mostread&&void 0!==e.mostread.articles){wiki.mostread.articles=[];for(var t=0;t<e.mostread.articles.length;t++){var i=e.mostread.articles[t],n="",s=(void 0!==i.thumbnail&&void 0!==i.thumbnail.source&&(n=i.thumbnail.source),"");0==(s=void 0!==i.description?i.description:s).length&&(s=i.extract.slice(0,50)),wiki.mostread.articles.push({title:i.titles.display,description:s,views:i.views,rank:i.rank,thumb:n,url:i.content_urls.desktop.page})}var a=new Date,o=a.getFullYear(),r=a.getMonth()+1,a=a.getDate();wiki.mostread.date=o+"-"+(r=r<10?"0"+r:r)+"-"+(a=a<10?"0"+a:a),wiki.mostread.language=wikiGetLanguage(),saveMostRead()}}})}function saveMostRead(){chrome.storage.local.set({mostread:JSON.stringify(wiki.mostread)})}function clearMostRead(){chrome.storage.local.remove("mostread"),wiki.mostread={articles:[],date:"",language:"en"}}function wikiSetupHistory(){$(window).bind("popstate",function(e){location.hash.replace("#","");0<$(":target").length?($(":target")[0].scrollIntoView(),console.log("popstate - scrollIntoView")):console.log("popstate"),updateContentsSelection()})}function hideLoadingOverlay(){$("#wiki_loading").addClass("wiki-loading-hide"),setTimeout(function(){$("#wiki_loading").remove()},420)}function wikiSetupArticle(){0<$("#firstHeading").length&&$("#firstHeading").is(":visible")&&(0<$("#bodyContent .shortdescription").length?($(".mw-parser-output").prepend($("#bodyContent .shortdescription").first().show().remove()),$("<div />").addClass("wiki-tagline-sep").insertAfter($("#bodyContent .shortdescription").first())):1==wikiOnArticlePage()&&$(".mw-parser-output").prepend($("<div />").addClass("wiki-tagline-spacer")));var e=$("<div />").addClass("wiki-footer").insertBefore("#footer");e.append($("footer").remove()),$("<div />").addClass("wiki-footer-clear").appendTo(e),$(".thumbimage, .infobox-image img").each(function(e){var t=$(this).attr("width");$(this).attr("data-file-width");"220"==t&&$(this).attr("width","400")}),(0<$("#t-info a").length||0<$("#t-permalink a").length||0<$("#t-whatlinkshere a").length||0<$("#t-wikibase a").length||0<$("#t-cite a").length||0<$("#coll-download-as-rl a").length||0<$('a[rel="discussion"]').length||0<$("#ca-history a").length||0<$("#ca-edit a").length||0<$("#ca-viewsource a").length||0<$("#ca-watch a").length||0<$("#ca-unwatch a").length)&&(e=$("<div />").attr("id","button_article").addClass("wiki-header-button wiki-header-button-article").prependTo("#firstHeading"),$("<div />").appendTo(e),e.on("click",function(){wikiShowMenu("article","button_article")}),e.on("mousedown",function(){$(this).addClass("wiki-header-button-down")}))}function wikiSetupCollapsed(){var e,i,n,t=$("#References");0!=(t=0==t.length?$("#Citations"):t).length&&(t.addClass("wiki-heading-expandable"),e=getImageUrl("images/icon-chevron-down.png"),$("<span />").addClass("wiki-heading-chevron").css("background-image","url('"+e+"')").appendTo(t),t.on("click",function(){wikiToggleRefs()}),i=t.offset().top,n=null,$(".references").each(function(e){var t=$(this).offset().top;if(i<t)return n=$(this),!1}),null!=n&&n.addClass("wiki-refs-wrap").hide(),$(".reference").on("click",function(){wikiToggleRefs()}))}function wikiToggleRefs(){$(".wiki-heading-expandable").first().toggleClass("wiki-heading-expanded"),$(".wiki-refs-wrap").first().toggle()}function wikiSetupImages(){var e=getImageUrl("images/icon-menu2.png"),t=getImageUrl("images/logo-text.png"),i=getImageUrl("images/icon-search-50pc.png"),n=getImageUrl("images/icon-bookmark.png"),s=getImageUrl("images/icon-history2.png"),a=getImageUrl("images/icon-font2.png"),o=getImageUrl("images/icon-lang4.png"),r=getImageUrl("images/icon-user.png"),l=getImageUrl("images/arrow-up.png"),d=getImageUrl("images/icon-dots.png"),c=getImageUrl("images/icon-cross.png");$(".wiki-logo-text").attr("src",t),$("#wiki_search_icon").css("background-image","url('"+i+"')"),$("#wiki_search_delete").css("background-image","url('"+c+"')"),$("#button_menu div").css("background-image","url('"+e+"')"),$("#button_bookmark div").css("background-image","url('"+n+"')"),$("#button_history div").css("background-image","url('"+s+"')"),$("#button_settings div").css("background-image","url('"+a+"')"),$("#button_lang div").css("background-image","url('"+o+"')"),$("#button_user div").css("background-image","url('"+r+"')"),$(".top-button-wrap").css("background-image","url('"+l+"')"),$("#button_article div").css("background-image","url('"+d+"')")}function wikiSetupEvents(){$(window).on("scroll",function(){180<$(this).scrollTop()?$("#top_button").css("-webkit-animation","top-button-in 0.3s ease-out 0s 1 normal forwards"):$("#top_button").css("-webkit-animation","top-button-out 0.2s ease-in-out 0s 1 normal forwards"),65<$(this).scrollTop()?$("#wiki_contents").addClass("wiki-contents-scrolled"):$("#wiki_contents").removeClass("wiki-contents-scrolled"),"article"!=menuName&&0!=wiki.settings.fixed_header||wikiHideMenu(!1)}),$(document).on("mouseup",function(e){$(".wiki-header-button").removeClass("wiki-header-button-down"),1!=menuOpen||0<$(e.target).closest(".menu-inner").length||0<$(e.target).closest(".wiki-search").length||(clearTimeout(hideMenuTimer),hideMenuTimer=setTimeout(function(){wikiHideMenu()},20))}),$(document).keydown(function(e){if(1!=e.metaKey)return $(e.target).is("input[type='text']:focus"),e.repeat||191!=e.which||$("#wiki_search").is(":focus")?void 0:($("#wiki_search").focus().select(),e.preventDefault(),!1)})}function wikiDrawHeader(){var e=$("<div />").addClass("wiki-header").attr("id","wiki_header").prependTo("body"),t=$("<div />").addClass("wiki-header-inner").appendTo(e),i=(updateSettingHeader(),$("<div />").attr("id","button_menu").addClass("wiki-header-button wiki-header-button-menu").appendTo(e)),n=(i.on("click",function(){toggleContents()}),"/wiki/Main_Page"),s=$(".mw-wiki-logo").first(),s=(0<s.length&&(n=s.attr("href")),$("<a />").attr("href",n).addClass("wiki-logo").appendTo(e)),n=($("<img />").addClass("wiki-logo-text").attr("src","logo-text.png").appendTo(s),$("<div />").attr("id","wiki_search_wrap").addClass("wiki-search-wrap").html("&nbsp;").appendTo(t)),s=($("<div />").attr("id","wiki_search_icon").addClass("wiki-search-icon").appendTo(n),$("<div />").attr("id","wiki_search_delete").addClass("wiki-search-delete").appendTo(n).on("click",function(){searchQuery="",$("#wiki_search").val("").focus(),$(this).hide()}),$("<input />").attr("id","wiki_search").addClass("wiki-search").appendTo(n)),t=(s.attr("autocomplete","off").attr("spellcheck","false").attr("autocapitalize","off").attr("autocorrect","off"),$("#searchInput").attr("placeholder")),n=(null!=t&&0!=t.length||(t="Search Wikipedia"),s.attr("placeholder",t),$("<div />").addClass("wiki-header-buttons").appendTo(e)),s=$("<div />").attr("id","button_lang").addClass("wiki-header-button wiki-header-button-lang"),t=$("<div />").attr("id","button_bookmark").addClass("wiki-header-button wiki-header-button-bookmark"),e=$("<div />").attr("id","button_history").addClass("wiki-header-button wiki-header-button-history"),a=$("<div />").attr("id","button_settings").addClass("wiki-header-button wiki-header-button-settings"),o=$("<div />").attr("id","button_user").addClass("wiki-header-button wiki-header-button-user");e.appendTo(n),(0<$("#p-lang .interlanguage-link-target").length||0<$(".interlanguage-link").length)&&(s.appendTo(n),$("#p-lang-btn").hide()),a.appendTo(n),o.appendTo(n),$("<div />").appendTo(i),$("<div />").appendTo(s),$("<div />").appendTo(t),$("<div />").appendTo(e),$("<div />").appendTo(a),$("<div />").appendTo(o),t.on("click",function(e){wikiShowMenu("bookmark","button_bookmark"),e.preventDefault()}),e.on("click",function(e){loadHistoryMenu(),e.preventDefault()}),s.on("click",function(e){wikiShowMenu("lang","button_lang"),e.preventDefault()}),a.on("click",function(e){wikiShowMenu("settings","button_settings"),e.preventDefault()}),o.on("click",function(e){wikiShowMenu("user","button_user"),e.preventDefault()}),$(".wiki-header-button").on("mousedown",function(){$(this).addClass("wiki-header-button-down")})}function wikiDrawTopButton(){var e=$("<div />").attr("id","top_button").addClass("top-button").appendTo("body");$("<div />").addClass("top-button-wrap").appendTo(e).on("click",function(){wikiScrollToTopClick()})}chrome.runtime.onMessage.addListener(function(e,t,i){e.action});var searchTimer,searchQuery="",searchResults=[],searchCounter=0,searchLimit=50,searchResultSelected=null;function wikiSetupSearch(){var e=$("#wiki_search");e.on("keyup",function(e){0==$(this).val().length?$("#wiki_search_delete").hide():$("#wiki_search_delete").show(),1==e.metaKey||40==e.which||38==e.which||37==e.which||39==e.which||13==e.which||191==e.which&&0==$(this).val().length||loadSearchResults()}),e.on("focus",function(){$.trim($("#wiki_search").val());1==menuOpen&&"search"!=menuName&&wikiHideMenu(),showSearchResults()}),e.on("blur",function(){hideSearchResults(),0==searchQuery.length&&($(this).val(""),$("#wiki_search_delete").hide())}),e.keydown(function(e){if(1!=e.metaKey&&!e.repeat)return 40==e.which?((null==searchResultSelected||++searchResultSelected>=searchResults.length)&&(searchResultSelected=0),updateResultSelection(),e.preventDefault(),!1):38==e.which?((null==searchResultSelected||--searchResultSelected<0)&&(searchResultSelected=searchResults.length-1),updateResultSelection(),e.preventDefault(),!1):13==e.which?(openSelectedResult(),e.preventDefault(),!1):void(27==e.which&&$(this).blur())})}function loadSearchResults(){0==(searchQuery=(searchQuery=$.trim($("#wiki_search").val())).replace(/[\(\)]/g,"")).length?hideSearchResults():(clearTimeout(searchTimer),searchTimer=setTimeout(function(){doLoadSearchResults()},150))}function doLoadSearchResults(){searchResultSelected=null;var t=++searchCounter,e=wikiGetLanguage();$.ajax({url:"https://"+e+".wikipedia.org/w/api.php",type:"GET",data:{action:"query",format:"json",generator:"prefixsearch",prop:"pageprops|pageimages|description",ppprop:"displaytitle",piprop:"thumbnail",pithumbsize:160,pilimit:searchLimit,gpssearch:searchQuery,gpsnamespace:0,gpslimit:searchLimit},timeout:15e3,dataType:"json",success:function(e){t==searchCounter&&void 0!==e.query&&void 0!==e.query.pages&&processSearchResults(e.query.pages)}})}function processSearchResults(t){searchResults=[],$.each(t,function(e){searchResults.push(t[e])}),searchResults.sort(function(e,t){return e.index-t.index}),$("#menu_inner").scrollTop(0),showSearchResults()}function showSearchResults(){var e=$.trim($("#wiki_search").val());if(0!=e.length||0!=wiki.mostread.articles.length){1==menuOpen&&"search"!=menuName&&wikiHideMenu(),0==menuOpen&&wikiShowMenu("search","wiki_search");var t=$("#menu_inner").html(""),i=!1;if(0==e.length&&0<wiki.mostread.articles.length){i=!0,searchResults=[];for(var n=0;n<wiki.mostread.articles.length;n++){var s=wiki.mostread.articles[n];searchResults.push({title:s.title,thumbnail:{source:s.thumb},description:s.description,url:s.url})}var e=$("<div />").addClass("menu-heading").text("Trending").appendTo(t),a="/wiki/Special:Random",o="Random",r=$("#n-randompage a");0<r.length&&(a=r.first().attr("href"),o=r.first().text()),(r=$("<a />").addClass("menu-random-link").attr("href",a).text(o).appendTo(e)).on("click",function(){wikiHideMenu()}),t.addClass("menu-inner-no-max"),t=$("<div />").attr("id","menu_list_wrap").addClass("menu-list-wrap").appendTo(t)}else t.removeClass("menu-inner-no-max");for(n=0;n<searchResults.length;n++){var l=$("<a />").addClass("wiki-results-row").attr("id","result_row_"+n).appendTo(t),d=(l.attr("href",getResultUrl(n)),1==i&&(l.addClass("wiki-results-row-mostread"),$("<div />").addClass("wiki-results-number").text(n+1).appendTo(l)),""),c=(void 0!==searchResults[n].thumbnail&&0<searchResults[n].thumbnail.source.length&&(d=searchResults[n].thumbnail.source),$("<div />").addClass("wiki-results-img").appendTo(l)),u=$("<div />").appendTo(c),c=(0==d.length&&(d=getImageUrl("images/icon-w.png"),c.addClass("wiki-results-img-placeholder"),1==i)&&c.hide(),u.css("background-image","url('"+d+"')"),searchResults[n].title),u=new RegExp(searchQuery,"i"),c=(c=c.replace(u,function(e){return"<b>"+e+"</b>"}),$("<div />").addClass("wiki-results-title").html(c).appendTo(l));$("<div />").addClass("wiki-results-desc").text(searchResults[n].description).appendTo(l)}}}function hideSearchResults(){searchResultSelected=null,searchCounter++,wikiHideMenu()}function updateResultSelection(){var e,t;null!=searchResultSelected&&($("#wiki_search").val($("<div>"+searchResults[searchResultSelected].title+"</div>").text()),e=$("#menu_inner"),0<$("#menu_list_wrap",e).length&&(e=$("#menu_list_wrap")),t=$("#result_row_"+searchResultSelected),$(".wiki-results-row-selected").removeClass("wiki-results-row-selected"),t.addClass("wiki-results-row-selected"),t=e.scrollTop()+t.position().top-e.height()/2+t.height()/2-4,e.scrollTop(t))}function openSelectedResult(){var e=getResultUrl(searchResultSelected);null!=e&&(location.href=e),wikiHideMenu(),$("#wiki_search").blur()}function getResultUrl(e){var t=wikiGetLanguage();return null==e?"https://"+t+".wikipedia.org/w/index.php?search="+encodeURIComponent($("#wiki_search").val())+"&title=Special%3ASearch&go=Go&ns0=1":void 0!==searchResults[e].url?searchResults[e].url:"https://"+t+".wikipedia.org/wiki/"+encodeURIComponent(searchResults[e].title.replace(/ /g,"_"))}var menuOpen=!1,menuName="",hideMenuTimer=null;function wikiShowMenu(e,t){if(1==menuOpen){if(menuName==e)return void wikiHideMenu();wikiHideMenu()}"search"!=(menuName=e)&&$("#"+t).addClass("wiki-header-button-active"),clearTimeout(hideMenuTimer),$("#menu").remove();var e=$("<div />").addClass("menu menu-right").attr("id","menu").appendTo("body"),i=$("<div />").attr("id","menu_inner").addClass("menu-inner").appendTo(e),t=$("#"+t).offset(),i=("settings"==menuName?(i.addClass("wiki-menu-settings"),drawSettingsMenu(i)):"history"==menuName?drawHistoryMenu():"bookmark"==menuName?$("<div />").addClass("wiki-menu-bookmark").text("Saved").appendTo(i):"search"==menuName?e.removeClass("menu-right"):"lang"==menuName?drawLanguageMenu(i):"user"==menuName?drawUserMenu(i):"article"==menuName&&drawArticleMenu(i),$("a",i).on("click",function(){wikiHideMenu()}),t.left-e.width()+41),t=t.top+29-$(window).scrollTop();"search"==menuName&&(i-=20,t+=0),e.css("left",i+"px").css("top",t+"px").css("right","auto"),e.css("animation","menu-show-anim2 0.15s ease 0s 1 normal forwards"),menuOpen=!0}function wikiHideMenu(e){e=void 0===e||e;$(".wiki-header-button-active").removeClass("wiki-header-button-active"),0!=menuOpen&&(1==e?$("#menu").css("animation","menu-hide-anim2 0.25s ease 0s 1 normal forwards"):$("#menu").css("animation","menu-hide-anim2 0.01s ease 0s 1 normal forwards"),menuOpen=!1)}var sliderBgColor="rgba(var(--theme-colors),0.8)",currentTab="style",currentSwitch="article";function drawSettingsMenu(e){var e=$("<div />").addClass("settings-menu-wrap").attr("id","settings_menu_wrap").appendTo(e),t=$("<div />").addClass("menu-tabs").appendTo(e),i=$("<div />").text("Theme").attr("id","menu_tab_style").addClass("menu-tab").appendTo(t),n=$("<div />").text("Settings").attr("id","menu_tab_settings").addClass("menu-tab").appendTo(t);("style"==currentTab?i:n).addClass("menu-tab-selected"),$("div",t).off("click").on("click",function(){var e=$(this).attr("id").split("_")[2];currentTab=e,$(".menu-tab-selected").removeClass("menu-tab-selected"),$("#menu_tab_"+currentTab).addClass("menu-tab-selected"),("style"==currentTab?drawTabStyle:drawTabSettings)()}),$("<div />").attr("id","menu_tab_content").appendTo(e),("style"==currentTab?drawTabStyle:drawTabSettings)()}function drawTabStyle(){var e=$("#menu_tab_content").html(""),t=(1==wikiOnArticlePage()&&(i=$("<div />").addClass("settings-row settings-row-font settings-row-top").appendTo(e),i=$("<div />").addClass("settings-font-wrap").appendTo(i),t=$("<div />").addClass("settings-font-button settings-font-button-sans").appendTo(i),$("<div />").addClass("settings-font-button-title").text("Sans").appendTo(t),$("<div />").addClass("settings-font-button-preview").text("Aa").appendTo(t),i=$("<div />").addClass("settings-font-button settings-font-button-serif").appendTo(i),$("<div />").addClass("settings-font-button-title").text("Serif").appendTo(i),$("<div />").addClass("settings-font-button-preview").text("Aa").appendTo(i),t.on("click",function(){updateSettingFont("sans")}),i.on("click",function(){updateSettingFont("serif")}),"sans"==wiki.settings.font?t.addClass("settings-font-button-selected"):"serif"==wiki.settings.font&&i.addClass("settings-font-button-selected")),$("<div />").addClass("settings-row settings-row-colors").appendTo(e)),i=(0==wikiOnArticlePage()&&t.addClass("settings-row-top"),$("<div />").addClass("settings-color settings-color-light").appendTo(t)),n=$("<div />").addClass("settings-color settings-color-sepia").appendTo(t),s=$("<div />").addClass("settings-color settings-color-slate").appendTo(t),a=$("<div />").addClass("settings-color settings-color-dark").appendTo(t),t=$("<div />").addClass("settings-color settings-color-black").appendTo(t);"light"==wiki.settings.theme?i.addClass("settings-color-selected"):"sepia"==wiki.settings.theme?n.addClass("settings-color-selected"):"slate"==wiki.settings.theme?s.addClass("settings-color-selected"):"dark"==wiki.settings.theme?a.addClass("settings-color-selected"):"black"==wiki.settings.theme&&t.addClass("settings-color-selected"),i.on("click",function(){updateSettingTheme(wiki.settings.auto_theme_light="light")}),n.on("click",function(){updateSettingTheme(wiki.settings.auto_theme_light="sepia")}),s.on("click",function(){updateSettingTheme(wiki.settings.auto_theme_dark="slate")}),a.on("click",function(){updateSettingTheme(wiki.settings.auto_theme_dark="dark")}),t.on("click",function(){updateSettingTheme(wiki.settings.auto_theme_dark="black")}),1==wikiOnArticlePage()&&(i=$("<div />").addClass("menu-switcher-wrap").attr("id","menu_switcher").appendTo(e),n=$("<div />").addClass("menu-switcher").appendTo(i),s=$("<div />").text("Contents").attr("id","menu_switcher_contents").appendTo(n),a=$("<div />").text("Article").attr("id","menu_switcher_article").appendTo(n),("article"==currentSwitch?a:s).addClass("menu-switcher-selected"),$("div",n).off("click").on("click",function(){var e=$(this).attr("id").split("_")[2];currentSwitch=e,$(".menu-switcher-selected").removeClass("menu-switcher-selected"),$("#menu_switcher_"+currentSwitch).addClass("menu-switcher-selected"),drawStyleSliders()}),$("<div />").addClass("menu-sliders-wrap").attr("id","menu_sliders_wrap").appendTo(e),drawStyleSliders())}function drawTabSettings(){var e=$("#menu_tab_content").html("");$("<div />").attr("id","menu_toggles_wrap").addClass("settings-toggles-wrap").appendTo(e);addSettingsToggle("auto_theme","Auto Dark Theme"),addSettingsToggle("fixed_header","Fixed Header"),addSettingsToggle("justify","Justify Text"),addSettingsToggle("links_new","Open Links In New Tab"),addSettingsToggle("hide_links","Hide Article Links"),addSettingsToggle("contents_bullets","Contents Bullet Points")}function addSettingsToggle(e,t,i){var i=void 0!==i&&i,n=$("#menu_toggles_wrap"),n=$("<div />").addClass("settings-row settings-row-toggle").data("name",e).appendTo(n);$("<div />").addClass("toggle").html("<span></span>").attr("id","toggle_"+e).appendTo(n);0==i&&n.addClass("settings-row-top"),updateToggleValue(e),$("<div />").addClass("settings-menu-label").text(t).appendTo(n),n.on("click",function(){var e=$(this).data("name");$(".toggle",this).toggleClass("toggle-selected"),"fixed_header"==e?(wiki.settings.fixed_header=!wiki.settings.fixed_header,updateSettingHeader()):"justify"==e?(wiki.settings.justify=!wiki.settings.justify,updateSettingJustify()):"links_new"==e?(wiki.settings.links_new=!wiki.settings.links_new,updateSettingLinksNew()):"hide_links"==e?(wiki.settings.hide_links=!wiki.settings.hide_links,updateSettingHideLinks()):"contents_bullets"==e?(wiki.settings.contents_bullets=!wiki.settings.contents_bullets,updateSettingContentsBullets()):"auto_theme"==e&&(wiki.settings.auto_theme=!wiki.settings.auto_theme),saveSettings()})}function updateToggleValue(e){var t=$("#toggle_"+e),i=!1;"fixed_header"==e?i=wiki.settings.fixed_header:"justify"==e?i=wiki.settings.justify:"links_new"==e?i=wiki.settings.links_new:"hide_links"==e?i=wiki.settings.hide_links:"contents_bullets"==e?i=wiki.settings.contents_bullets:"auto_theme"==e&&(i=wiki.settings.auto_theme),1==i?t.addClass("toggle-selected"):t.removeClass("toggle-selected")}function drawStyleSliders(){var e=wiki.settings.font_size,t=wiki.settings.line_height,i=wiki.settings.width,n=("contents"==currentSwitch&&(e=wiki.settings.contents_font_size,t=wiki.settings.contents_line_height,i=wiki.settings.contents_width),$("#menu_sliders_wrap").html("")),s=$("<div />").addClass("settings-row settings-row-top").appendTo(n),s=$("<div />").addClass("settings-slider-wrap").appendTo(s),a=$("<div />").addClass("settings-slider-icon settings-slider-icon-left").appendTo(s),o=$("<div />").addClass("settings-slider-icon settings-slider-icon-right").appendTo(s),r=(a.on("click",function(){var e=wiki.settings.font_size,e=(e="contents"==currentSwitch?wiki.settings.contents_font_size:e)-1,t=(e<0&&(e=0),$("#font_size_slider").val(e));updateSettingFontSize(e),updateSliderTrackSize(t)}),o.on("click",function(){var e=wiki.settings.font_size,e=(e="contents"==currentSwitch?wiki.settings.contents_font_size:e)+1,t=(10<e&&(e=10),$("#font_size_slider").val(e));updateSettingFontSize(e),updateSliderTrackSize(t)}),getImageUrl("images/icon-font-up.png")),a=(getImageUrl("images/icon-font-down.png"),a.css("background-image","url('"+r+"')").addClass("settings-slider-icon-font-down"),o.css("background-image","url('"+r+"')"),$("<input />").attr("id","font_size_slider").addClass("knob-slider").appendTo(s)),o=(a.attr({type:"range",min:0,max:10,step:1,value:e}),updateSliderStyle(a),updateSliderTrackSize(a),a.on("input change",function(e){updateSettingFontSize(parseInt($(this).val()))}),a.on("input",function(e){updateSliderTrackSize($(e.target))}),a.on("mouseup touchend",function(){$(this).blur()}),$("<div />").addClass("settings-row settings-row-top").appendTo(n)),r=$("<div />").addClass("settings-slider-wrap").appendTo(o),s=$("<div />").addClass("settings-slider-icon settings-slider-icon-left").appendTo(r),e=$("<div />").addClass("settings-slider-icon settings-slider-icon-right").appendTo(r),a=(s.on("click",function(){var e=wiki.settings.line_height,e=(e="contents"==currentSwitch?wiki.settings.contents_line_height:e)-1,t=(e<0&&(e=0),$("#line_height_slider").val(e));updateSettingLineHeight(e),updateSliderTrackSize(t)}),e.on("click",function(){var e=wiki.settings.line_height,e=(e="contents"==currentSwitch?wiki.settings.contents_line_height:e)+1,t=(10<e&&(e=10),$("#line_height_slider").val(e));updateSettingLineHeight(e),updateSliderTrackSize(t)}),s.addClass("settings-slider-icon-line-height"),e.addClass("settings-slider-icon-line-height"),getImageUrl("images/icon-line-height-up2.png")),o=getImageUrl("images/icon-line-height-down2.png"),s=(s.css("background-image","url('"+o+"')"),e.css("background-image","url('"+a+"')"),$("<input />").attr("id","line_height_slider").addClass("knob-slider").appendTo(r)),o=(s.attr({type:"range",min:0,max:10,step:1,value:t}),updateSliderStyle(s),updateSliderTrackSize(s),s.on("input change",function(e){updateSettingLineHeight(parseInt($(this).val()))}),s.on("input",function(e){updateSliderTrackSize($(e.target))}),s.on("mouseup touchend",function(){$(this).blur()}),$("<div />").addClass("settings-row settings-row-top").appendTo(n)),e=$("<div />").addClass("settings-slider-wrap").appendTo(o),a=$("<div />").addClass("settings-slider-icon settings-slider-icon-left").appendTo(e),r=$("<div />").addClass("settings-slider-icon settings-slider-icon-right").appendTo(e),t=(a.addClass("settings-slider-icon-width"),r.addClass("settings-slider-icon-width"),a.on("click",function(){var e=wiki.settings.width,e=(e="contents"==currentSwitch?wiki.settings.contents_width:e)-1,t=(e<0&&(e=0),$("#width_slider").val(e));updateSettingWidth(e),updateSliderTrackSize(t)}),r.on("click",function(){var e=wiki.settings.width,e=(e="contents"==currentSwitch?wiki.settings.contents_width:e)+1,t=(10<e&&(e=10),$("#width_slider").val(e));updateSettingWidth(e),updateSliderTrackSize(t)}),getImageUrl("images/icon-width-up6.png")),s=getImageUrl("images/icon-width-down5.png"),n=(a.css("background-image","url('"+s+"')"),r.css("background-image","url('"+t+"')"),$("<input />").attr("id","width_slider").addClass("knob-slider").appendTo(e));n.attr({type:"range",min:0,max:10,step:1,value:i}),updateSliderStyle(n),updateSliderTrackSize(n),n.on("input change",function(e){updateSettingWidth(parseInt($(this).val()))}),n.on("input",function(e){updateSliderTrackSize($(e.target))}),n.on("mouseup touchend",function(){$(this).blur()})}function drawUserMenu(e){if(e.addClass("menu-inner-rows"),0==wikiLoggedIn()){var t=$("#pt-createaccount a").first(),i=$("#pt-login a").first(),n=$("#pt-anontalk a").first(),s=$("#pt-anoncontribs a").first();0==t.length&&(t=$("#p-createaccount a").first()),0==i.length&&(i=$(".vector-menu-content-item-login").first()),0<t.length&&$("<a />").text(t.text()).attr("href",t.attr("href")).addClass("menu-row").appendTo(e),0<i.length&&$("<a />").text(i.text()).attr("href",i.attr("href")).addClass("menu-row").appendTo(e),$("<div />").addClass("menu-row-sep").appendTo(e),0<n.length&&$("<a />").text(n.text()).attr("href",n.attr("href")).addClass("menu-row").appendTo(e),0<s.length&&$("<a />").text(s.text()).attr("href",s.attr("href")).addClass("menu-row").appendTo(e)}else{var t=$("#pt-userpage a").first(),i=$("#pt-notifications-alert a").first(),a=$("#pt-notifications-notice a").first(),n=$("#pt-mytalk a").first(),o=$("#pt-sandbox a").first(),r=$("#pt-preferences a").first(),l=$("#pt-betafeatures a").first(),d=$("#pt-watchlist a").first(),s=$("#pt-mycontris a").first(),c=$("#pt-logout a").first(),t=(0<t.length&&$("<a />").text(t.text()).attr("href",t.attr("href")).addClass("menu-row menu-row-profile").appendTo(e),$("<div />").addClass("menu-row-sep").appendTo(e),i.text()),u="",h=a.text(),g="",t=t.replace(/\([0-9]+\)/,""),h=h.replace(/\([0-9]+\)/,"");try{var w=parseInt($("#pt-notifications-alert a").data("counter-num"));0<w&&(t+=" <span class='menu-row-counter'>"+w+"</span>",u=" menu-row-with-counter")}catch(e){}try{var p=parseInt($("#pt-notifications-notice a").data("counter-num"));0<p&&(h+=" <span class='menu-row-counter'>"+p+"</span>",g=" menu-row-with-counter")}catch(e){}0<i.length&&$("<a />").html(t).attr("href",i.attr("href")).addClass("menu-row"+u).appendTo(e),0<a.length&&$("<a />").html(h).attr("href",a.attr("href")).addClass("menu-row"+g).appendTo(e),$("<div />").addClass("menu-row-sep").appendTo(e),0<n.length&&$("<a />").text(n.text()).attr("href",n.attr("href")).addClass("menu-row").appendTo(e),0<o.length&&$("<a />").text(o.text()).attr("href",o.attr("href")).addClass("menu-row").appendTo(e),0<r.length&&$("<a />").text(r.text()).attr("href",r.attr("href")).addClass("menu-row").appendTo(e),0<l.length&&$("<a />").text(l.text()).attr("href",l.attr("href")).addClass("menu-row").appendTo(e),0<d.length&&$("<a />").text(d.text()).attr("href",d.attr("href")).addClass("menu-row").appendTo(e),0<s.length&&$("<a />").text(s.text()).attr("href",s.attr("href")).addClass("menu-row").appendTo(e),$("<div />").addClass("menu-row-sep").appendTo(e),0<c.length&&$("<a />").text(c.text()).attr("href",c.attr("href")).addClass("menu-row").appendTo(e)}}function wikiGetLanguage(){var e="en";return e=-1!=window.location.href.indexOf(".wikipedia.org")?window.location.host.split(".")[0]:e}function wikiLoggedIn(){return 0==$("#pt-anontalk").length}function drawLanguageMenu(e){languageSelected=null;(e=$("#menu_inner")).addClass("menu-inner-languages").html("");var t=$("<div />").attr("id","menu_search_wrap").addClass("menu-search-wrap").html("&nbsp;").appendTo(e),i=$("<div />").attr("id","menu_search_icon").addClass("menu-search-icon").appendTo(t),n=$("<div />").attr("id","menu_search_delete").addClass("menu-search-delete").appendTo(t),i=(n.on("click",function(){$("#wiki_languages_input").val("").focus(),$(this).hide(),drawLanguagesList()}),i.css("background-image","url('"+getImageUrl("images/icon-search-50pc.png")+"')"),n.css("background-image","url('"+getImageUrl("images/icon-cross.png")+"')"),$("<input />").attr("id","wiki_languages_input").addClass("menu-search-input").attr("placeholder","Find language").appendTo(t));i.attr("autocomplete","off").attr("spellcheck","false").attr("autocapitalize","off").attr("autocorrect","off"),i.on("keyup",function(e){0==$(this).val().length?$("#menu_search_delete").hide():$("#menu_search_delete").show(),1!=e.metaKey&&40!=e.which&&38!=e.which&&37!=e.which&&39!=e.which&&13!=e.which&&drawLanguagesList()}),i.keydown(function(e){if(1!=e.metaKey&&!e.repeat)return 40==e.which?((null==languageSelected||++languageSelected>=wikiLanguages.length)&&(languageSelected=0),updateLanguageSelection(),e.preventDefault(),!1):38==e.which?((null==languageSelected||--languageSelected<0)&&(languageSelected=wikiLanguages.length-1),updateLanguageSelection(),e.preventDefault(),!1):13==e.which?(selectLanguage(),e.preventDefault(),!1):void(27==e.which&&(wikiHideMenu(),$(this).blur(),languageSelected=null))}),$("<div />").attr("id","wiki_languages_wrap").addClass("menu-list-wrap menu-inner-rows menu-inner-rows-narrow").appendTo(e);drawLanguagesList(),setTimeout(function(){$("#wiki_languages_input").focus()},20)}var applySettingsTimer,wikiLanguagesFull=[],wikiLanguages=[],languageSelected=null;function drawLanguagesList(){0==wikiLanguagesFull.length&&($("#p-lang .interlanguage-link-target").each(function(e){var t="–",t=(-1==$(this).attr("title").indexOf(t)&&(t="-"),-1==$(this).attr("title").indexOf(t)&&(t="—"),$(this).attr("title").split(t)),t=$.trim(t[t.length-1]);wikiLanguagesFull.push({name:$("span",this).text(),tagline:t,url:$(this).attr("href"),title:$(this).attr("title")})}),0==wikiLanguagesFull.length)&&$(".interlanguage-link a").each(function(e){var t="–",t=(-1==$(this).attr("title").indexOf(t)&&(t="-"),-1==$(this).attr("title").indexOf(t)&&(t="—"),$(this).attr("title").split(t)),t=$.trim(t[t.length-1]);wikiLanguagesFull.push({name:$(this).text(),tagline:t,url:$(this).attr("href"),title:$(this).attr("title")})});var e=$("#wiki_languages_wrap").html(""),t=$("#wiki_languages_input").val().toLowerCase();wikiLanguages=[],languageSelected=null;for(var i=0;i<wikiLanguagesFull.length;i++)0<t.length&&-1==wikiLanguagesFull[i].name.toLowerCase().indexOf(t)&&-1==wikiLanguagesFull[i].tagline.toLowerCase().indexOf(t)||wikiLanguages.push(wikiLanguagesFull[i]);for(i=0;i<wikiLanguages.length;i++){var n=$("<a />").text(wikiLanguages[i].name).addClass("menu-row").appendTo(e);$("<div />").addClass("menu-row-tagline").text(wikiLanguages[i].tagline).appendTo(n),n.attr("id","language_row_"+i),n.attr("href",wikiLanguages[i].url).attr("title",wikiLanguages[i].title)}}function updateLanguageSelection(){var e,t;null!=languageSelected&&($("#wiki_languages_input").val(wikiLanguages[languageSelected].name),e=$("#wiki_languages_wrap"),t=$("#language_row_"+languageSelected),$(".wiki-results-row-selected").removeClass("wiki-results-row-selected"),t.addClass("wiki-results-row-selected"),t=e.scrollTop()+t.position().top-e.height()/2+t.height()/2-4,e.scrollTop(t))}function selectLanguage(){location.href=wikiLanguages[languageSelected].url,wikiHideMenu(),$("#wiki_languages_input").blur()}function wikiAddToHistory(){if(0!=wikiOnArticlePage()){var e=$("script[type='application/ld+json']");if(0!=e.length){var e=JSON.parse(e.last().text()),t=e.name,i="",n=e.url,s="",a=$(".shortdescription");if(0==(i=0<a.length?a.first().text():i).length&&void 0!==e.headline&&(i=e.headline),void 0!==e.image){a=(s=e.image).split("/");if(0==a.length)return;e=a[a.length-1],a=wikiGetLanguage();".png"!=(s=(s=s.replace("commons/","commons/thumb/").replace("wikipedia/"+a+"/","wikipedia/"+a+"/thumb/"))+"/160px-"+e).slice(-4)&&(s+=".png")}wiki.history=wiki.history.slice(-100);for(var o=null,r=wiki.history.length-1;0<=r;r--)if(wiki.history[r].url==n){o=r;break}null!=o?wiki.history[o].timestamp=Math.floor(Date.now()/1e3):wiki.history.push({title:t,description:i,url:n,thumb:s,scroll:$(document).scrollTop(),timestamp:Math.floor(Date.now()/1e3)}),saveHistory()}}}function saveHistory(){chrome.storage.local.set({history:JSON.stringify(wiki.history)})}function clearHistory(){1==confirm("Your history will be cleared. Are you sure?")&&(chrome.storage.local.remove("history"),wikiHideMenu(!(wiki.history=[])),wikiShowMenu("history","button_history"))}function loadHistory(){chrome.storage.local.get(["history"],function(e){void 0!==e.history&&(wiki.history=JSON.parse(e.history)),wikiAddToHistory()})}function loadHistoryMenu(){chrome.storage.local.get(["history"],function(e){void 0!==e.history&&(wiki.history=JSON.parse(e.history)),wikiShowMenu("history","button_history")})}function drawHistoryMenu(){var e=$("#menu_inner");if(e.addClass("menu-inner-history").html(""),0==wiki.history.length)$("<div />").addClass("menu-placeholder").appendTo(e).text("Your history will appear here.");else{var t=$("<div />").addClass("menu-heading").text("History").appendTo(e),i=($("<div />").addClass("menu-clear-link").text("Clear").appendTo(t).on("click",function(){clearHistory()}),$("<div />").addClass("menu-list-wrap").appendTo(e)),n=new Date,s=new Date,a=(s.setDate(s.getDate()-1),["January","February","March","April","May","June","July","August","September","October","November","December"]),o=["Sunday","Monday","Tuesday","Wednesday","Thursday","Friday","Saturday"],r="";wiki.history.sort(function(e,t){return e.timestamp-t.timestamp});for(var l=wiki.history.length-1;0<=l;l--){var d=new Date(1e3*wiki.history[l].timestamp),c=o[d.getDay()]+" "+d.getDate()+" "+a[d.getMonth()],d=(c!=r&&(u=c,n.getDate()==d.getDate()&&n.getMonth()==d.getMonth()&&n.getFullYear()==d.getFullYear()?u="Today":s.getDate()==d.getDate()&&s.getMonth()==d.getMonth()&&s.getFullYear()==d.getFullYear()&&(u="Yesterday"),$("<div />").addClass("menu-day-heading").text(u).appendTo(i),r=c,$(".wiki-results-row",i).last().addClass("wiki-results-row-last")),$("<a />").addClass("wiki-results-row").attr("id","history_row_"+l).appendTo(i)),u=(d.attr("href",wiki.history[l].url),""),c=(0<wiki.history[l].thumb.length&&(u=wiki.history[l].thumb),$("<div />").addClass("wiki-results-img").appendTo(d)),h=$("<div />").appendTo(c),c=(0==u.length&&(u=getImageUrl("images/icon-w.png"),c.addClass("wiki-results-img-placeholder")),h.css("background-image","url('"+u+"')"),$("<div />").addClass("wiki-results-title").html(wiki.history[l].title).appendTo(d),$("<div />").addClass("wiki-results-desc").text(wiki.history[l].description).appendTo(d),$("<div />").data("history_index",l).addClass("wiki-results-delete").appendTo(d));c.css("background-image","url('"+getImageUrl("images/icon-cross.png")+"')"),c.on("click",function(e){var t=parseInt($(this).data("history_index"));return wiki.history.splice(t,1),$("#history_row_"+t).remove(),saveHistory(),0==wiki.history.length&&(wikiHideMenu(!1),wikiShowMenu("history","button_history")),e.preventDefault(),!1})}}}function drawArticleMenu(e){e.addClass("menu-inner-rows");var t=$('a[rel="discussion"]').first(),i=$("#ca-history a").first(),n=$("#ca-edit a").first(),s=$("#ca-watch a").first(),a=$("#t-info a").first(),o=$("#t-permalink a").first(),r=$("#t-whatlinkshere a").first(),l=$("#t-wikibase a").first(),d=$("#t-cite a").first(),c=$("#coll-download-as-rl a").first();0==n.length&&(n=$("#ca-viewsource a").first()),0==s.length&&(s=$("#ca-unwatch a").first()),0<t.length&&$("<a />").text(t.text()).attr("href",t.attr("href")).addClass("menu-row").appendTo(e),0<i.length&&$("<a />").text(i.text()).attr("href",i.attr("href")).addClass("menu-row").appendTo(e),0<n.length&&$("<a />").text(n.text()).attr("href",n.attr("href")).addClass("menu-row").appendTo(e),1==wikiLoggedIn()&&0<s.length&&(t=$("<a />").text(s.text()).attr("href",s.attr("href")).addClass("menu-row").appendTo(e),0<$("#ca-watch").length?t.on("click",function(e){return document.getElementById("ca-watch").children[0].click(),wikiHideMenu(),e.preventDefault(),!1}):t.on("click",function(e){return document.getElementById("ca-unwatch").children[0].click(),wikiHideMenu(),e.preventDefault(),!1})),(0<a.length||0<o.length||0<r.length||0<l.length||0<d.length||0<c.length)&&$("<div />").addClass("menu-row-sep").appendTo(e),0<a.length&&$("<a />").text(a.text()).attr("href",a.attr("href")).addClass("menu-row").appendTo(e),0<o.length&&$("<a />").text(o.text()).attr("href",o.attr("href")).addClass("menu-row").appendTo(e),0<r.length&&$("<a />").text(r.text()).attr("href",r.attr("href")).addClass("menu-row").appendTo(e),0<l.length&&$("<a />").text(l.text()).attr("href",l.attr("href")).addClass("menu-row").appendTo(e),0<d.length&&$("<a />").text(d.text()).attr("href",d.attr("href")).addClass("menu-row").appendTo(e),0<c.length&&$("<a />").text(c.text()).attr("href",c.attr("href")).addClass("menu-row").appendTo(e)}function updateSettingFontSize(e){"article"==currentSwitch?wiki.settings.font_size=e:wiki.settings.contents_font_size=e,saveSettings(),clearTimeout(applySettingsTimer),applySettingsTimer=setTimeout(function(){1==wikiOnArticlePage()&&("article"==currentSwitch?($("body").removeClass("theme-font-size-0 theme-font-size-1 theme-font-size-2 theme-font-size-3 theme-font-size-4 theme-font-size-5 theme-font-size-6 theme-font-size-7 theme-font-size-8 theme-font-size-9 theme-font-size-10"),$("body").addClass("theme-font-size-"+wiki.settings.font_size)):($("body").removeClass("theme-contents-font-size-0 theme-contents-font-size-1 theme-contents-font-size-2 theme-contents-font-size-3 theme-contents-font-size-4 theme-contents-font-size-5 theme-contents-font-size-6 theme-contents-font-size-7 theme-contents-font-size-8 theme-contents-font-size-9 theme-contents-font-size-10"),$("body").addClass("theme-contents-font-size-"+wiki.settings.contents_font_size)))},applySettingsTimeout)}function updateSettingLineHeight(e){"article"==currentSwitch?wiki.settings.line_height=e:wiki.settings.contents_line_height=e,saveSettings(),clearTimeout(applySettingsTimer),applySettingsTimer=setTimeout(function(){1==wikiOnArticlePage()&&("article"==currentSwitch?($("body").removeClass("theme-line-height-0 theme-line-height-1 theme-line-height-2 theme-line-height-3 theme-line-height-4 theme-line-height-5 theme-line-height-6 theme-line-height-7 theme-line-height-8 theme-line-height-9 theme-line-height-10"),$("body").addClass("theme-line-height-"+wiki.settings.line_height)):($("body").removeClass("theme-contents-line-height-0 theme-contents-line-height-1 theme-contents-line-height-2 theme-contents-line-height-3 theme-contents-line-height-4 theme-contents-line-height-5 theme-contents-line-height-6 theme-contents-line-height-7 theme-contents-line-height-8 theme-contents-line-height-9 theme-contents-line-height-10"),$("body").addClass("theme-contents-line-height-"+wiki.settings.contents_line_height)))},applySettingsTimeout)}function updateSettingWidth(e){"article"==currentSwitch?wiki.settings.width=e:wiki.settings.contents_width=e,saveSettings(),clearTimeout(applySettingsTimer),applySettingsTimer=setTimeout(function(){1==wikiOnArticlePage()&&("article"==currentSwitch?($("body").removeClass("theme-width-0 theme-width-1 theme-width-2 theme-width-3 theme-width-4 theme-width-5 theme-width-6 theme-width-7 theme-width-8 theme-width-9 theme-width-10"),$("body").addClass("theme-width-"+wiki.settings.width)):($("body").removeClass("theme-contents-width-0 theme-contents-width-1 theme-contents-width-2 theme-contents-width-3 theme-contents-width-4 theme-contents-width-5 theme-contents-width-6 theme-contents-width-7 theme-contents-width-8 theme-contents-width-9 theme-contents-width-10"),$("body").addClass("theme-contents-width-"+wiki.settings.contents_width)))},applySettingsTimeout)}function updateSettingFont(e){wiki.settings.font=e,saveSettings(),clearTimeout(applySettingsTimer),applySettingsTimer=setTimeout(function(){1==wikiOnArticlePage()&&($("body").removeClass("theme-font-sans theme-font-serif"),$("body").addClass("theme-font-"+wiki.settings.font))},applySettingsTimeout),$(".settings-font-button-selected").removeClass("settings-font-button-selected"),("sans"==e?$(".settings-font-button-sans"):$(".settings-font-button-serif")).addClass("settings-font-button-selected")}function updateSettingTheme(e){wiki.settings.theme=e,saveSettings(),clearTimeout(applySettingsTimer),applySettingsTimer=setTimeout(function(){$("body").removeClass("theme-light theme-sepia theme-slate theme-dark theme-black"),$("body").addClass("theme-"+wiki.settings.theme),updateSettingThemeStyle()},applySettingsTimeout),$(".settings-color").removeClass("settings-color-selected"),$(".settings-color-"+e).addClass("settings-color-selected")}function updateSettingThemeStyle(){"light"==wiki.settings.theme||"sepia"==wiki.settings.theme?document.documentElement.style.setProperty("color-scheme","light"):document.documentElement.style.setProperty("color-scheme","dark")}function saveSettings(){chrome.storage.local.set({settings:wiki.settings}),storeBgColor()}function loadSettings(){chrome.storage.local.get(["settings"],function(e){void 0!==e.settings&&(wiki.settings=e.settings),void 0===wiki.settings.links_new&&(wiki.settings.links_new=!1),void 0===wiki.settings.hide_links&&(wiki.settings.hide_links=!1),void 0===wiki.settings.contents_bullets&&(wiki.settings.contents_bullets=!1),void 0===wiki.settings.contents_font_size&&(wiki.settings.contents_font_size=3),void 0===wiki.settings.contents_line_height&&(wiki.settings.contents_line_height=5),void 0===wiki.settings.contents_width&&(wiki.settings.contents_width=4),void 0===wiki.settings.auto_theme&&(wiki.settings.auto_theme=!1),void 0===wiki.settings.auto_theme_light&&(wiki.settings.auto_theme_light="light"),void 0===wiki.settings.auto_theme_dark&&(wiki.settings.auto_theme_dark="black"),void 0===wiki.settings.version&&(wiki.settings.version="1.21"),"1.21"==wiki.settings.version&&(5==wiki.settings.width&&(wiki.settings.width=9),6==wiki.settings.width)&&(wiki.settings.width=10),wiki.settings.version=wiki.version,saveSettings(),applySettings(),hideLoadingOverlay()})}function clearSettings(){chrome.storage.local.remove("settings")}function storeBgColor(){var e="#fff",t=!1;"sepia"==wiki.settings.theme?e="rgb(250,240,228)":"slate"==wiki.settings.theme?(e="rgb(39,40,45)",t=!0):"dark"==wiki.settings.theme?(e="rgb(17,18,22)",t=!0):"black"==wiki.settings.theme&&(e="rgb(0,0,0)",t=!0),localStorage.setItem("bg_color",e),localStorage.setItem("bg_dark",t)}var menuItems,scrollItems,scrollIntoViewTimer,applySettingsTimeout=0;function wikiOnArticlePage(){var e,t=window.location.href;return 0!=$("script[type='application/ld+json']").length&&!(0<(e=$(".mw-wiki-logo").first()).length&&-1!=t.indexOf(e.attr("href")))}function applySettings(){$("body").addClass("theme-"+wiki.settings.theme),updateSettingThemeStyle(),1==wikiOnArticlePage()?($("body").addClass("theme-article"),$("body").addClass("theme-font-"+wiki.settings.font),$("body").addClass("theme-font-size-"+wiki.settings.font_size),$("body").addClass("theme-line-height-"+wiki.settings.line_height),$("body").addClass("theme-width-"+wiki.settings.width)):($("body").addClass("theme-non-article"),$("body").addClass("theme-width-5")),$("body").addClass("theme-contents-font-size-"+wiki.settings.contents_font_size),$("body").addClass("theme-contents-line-height-"+wiki.settings.contents_line_height),$("body").addClass("theme-contents-width-"+wiki.settings.contents_width),updateSettingHeader(),updateSettingContents(),updateSettingJustify(),updateSettingLinksNew(),updateSettingHideLinks(),updateSettingContentsBullets()}function updateSettingContents(e){e=void 0!==e&&e;1==wiki.settings.contents?(1==e?$("#wiki_contents").css("transition","all 0.27s ease-out"):$("#wiki_contents").css("transition",""),$("#wiki_contents").removeClass("wiki-contents-hide"),$("body").removeClass("theme-contents-hidden"),$("body").addClass("theme-contents-visible")):(1==e?$("#wiki_contents").css("transition","all 0.27s ease-in"):$("#wiki_contents").css("transition",""),$("#wiki_contents").addClass("wiki-contents-hide"),1==e?setTimeout(function(){$("body").removeClass("theme-contents-visible"),$("body").addClass("theme-contents-hidden")},250):($("body").removeClass("theme-contents-visible"),$("body").addClass("theme-contents-hidden")))}function updateSettingHeader(){1==wiki.settings.fixed_header?($("html").removeClass("theme-header-not-fixed"),$("html").addClass("theme-header-fixed")):($("html").addClass("theme-header-not-fixed"),$("html").removeClass("theme-header-fixed"))}function updateSettingJustify(){1==wiki.settings.justify?$("#mw-content-text").addClass("theme-justify"):$("#mw-content-text").removeClass("theme-justify")}function updateSettingLinksNew(){1==wiki.settings.links_new?$("#mw-content-text a").each(function(){if(null==$(this).attr("href"))return!0;0!=$(this).attr("href").indexOf("#")&&$(this).attr("target","_blank")}):$("#mw-content-text a").removeAttr("target")}function updateSettingHideLinks(){1==wiki.settings.hide_links?$("#mw-content-text").addClass("theme-hide-links"):$("#mw-content-text").removeClass("theme-hide-links")}function updateSettingContentsBullets(){1==wiki.settings.contents_bullets?$("#wiki_contents").addClass("theme-contents-bullets"):$("#wiki_contents").removeClass("theme-contents-bullets")}function updateSliderStyle(e){var t=e[0].min<0?"50%":"0%";e.css("background-image","-webkit-gradient(linear, 50% 0%, 50% 100%, color-stop("+t+", "+sliderBgColor+"), color-stop(100%, "+sliderBgColor+"))")}function updateSliderTrackSize(e){var t,i,n,s,a,o,r;0!=e.length&&(t=e[0].min,i=e[0].max,n=e[0].value,s=Math.floor(e.width()),a=Math.floor(e.width()/2),o=100*(n-t)/(i-t)+"% 100%",r="0px 0px",t<0&&0<i?(-.5==t&&.5==i&&(n*=2),r=0<=n?(o=a*n+"px 100%",a+"px 0px"):(o=Math.floor(a*Math.abs(n))+"px 100%",Math.floor(a-Math.floor(a*Math.abs(n)))+"px 0px")):t<0&&0==i&&(r=s-Math.floor(s*(Math.abs(n)/Math.abs(t)))+"px 0px",o="100% 100%"),e.css({backgroundSize:o}).css("background-position",r))}var scrollMenuItemIntoViewTimer,scrollIntoView=!0,contentsMouseOver=!1;function wikiDrawContents(){var e,t,i,n;0!=$("#toc ul").length&&((t=$("<div />").attr("id","wiki_contents").addClass("wiki-contents").appendTo("body")).on("scroll",function(){clearTimeout(scrollMenuItemIntoViewTimer)}),t.on("mouseenter",function(){contentsMouseOver=!0}),t.on("mouseleave",function(){contentsMouseOver=!1}),$("<div />").addClass("wiki-contents-heading").text("Contents").appendTo(t),e=$("#firstHeading").text(),t=$("<ul />").html($("#toc ul").html()).attr("id","wiki_contents_wrap").addClass("wiki-contents-wrap").appendTo(t),$("#toc").remove(),i=$("<li />").addClass("toclevel-1 tocsection-1 wiki-contents-title").prependTo(t),n=$("<a />").attr("href","#firstHeading").appendTo(i),$("<span />").addClass("toctext").text(e).appendTo(n),n.on("click",function(){return setTimeout(function(){$("html, body").scrollTop(0)},10),window.location.replace("#"),history.replaceState({},"",window.location.href.slice(0,-1)),!1}),i.addClass("wiki-contents-selected"),$("a",t).on("click",function(){wikiDisableScrollIntoView(),$(".wiki-contents-selected").removeClass("wiki-contents-selected"),$(this).parent().addClass("wiki-contents-selected"),$(".wiki-contents-child-selected").removeClass("wiki-contents-child-selected"),$(this).parent().parent().parent(".toclevel-1").addClass("wiki-contents-selected wiki-contents-child-selected"),wikiScrollMenuItemIntoView()}),menuItems=t.find('a[href^="#"]'),scrollItems=menuItems.map(function(){var e=$(this).attr("href");if("#"!=e){e=e.replace(/^#/,""),e=$("#"+$.escapeSelector(e));if(e.length)return e}}),$(window).scroll(function(){updateContentsSelection()}))}function updateContentsSelection(){var e,t;0!=scrollIntoView&&(t=88,0==wiki.settings.fixed_header&&(t=23),e=$(window).scrollTop()+t,t=(t=(t=scrollItems.map(function(){return $(this).offset().top<e?this:null}))[t.length-1])&&t.length?t[0].id:"")&&(menuItems.parent().removeClass("wiki-contents-selected"),$(".wiki-contents-child-selected").removeClass("wiki-contents-child-selected"),(t=menuItems.parent().end().filter('[href^="#'+$.escapeSelector(t)+'"]').parent()).addClass("wiki-contents-selected"),t.parent().parent(".toclevel-1").addClass("wiki-contents-selected wiki-contents-child-selected"),wikiScrollMenuItemIntoView())}function toggleContents(){wiki.settings.contents=!wiki.settings.contents,updateSettingContents(!0),saveSettings()}function wikiScrollMenuItemIntoView(){var e,t,i;1!=contentsMouseOver&&0!=(e=0==(e=$(".wiki-contents-selected").not(".wiki-contents-child-selected").first()).length?$(".wiki-contents-child-selected"):e).length&&(t=$("#wiki_contents"),i=t.scrollTop()+e.position().top-t.height()/2+55,t.height(),clearTimeout(scrollMenuItemIntoViewTimer),scrollMenuItemIntoViewTimer=setTimeout(function(){t.scrollTop(i)},0))}function wikiDisableScrollIntoView(){scrollIntoView=!1,clearTimeout(scrollIntoViewTimer),scrollIntoViewTimer=setTimeout(function(){scrollIntoView=!0,$("#wiki_search").is(":focus")},1100)}function wikiScrollToTopClick(){return wikiDisableScrollIntoView(),$(".wiki-contents-selected").removeClass("wiki-contents-selected"),$(".wiki-contents-child-selected").removeClass("wiki-contents-child-selected"),$("#wiki_contents .toclevel-1").first().addClass("wiki-contents-selected"),$("#wiki_contents").scrollTop(0),$("html, body").scrollTop(0),!1}function getImageUrl(e){if(0==wiki.test)try{e=chrome.runtime.getURL(e)}catch(e){}return e}function isMac(){return 0<=navigator.platform.toUpperCase().indexOf("MAC")}"undefined"==typeof testMode&&wikiStartup();
 			// END: content.js
 			;}
-			   } catch(e) { console.error(`  Error executing scripts ${scriptPaths}`, e); }
+			   } catch(e) { _error(`  Error executing scripts ${scriptPaths}`, e); }
 			  
 			  } else {
-			      console.log(`[${scriptName}] Skipping document-end phase (no document).`);
+			      _log(`Skipping document-end phase (no document).`);
 			  }
 			
-			  /*
+			  
   // #endregion
   // #region Wait for Document Idle
-			  console.log(`[${scriptName}] Waiting for document idle state...`);
+			  _log(`Waiting for document idle state...`);
 			  if (typeof window !== 'undefined' && typeof window.requestIdleCallback === 'function') {
 			      await new Promise(resolve => window.requestIdleCallback(resolve, { timeout: 2000 })); // 2-second timeout fallback
-			      console.log(`[${scriptName}] requestIdleCallback fired or timed out.`);
+			      _log(`requestIdleCallback fired or timed out.`);
 			  } else {
 			      // Fallback: wait a short period after DOMContentLoaded/current execution if requestIdleCallback is unavailable
 			      await new Promise(resolve => setTimeout(resolve, 50));
-			      console.log(`[${scriptName}] Idle fallback timer completed.`);
+			      _log(`Idle fallback timer completed.`);
 			  }
-			  */
+			  
 			
   // #endregion
   // #region Document Idle
 			   if (typeof document !== 'undefined') {
-			    console.log(`[${scriptName}] Executing document-idle phase...`);
+			    _log(`Executing document-idle phase...`);
 			    
 			    const scriptPaths = [];
-			   console.log(`  Executing JS (idle): ${scriptPaths}`);
+			   _log(`  Executing JS (idle): ${scriptPaths}`);
 			
 			   try {
 			       // Keep variables from being redeclared for global scope, but also make them apply to global scope. (Theoretically)
 			      with (globalThis){;
 			
 			;}
-			   } catch(e) { console.error(`  Error executing scripts ${scriptPaths}`, e); }
+			   } catch(e) { _error(`  Error executing scripts ${scriptPaths}`, e); }
 			  
 			  } else {
-			      console.log(`[${scriptName}] Skipping document-idle phase (no document).`);
+			      _log(`Skipping document-idle phase (no document).`);
 			  }
 			
-			  console.log(`[${scriptName}] All execution phases complete, re-firing load events.`);
+			  _log(`All execution phases complete, re-firing load events.`);
 			  document.dispatchEvent(new Event("DOMContentLoaded", {
 			    bubbles: true,
 			    cancelable: true
@@ -2412,7 +2398,7 @@ const e=!0,t=e=>e,s="passthrough";let o,c={createHTML:t,createScript:t,createScr
 			
 			async function openPopupPage() {
 			    if (!POPUP_PAGE_PATH || typeof EXTENSION_ASSETS_MAP === 'undefined') {
-			        console.warn('No popup page available.');
+			        _warn('No popup page available.');
 			        return;
 			    }
 			    await openModal({
@@ -2425,7 +2411,7 @@ const e=!0,t=e=>e,s="passthrough";let o,c={createHTML:t,createScript:t,createScr
 			
 			async function openOptionsPage() {
 			    if (!OPTIONS_PAGE_PATH || typeof EXTENSION_ASSETS_MAP === 'undefined') {
-			        console.warn('No options page available.');
+			        _warn('No options page available.');
 			        return;
 			    }
 			    await openModal({
@@ -2537,7 +2523,7 @@ const e=!0,t=e=>e,s="passthrough";let o,c={createHTML:t,createScript:t,createScr
 			    const { type, pagePath, defaultTitle, closeFn } = config;
 			    const html = EXTENSION_ASSETS_MAP[pagePath];
 			    if (!html) {
-			        console.warn(`${defaultTitle} HTML not found in asset map`);
+			        _warn(`${defaultTitle} HTML not found in asset map`);
 			        return;
 			    }
 			
@@ -2613,13 +2599,13 @@ const e=!0,t=e=>e,s="passthrough";let o,c={createHTML:t,createScript:t,createScr
 			        doc.head.insertAdjacentElement("afterbegin", script);
 			        iframe.srcdoc = doc.documentElement.outerHTML;
 			    } catch (e) {
-			        console.error('Error generating complete polyfill for iframe', e);
+			        _error('Error generating complete polyfill for iframe', e);
 			        iframe.srcdoc = html;
 			    }
 			}
 			
 			function generateCompletePolyfillForIframe() {
-			    const polyfillString = "\n// -- Messaging implementation\n\nfunction createEventBus(\n  scopeId,\n  type = \"page\", // \"page\" or \"iframe\"\n  { allowedOrigin = \"*\", children = [], parentWindow = null } = {},\n) {\n  if (!scopeId) throw new Error(\"createEventBus requires a scopeId\");\n\n  const handlers = {};\n\n  function handleIncoming(ev) {\n    if (allowedOrigin !== \"*\" && ev.origin !== allowedOrigin) return;\n\n    const msg = ev.data;\n    if (!msg || msg.__eventBus !== true || msg.scopeId !== scopeId) return;\n\n    const { event, payload } = msg;\n\n    // PAGE: if it's an INIT from an iframe, adopt it\n    if (type === \"page\" && event === \"__INIT__\") {\n      const win = ev.source;\n      if (win && !children.includes(win)) {\n        children.push(win);\n      }\n      return;\n    }\n\n    (handlers[event] || []).forEach((fn) =>\n      fn(payload, { origin: ev.origin, source: ev.source }),\n    );\n  }\n\n  window.addEventListener(\"message\", handleIncoming);\n\n  function emitTo(win, event, payload) {\n    const envelope = {\n      __eventBus: true,\n      scopeId,\n      event,\n      payload,\n    };\n    win.postMessage(envelope, allowedOrigin);\n  }\n\n  // IFRAME: announce to page on startup\n  if (type === \"iframe\") {\n    setTimeout(() => {\n      const pw = parentWindow || window.parent;\n      if (pw && pw.postMessage) {\n        emitTo(pw, \"__INIT__\", null);\n      }\n    }, 0);\n  }\n\n  return {\n    on(event, fn) {\n      handlers[event] = handlers[event] || [];\n      handlers[event].push(fn);\n    },\n    off(event, fn) {\n      if (!handlers[event]) return;\n      handlers[event] = handlers[event].filter((h) => h !== fn);\n    },\n    /**\n     * Emits an event.\n     * @param {string} event - The event name.\n     * @param {any} payload - The event payload.\n     * @param {object} [options] - Emission options.\n     * @param {Window} [options.to] - A specific window to target. If provided, message is ONLY sent to the target.\n     */\n    emit(event, payload, { to } = {}) {\n      // If a specific target window is provided, send only to it and DO NOT dispatch locally.\n      // This prevents a port from receiving its own messages.\n      if (to) {\n        if (to && typeof to.postMessage === \"function\") {\n          emitTo(to, event, payload);\n        }\n        return; // Exit after targeted send.\n      }\n\n      // For broadcast messages (no 'to' target), dispatch locally first.\n      (handlers[event] || []).forEach((fn) =>\n        fn(payload, { origin: location.origin, source: window }),\n      );\n\n      // Then propagate the broadcast to other windows.\n      if (type === \"page\") {\n        children.forEach((win) => emitTo(win, event, payload));\n      } else {\n        const pw = parentWindow || window.parent;\n        if (pw && pw.postMessage) {\n          emitTo(pw, event, payload);\n        }\n      }\n    },\n  };\n}\n\nfunction createRuntime(type = \"background\", bus) {\n  let nextId = 1;\n  const pending = {};\n  const msgListeners = [];\n\n  let nextPortId = 1;\n  const ports = {};\n  const onConnectListeners = [];\n\n  function parseArgs(args) {\n    let target, message, options, callback;\n    const arr = [...args];\n    if (arr.length === 0) {\n      throw new Error(\"sendMessage requires at least one argument\");\n    }\n    if (arr.length === 1) {\n      return { message: arr[0] };\n    }\n    // last object could be options\n    if (\n      arr.length &&\n      typeof arr[arr.length - 1] === \"object\" &&\n      !Array.isArray(arr[arr.length - 1])\n    ) {\n      options = arr.pop();\n    }\n    // last function is callback\n    if (arr.length && typeof arr[arr.length - 1] === \"function\") {\n      callback = arr.pop();\n    }\n    if (\n      arr.length === 2 &&\n      (typeof arr[0] === \"string\" || typeof arr[0] === \"number\")\n    ) {\n      [target, message] = arr;\n    } else {\n      [message] = arr;\n    }\n    return { target, message, options, callback };\n  }\n\n  if (type === \"background\") {\n    bus.on(\"__REQUEST__\", ({ id, message }, { source }) => {\n      let responded = false,\n        isAsync = false;\n      function sendResponse(resp) {\n        if (responded) return;\n        responded = true;\n        // Target the response directly back to the window that sent the request.\n        bus.emit(\"__RESPONSE__\", { id, response: resp }, { to: source });\n      }\n      const results = msgListeners\n        .map((fn) => {\n          try {\n            // msg, sender, sendResponse\n            const ret = fn(message, { id, tab: { id: source } }, sendResponse);\n            if (ret === true || (ret && typeof ret.then === \"function\")) {\n              isAsync = true;\n              return ret;\n            }\n            return ret;\n          } catch (e) {\n            console.error(e);\n          }\n        })\n        .filter((r) => r !== undefined);\n\n      const promises = results.filter((r) => r && typeof r.then === \"function\");\n      if (!isAsync && promises.length === 0) {\n        const out = results.length === 1 ? results[0] : results;\n        sendResponse(out);\n      } else if (promises.length) {\n        Promise.all(promises).then((vals) => {\n          if (!responded) {\n            const out = vals.length === 1 ? vals[0] : vals;\n            sendResponse(out);\n          }\n        });\n      }\n    });\n  }\n\n  if (type !== \"background\") {\n    bus.on(\"__RESPONSE__\", ({ id, response }) => {\n      const entry = pending[id];\n      if (!entry) return;\n      entry.resolve(response);\n      if (entry.callback) entry.callback(response);\n      delete pending[id];\n    });\n  }\n\n  function sendMessage(...args) {\n    // Background should be able to send message to itself\n    // if (type === \"background\") {\n    //   throw new Error(\"Background cannot sendMessage to itself\");\n    // }\n    const { target, message, callback } = parseArgs(args);\n    const id = nextId++;\n    const promise = new Promise((resolve) => {\n      pending[id] = { resolve, callback };\n      bus.emit(\"__REQUEST__\", { id, message });\n    });\n    return promise;\n  }\n\n  bus.on(\"__PORT_CONNECT__\", ({ portId, name }, { source }) => {\n    if (type !== \"background\") return;\n    const backgroundPort = makePort(\"background\", portId, name, source);\n    ports[portId] = backgroundPort;\n\n    onConnectListeners.forEach((fn) => fn(backgroundPort));\n\n    // send back a CONNECT_ACK so the client can\n    // start listening on its end:\n    bus.emit(\"__PORT_CONNECT_ACK__\", { portId, name }, { to: source });\n  });\n\n  // Clients handle the ACK and finalize their Port object by learning the remote window.\n  bus.on(\"__PORT_CONNECT_ACK__\", ({ portId, name }, { source }) => {\n    if (type === \"background\") return; // ignore\n    const p = ports[portId];\n    if (!p) return;\n    // Call the port's internal finalize method to complete the handshake\n    if (p._finalize) {\n      p._finalize(source);\n    }\n  });\n\n  // Any port message travels via \"__PORT_MESSAGE__\"\n  bus.on(\"__PORT_MESSAGE__\", (envelope, { source }) => {\n    const { portId } = envelope;\n    const p = ports[portId];\n    if (!p) return;\n    p._receive(envelope, source);\n  });\n\n  // Any port disconnect:\n  bus.on(\"__PORT_DISCONNECT__\", ({ portId }) => {\n    const p = ports[portId];\n    if (!p) return;\n    p._disconnect();\n    delete ports[portId];\n  });\n\n  // Refactored makePort to correctly manage internal state and the connection handshake.\n  function makePort(side, portId, name, remoteWindow) {\n    let onMessageHandlers = [];\n    let onDisconnectHandlers = [];\n    let buffer = [];\n    // Unique instance ID for this port instance\n    const instanceId = Math.random().toString(36).slice(2) + Date.now();\n    // These state variables are part of the closure and are updated by _finalize\n    let _ready = side === \"background\";\n\n    function _drainBuffer() {\n      buffer.forEach((m) => _post(m));\n      buffer = [];\n    }\n\n    function _post(msg) {\n      // Always use the 'to' parameter for port messages, making them directional.\n      // Include senderInstanceId\n      bus.emit(\n        \"__PORT_MESSAGE__\",\n        { portId, msg, senderInstanceId: instanceId },\n        { to: remoteWindow },\n      );\n    }\n\n    function postMessage(msg) {\n      if (!_ready) {\n        buffer.push(msg);\n      } else {\n        _post(msg);\n      }\n    }\n\n    function _receive(envelope, source) {\n      // envelope: { msg, senderInstanceId }\n      if (envelope.senderInstanceId === instanceId) return; // Don't dispatch to self\n      onMessageHandlers.forEach((fn) =>\n        fn(envelope.msg, { id: portId, tab: { id: source } }),\n      );\n    }\n\n    function disconnect() {\n      // Also use the 'to' parameter for disconnect messages\n      bus.emit(\"__PORT_DISCONNECT__\", { portId }, { to: remoteWindow });\n      _disconnect();\n      delete ports[portId];\n    }\n\n    function _disconnect() {\n      onDisconnectHandlers.forEach((fn) => fn());\n      onMessageHandlers = [];\n      onDisconnectHandlers = [];\n    }\n\n    // This function is called on the client port when the ACK is received from background.\n    // It updates the port's state, completing the connection.\n    function _finalize(win) {\n      remoteWindow = win; // <-- This is the crucial part: learn the destination\n      _ready = true;\n      _drainBuffer();\n    }\n\n    return {\n      name,\n      sender: {\n        id: portId,\n      },\n      onMessage: {\n        addListener(fn) {\n          onMessageHandlers.push(fn);\n        },\n        removeListener(fn) {\n          onMessageHandlers = onMessageHandlers.filter((x) => x !== fn);\n        },\n      },\n      onDisconnect: {\n        addListener(fn) {\n          onDisconnectHandlers.push(fn);\n        },\n        removeListener(fn) {\n          onDisconnectHandlers = onDisconnectHandlers.filter((x) => x !== fn);\n        },\n      },\n      postMessage,\n      disconnect,\n      // Internal methods used by the runtime\n      _receive,\n      _disconnect,\n      _finalize, // Expose the finalizer for the ACK handler\n    };\n  }\n\n  function connect(connectInfo = {}) {\n    if (type === \"background\") {\n      throw new Error(\"Background must use onConnect, not connect()\");\n    }\n    const name = connectInfo.name || \"\";\n    const portId = nextPortId++;\n    // create the client side port\n    // remoteWindow is initially null; it will be set by _finalize upon ACK.\n    const clientPort = makePort(\"client\", portId, name, null);\n    ports[portId] = clientPort;\n\n    // fire the connect event across the bus\n    bus.emit(\"__PORT_CONNECT__\", { portId, name });\n    return clientPort;\n  }\n\n  function onConnect(fn) {\n    if (type !== \"background\") {\n      throw new Error(\"connect event only fires in background\");\n    }\n    onConnectListeners.push(fn);\n  }\n\n  return {\n    // rpc:\n    sendMessage,\n    onMessage: {\n      addListener(fn) {\n        msgListeners.push(fn);\n      },\n      removeListener(fn) {\n        const i = msgListeners.indexOf(fn);\n        if (i >= 0) msgListeners.splice(i, 1);\n      },\n    },\n\n    // port API:\n    connect,\n    onConnect: {\n      addListener(fn) {\n        onConnect(fn);\n      },\n      removeListener(fn) {\n        const i = onConnectListeners.indexOf(fn);\n        if (i >= 0) onConnectListeners.splice(i, 1);\n      },\n    },\n  };\n}\n\n\n// --- Abstraction Layer: PostMessage Target\n\nlet nextRequestId = 1;\nconst pendingRequests = new Map(); // requestId -> { resolve, reject, timeout }\n\nfunction sendAbstractionRequest(method, args = []) {\n  return new Promise((resolve, reject) => {\n    const requestId = nextRequestId++;\n\n    const timeout = setTimeout(() => {\n      pendingRequests.delete(requestId);\n      reject(new Error(`PostMessage request timeout for method: ${method}`));\n    }, 10000);\n\n    pendingRequests.set(requestId, { resolve, reject, timeout });\n\n    window.parent.postMessage({\n      type: \"abstraction-request\",\n      requestId,\n      method,\n      args,\n    });\n  });\n}\n\nwindow.addEventListener(\"message\", (event) => {\n  const { type, requestId, success, result, error } = event.data;\n\n  if (type === \"abstraction-response\") {\n    const pending = pendingRequests.get(requestId);\n    if (pending) {\n      clearTimeout(pending.timeout);\n      pendingRequests.delete(requestId);\n\n      if (success) {\n        pending.resolve(result);\n      } else {\n        const err = new Error(error.message);\n        err.stack = error.stack;\n        pending.reject(err);\n      }\n    }\n  }\n});\n\nasync function _storageSet(items) {\n  return sendAbstractionRequest(\"_storageSet\", [items]);\n}\n\nasync function _storageGet(keys) {\n  return sendAbstractionRequest(\"_storageGet\", [keys]);\n}\n\nasync function _storageRemove(keysToRemove) {\n  return sendAbstractionRequest(\"_storageRemove\", [keysToRemove]);\n}\n\nasync function _storageClear() {\n  return sendAbstractionRequest(\"_storageClear\");\n}\n\nasync function _cookieList(details) {\n  return sendAbstractionRequest(\"_cookieList\", [details]);\n}\n\nasync function _cookieSet(details) {\n  return sendAbstractionRequest(\"_cookieSet\", [details]);\n}\n\nasync function _cookieDelete(details) {\n  return sendAbstractionRequest(\"_cookieDelete\", [details]);\n}\n\nasync function _fetch(url, options) {\n  return sendAbstractionRequest(\"_fetch\", [url, options]);\n}\n\nfunction _registerMenuCommand(name, func) {\n  console.warn(\"_registerMenuCommand called from iframe context:\", name);\n  return sendAbstractionRequest(\"_registerMenuCommand\", [\n    name,\n    func.toString(),\n  ]);\n}\n\nfunction _openTab(url, active) {\n  return sendAbstractionRequest(\"_openTab\", [url, active]);\n}\n\nasync function _initStorage() {\n  return sendAbstractionRequest(\"_initStorage\");\n}\n\n\nconst EXTENSION_ASSETS_MAP = {{EXTENSION_ASSETS_MAP}};\n\n// -- Polyfill Implementation\nfunction buildPolyfill({ isBackground = false, isOtherPage = false } = {}) {\n  // Generate a unique context ID for this polyfill instance\n  const contextType = isBackground\n    ? \"background\"\n    : isOtherPage\n      ? \"options\"\n      : \"content\";\n  const contextId = `${contextType}_${Math.random()\n    .toString(36)\n    .substring(2, 15)}`;\n\n  const IS_IFRAME = \"true\" === \"true\";\n  const BUS = (function () {\n    if (globalThis.__BUS) {\n      return globalThis.__BUS;\n    }\n    globalThis.__BUS = createEventBus(\n      \"modern-for-wikipedia\",\n      IS_IFRAME ? \"iframe\" : \"page\"\n    );\n    return globalThis.__BUS;\n  })();\n  const RUNTIME = createRuntime(isBackground ? \"background\" : \"tab\", BUS);\n  const createNoopListeners = () => ({\n    addListener: (callback) => {\n      console.log(\"addListener\", callback);\n    },\n    removeListener: (callback) => {\n      console.log(\"removeListener\", callback);\n    },\n  });\n  // TODO: Stub\n  const storageChangeListeners = new Set();\n  function broadcastStorageChange(changes, areaName) {\n    storageChangeListeners.forEach((listener) => {\n      listener(changes, areaName);\n    });\n  }\n\n  let REQ_PERMS = [];\n\n  // --- Chrome polyfill\n  let chrome = {\n    extension: {\n      isAllowedIncognitoAccess: () => Promise.resolve(true),\n      sendMessage: (...args) => _messagingHandler.sendMessage(...args),\n    },\n    permissions: {\n      // TODO: Remove origin permission means exclude from origin in startup\n      request: (permissions, callback) => {\n        console.log(\"permissions.request\", permissions, callback);\n        if (Array.isArray(permissions)) {\n          REQ_PERMS = [...REQ_PERMS, ...permissions];\n        }\n        if (typeof callback === \"function\") {\n          callback(permissions);\n        }\n        return Promise.resolve(permissions);\n      },\n      contains: (permissions, callback) => {\n        if (typeof callback === \"function\") {\n          callback(true);\n        }\n        return Promise.resolve(true);\n      },\n      getAll: () => {\n        return Promise.resolve({\n          permissions: EXTENSION_PERMISSIONS,\n          origins: ORIGIN_PERMISSIONS,\n        });\n      },\n      onAdded: createNoopListeners(),\n      onRemoved: createNoopListeners(),\n    },\n    i18n: {\n      getUILanguage: () => {\n        return USED_LOCALE || \"en\";\n      },\n      getMessage: (key, substitutions = []) => {\n        if (typeof substitutions === \"string\") {\n          substitutions = [substitutions];\n        }\n        if (typeof LOCALE_KEYS !== \"undefined\" && LOCALE_KEYS[key]) {\n          return LOCALE_KEYS[key].message?.replace(\n            /\\$(\\d+)/g,\n            (match, p1) => substitutions[p1 - 1] || match\n          );\n        }\n        return key;\n      },\n    },\n    alarms: {\n      onAlarm: createNoopListeners(),\n      create: () => {\n        console.log(\"alarms.create\", arguments);\n      },\n      get: () => {\n        console.log(\"alarms.get\", arguments);\n      },\n    },\n    runtime: {\n      ...RUNTIME,\n      onInstalled: createNoopListeners(),\n      onStartup: createNoopListeners(),\n      // TODO: Postmessage to parent to open options page or call openOptionsPage\n      openOptionsPage: () => {\n        // const url = chrome.runtime.getURL(OPTIONS_PAGE_PATH);\n        // console.log(\"openOptionsPage\", _openTab, url, EXTENSION_ASSETS_MAP);\n        // _openTab(url);\n        if (typeof openOptionsPage === \"function\") {\n          openOptionsPage();\n        } else if (window.parent) {\n          window.parent.postMessage({ type: \"openOptionsPage\" }, \"*\");\n        } else {\n          console.warn(\"openOptionsPage not available.\");\n        }\n      },\n      getManifest: () => {\n        // The manifest object will be injected into the scope where buildPolyfill is called\n        if (typeof INJECTED_MANIFEST !== \"undefined\") {\n          return JSON.parse(JSON.stringify(INJECTED_MANIFEST)); // Return deep copy\n        }\n        console.warn(\n          \"INJECTED_MANIFEST not found for chrome.runtime.getManifest\"\n        );\n        return { name: \"Unknown\", version: \"0.0\", manifest_version: 2 };\n      },\n      getURL: (path) => {\n        if (!path) return \"\";\n        if (path.startsWith(\"/\")) {\n          path = path.substring(1);\n        }\n\n        if (typeof _createAssetUrl === \"function\") {\n          return _createAssetUrl(path);\n        }\n\n        console.warn(\n          `chrome.runtime.getURL fallback for '${path}'. Assets may not be available.`\n        );\n        // Attempt a relative path resolution (highly context-dependent and likely wrong)\n        try {\n          if (window.location.protocol.startsWith(\"http\")) {\n            return new URL(path, window.location.href).toString();\n          }\n        } catch (e) {\n          /* ignore error, fallback */\n        }\n        return path;\n      },\n      id: \"polyfilled-extension-\" + Math.random().toString(36).substring(2, 15),\n      lastError: null,\n      getPlatformInfo: async () => {\n        const platform = {\n          os: \"unknown\",\n          arch: \"unknown\",\n          nacl_arch: \"unknown\",\n        };\n\n        if (typeof navigator !== \"undefined\") {\n          const userAgent = navigator.userAgent.toLowerCase();\n          if (userAgent.includes(\"mac\")) platform.os = \"mac\";\n          else if (userAgent.includes(\"win\")) platform.os = \"win\";\n          else if (userAgent.includes(\"linux\")) platform.os = \"linux\";\n          else if (userAgent.includes(\"android\")) platform.os = \"android\";\n          else if (userAgent.includes(\"ios\")) platform.os = \"ios\";\n\n          if (userAgent.includes(\"x86_64\") || userAgent.includes(\"amd64\")) {\n            platform.arch = \"x86-64\";\n          } else if (userAgent.includes(\"i386\") || userAgent.includes(\"i686\")) {\n            platform.arch = \"x86-32\";\n          } else if (userAgent.includes(\"arm\")) {\n            platform.arch = \"arm\";\n          }\n        }\n\n        return platform;\n      },\n      getBrowserInfo: async () => {\n        const info = {\n          name: \"unknown\",\n          version: \"unknown\",\n          buildID: \"unknown\",\n        };\n\n        if (typeof navigator !== \"undefined\") {\n          const userAgent = navigator.userAgent;\n          if (userAgent.includes(\"Chrome\")) {\n            info.name = \"Chrome\";\n            const match = userAgent.match(/Chrome\\/([0-9.]+)/);\n            if (match) info.version = match[1];\n          } else if (userAgent.includes(\"Firefox\")) {\n            info.name = \"Firefox\";\n            const match = userAgent.match(/Firefox\\/([0-9.]+)/);\n            if (match) info.version = match[1];\n          } else if (userAgent.includes(\"Safari\")) {\n            info.name = \"Safari\";\n            const match = userAgent.match(/Version\\/([0-9.]+)/);\n            if (match) info.version = match[1];\n          }\n        }\n\n        return info;\n      },\n    },\n    storage: {\n      local: {\n        get: function (keys, callback) {\n          if (typeof _storageGet !== \"function\")\n            throw new Error(\"_storageGet not defined\");\n\n          const promise = _storageGet(keys);\n\n          if (typeof callback === \"function\") {\n            promise\n              .then((result) => {\n                try {\n                  callback(result);\n                } catch (e) {\n                  console.error(\"Error in storage.get callback:\", e);\n                }\n              })\n              .catch((error) => {\n                console.error(\"Storage.get error:\", error);\n                callback({});\n              });\n            return;\n          }\n\n          return promise;\n        },\n        set: function (items, callback) {\n          if (typeof _storageSet !== \"function\")\n            throw new Error(\"_storageSet not defined\");\n\n          const promise = _storageSet(items).then((result) => {\n            broadcastStorageChange(items, \"local\");\n            return result;\n          });\n\n          if (typeof callback === \"function\") {\n            promise\n              .then((result) => {\n                try {\n                  callback(result);\n                } catch (e) {\n                  console.error(\"Error in storage.set callback:\", e);\n                }\n              })\n              .catch((error) => {\n                console.error(\"Storage.set error:\", error);\n                callback();\n              });\n            return;\n          }\n\n          return promise;\n        },\n        remove: function (keys, callback) {\n          if (typeof _storageRemove !== \"function\")\n            throw new Error(\"_storageRemove not defined\");\n\n          const promise = _storageRemove(keys).then((result) => {\n            const changes = {};\n            const keyList = Array.isArray(keys) ? keys : [keys];\n            keyList.forEach((key) => {\n              changes[key] = { oldValue: undefined, newValue: undefined };\n            });\n            broadcastStorageChange(changes, \"local\");\n            return result;\n          });\n\n          if (typeof callback === \"function\") {\n            promise\n              .then((result) => {\n                try {\n                  callback(result);\n                } catch (e) {\n                  console.error(\"Error in storage.remove callback:\", e);\n                }\n              })\n              .catch((error) => {\n                console.error(\"Storage.remove error:\", error);\n                callback();\n              });\n            return;\n          }\n\n          return promise;\n        },\n        clear: function (callback) {\n          if (typeof _storageClear !== \"function\")\n            throw new Error(\"_storageClear not defined\");\n\n          const promise = _storageClear().then((result) => {\n            broadcastStorageChange({}, \"local\");\n            return result;\n          });\n\n          if (typeof callback === \"function\") {\n            promise\n              .then((result) => {\n                try {\n                  callback(result);\n                } catch (e) {\n                  console.error(\"Error in storage.clear callback:\", e);\n                }\n              })\n              .catch((error) => {\n                console.error(\"Storage.clear error:\", error);\n                callback();\n              });\n            return;\n          }\n\n          return promise;\n        },\n        onChanged: {\n          addListener: (callback) => {\n            storageChangeListeners.add(callback);\n          },\n          removeListener: (callback) => {\n            storageChangeListeners.delete(callback);\n          },\n        },\n      },\n      sync: {\n        get: function (keys, callback) {\n          console.warn(\"chrome.storage.sync polyfill maps to local\");\n          return chrome.storage.local.get(keys, callback);\n        },\n        set: function (items, callback) {\n          console.warn(\"chrome.storage.sync polyfill maps to local\");\n\n          const promise = chrome.storage.local.set(items).then((result) => {\n            broadcastStorageChange(items, \"sync\");\n            return result;\n          });\n\n          if (typeof callback === \"function\") {\n            promise\n              .then((result) => {\n                try {\n                  callback(result);\n                } catch (e) {\n                  console.error(\"Error in storage.sync.set callback:\", e);\n                }\n              })\n              .catch((error) => {\n                console.error(\"Storage.sync.set error:\", error);\n                callback();\n              });\n            return;\n          }\n\n          return promise;\n        },\n        remove: function (keys, callback) {\n          console.warn(\"chrome.storage.sync polyfill maps to local\");\n\n          const promise = chrome.storage.local.remove(keys).then((result) => {\n            const changes = {};\n            const keyList = Array.isArray(keys) ? keys : [keys];\n            keyList.forEach((key) => {\n              changes[key] = { oldValue: undefined, newValue: undefined };\n            });\n            broadcastStorageChange(changes, \"sync\");\n            return result;\n          });\n\n          if (typeof callback === \"function\") {\n            promise\n              .then((result) => {\n                try {\n                  callback(result);\n                } catch (e) {\n                  console.error(\"Error in storage.sync.remove callback:\", e);\n                }\n              })\n              .catch((error) => {\n                console.error(\"Storage.sync.remove error:\", error);\n                callback();\n              });\n            return;\n          }\n\n          return promise;\n        },\n        clear: function (callback) {\n          console.warn(\"chrome.storage.sync polyfill maps to local\");\n\n          const promise = chrome.storage.local.clear().then((result) => {\n            broadcastStorageChange({}, \"sync\");\n            return result;\n          });\n\n          if (typeof callback === \"function\") {\n            promise\n              .then((result) => {\n                try {\n                  callback(result);\n                } catch (e) {\n                  console.error(\"Error in storage.sync.clear callback:\", e);\n                }\n              })\n              .catch((error) => {\n                console.error(\"Storage.sync.clear error:\", error);\n                callback();\n              });\n            return;\n          }\n\n          return promise;\n        },\n        onChanged: {\n          addListener: (callback) => {\n            storageChangeListeners.add(callback);\n          },\n          removeListener: (callback) => {\n            storageChangeListeners.delete(callback);\n          },\n        },\n      },\n      onChanged: {\n        addListener: (callback) => {\n          storageChangeListeners.add(callback);\n        },\n        removeListener: (callback) => {\n          storageChangeListeners.delete(callback);\n        },\n      },\n      managed: {\n        get: function (keys, callback) {\n          console.warn(\"chrome.storage.managed polyfill is read-only empty.\");\n\n          const promise = Promise.resolve({});\n\n          if (typeof callback === \"function\") {\n            promise.then((result) => {\n              try {\n                callback(result);\n              } catch (e) {\n                console.error(\"Error in storage.managed.get callback:\", e);\n              }\n            });\n            return;\n          }\n\n          return promise;\n        },\n      },\n    },\n    cookies: (function () {\n      const cookieChangeListeners = new Set();\n      function broadcastCookieChange(changeInfo) {\n        cookieChangeListeners.forEach((listener) => {\n          try {\n            listener(changeInfo);\n          } catch (e) {\n            console.error(\"Error in cookies.onChanged listener:\", e);\n          }\n        });\n      }\n\n      function handlePromiseCallback(promise, callback) {\n        if (typeof callback === \"function\") {\n          promise\n            .then((result) => callback(result))\n            .catch((error) => {\n              // chrome.runtime.lastError = { message: error.message }; // TODO: Implement lastError\n              console.error(error);\n              callback(); // Call with undefined on error\n            });\n          return;\n        }\n        return promise;\n      }\n\n      return {\n        get: function (details, callback) {\n          if (typeof _cookieList !== \"function\") {\n            return handlePromiseCallback(\n              Promise.reject(new Error(\"_cookieList not defined\")),\n              callback\n            );\n          }\n          const promise = _cookieList({\n            url: details.url,\n            name: details.name,\n            storeId: details.storeId,\n            partitionKey: details.partitionKey,\n          }).then((cookies) => {\n            if (!cookies || cookies.length === 0) {\n              return null;\n            }\n            // Sort by path length (longest first), then creation time (earliest first, if available)\n            cookies.sort((a, b) => {\n              const pathLenDiff = (b.path || \"\").length - (a.path || \"\").length;\n              if (pathLenDiff !== 0) return pathLenDiff;\n              return (a.creationTime || 0) - (b.creationTime || 0);\n            });\n            return cookies[0];\n          });\n          return handlePromiseCallback(promise, callback);\n        },\n\n        getAll: function (details, callback) {\n          if (typeof _cookieList !== \"function\") {\n            return handlePromiseCallback(\n              Promise.reject(new Error(\"_cookieList not defined\")),\n              callback\n            );\n          }\n          if (details.partitionKey) {\n            console.warn(\n              \"cookies.getAll: partitionKey is not fully supported in this environment.\"\n            );\n          }\n          const promise = _cookieList(details);\n          return handlePromiseCallback(promise, callback);\n        },\n\n        set: function (details, callback) {\n          const promise = (async () => {\n            if (\n              typeof _cookieSet !== \"function\" ||\n              typeof _cookieList !== \"function\"\n            ) {\n              throw new Error(\"_cookieSet or _cookieList not defined\");\n            }\n            if (details.partitionKey) {\n              console.warn(\n                \"cookies.set: partitionKey is not fully supported in this environment.\"\n              );\n            }\n\n            const getDetails = {\n              url: details.url,\n              name: details.name,\n              storeId: details.storeId,\n            };\n            const oldCookies = await _cookieList(getDetails);\n            const oldCookie = oldCookies && oldCookies[0];\n\n            if (oldCookie) {\n              broadcastCookieChange({\n                cause: \"overwrite\",\n                cookie: oldCookie,\n                removed: true,\n              });\n            }\n\n            await _cookieSet(details);\n            const newCookies = await _cookieList(getDetails);\n            const newCookie = newCookies && newCookies[0];\n\n            if (newCookie) {\n              broadcastCookieChange({\n                cause: \"explicit\",\n                cookie: newCookie,\n                removed: false,\n              });\n            }\n            return newCookie || null;\n          })();\n          return handlePromiseCallback(promise, callback);\n        },\n\n        remove: function (details, callback) {\n          const promise = (async () => {\n            if (\n              typeof _cookieDelete !== \"function\" ||\n              typeof _cookieList !== \"function\"\n            ) {\n              throw new Error(\"_cookieDelete or _cookieList not defined\");\n            }\n            const oldCookies = await _cookieList(details);\n            const oldCookie = oldCookies && oldCookies[0];\n\n            if (!oldCookie) return null; // Nothing to remove\n\n            await _cookieDelete(details);\n\n            broadcastCookieChange({\n              cause: \"explicit\",\n              cookie: oldCookie,\n              removed: true,\n            });\n\n            return {\n              url: details.url,\n              name: details.name,\n              storeId: details.storeId || \"0\",\n              partitionKey: details.partitionKey,\n            };\n          })();\n          return handlePromiseCallback(promise, callback);\n        },\n\n        getAllCookieStores: function (callback) {\n          const promise = Promise.resolve([\n            { id: \"0\", tabIds: [1] }, // Mock store for the current context\n          ]);\n          return handlePromiseCallback(promise, callback);\n        },\n\n        getPartitionKey: function (details, callback) {\n          console.warn(\n            \"chrome.cookies.getPartitionKey is not supported in this environment.\"\n          );\n          const promise = Promise.resolve({ partitionKey: {} }); // Return empty partition key\n          return handlePromiseCallback(promise, callback);\n        },\n\n        onChanged: {\n          addListener: (callback) => {\n            if (typeof callback === \"function\") {\n              cookieChangeListeners.add(callback);\n            }\n          },\n          removeListener: (callback) => {\n            cookieChangeListeners.delete(callback);\n          },\n        },\n      };\n    })(),\n    tabs: {\n      query: async (queryInfo) => {\n        console.warn(\n          \"chrome.tabs.query polyfill only returns current tab info.\"\n        );\n        const dummyId = Math.floor(Math.random() * 1000) + 1;\n        return [\n          {\n            id: dummyId,\n            url: CURRENT_LOCATION,\n            active: true,\n            windowId: 1,\n            status: \"complete\",\n          },\n        ];\n      },\n      create: async ({ url, active = true }) => {\n        console.log(`[Polyfill tabs.create] URL: ${url}`);\n        if (typeof _openTab !== \"function\")\n          throw new Error(\"_openTab not defined\");\n        _openTab(url, active);\n        const dummyId = Math.floor(Math.random() * 1000) + 1001;\n        return Promise.resolve({\n          id: dummyId,\n          url: url,\n          active,\n          windowId: 1,\n        });\n      },\n      sendMessage: async (tabId, message) => {\n        console.warn(\n          `chrome.tabs.sendMessage polyfill (to tab ${tabId}) redirects to runtime.sendMessage (current context).`\n        );\n        return chrome.runtime.sendMessage(message);\n      },\n    },\n    notifications: {\n      create: async (notificationId, options) => {\n        try {\n          let id = notificationId;\n          let notificationOptions = options;\n\n          if (typeof notificationId === \"object\" && notificationId !== null) {\n            notificationOptions = notificationId;\n            id = \"notification_\" + Math.random().toString(36).substring(2, 15);\n          } else if (typeof notificationId === \"string\" && options) {\n            id = notificationId;\n            notificationOptions = options;\n          } else {\n            throw new Error(\"Invalid parameters for notifications.create\");\n          }\n\n          if (!notificationOptions || typeof notificationOptions !== \"object\") {\n            throw new Error(\"Notification options must be an object\");\n          }\n\n          const {\n            title,\n            message,\n            iconUrl,\n            type = \"basic\",\n          } = notificationOptions;\n\n          if (!title || !message) {\n            throw new Error(\"Notification must have title and message\");\n          }\n\n          if (\"Notification\" in window) {\n            if (Notification.permission === \"granted\") {\n              const notification = new Notification(title, {\n                body: message,\n                icon: iconUrl,\n                tag: id,\n              });\n\n              console.log(`[Notifications] Created notification: ${id}`);\n              return id;\n            } else if (Notification.permission === \"default\") {\n              const permission = await Notification.requestPermission();\n              if (permission === \"granted\") {\n                const notification = new Notification(title, {\n                  body: message,\n                  icon: iconUrl,\n                  tag: id,\n                });\n                console.log(\n                  `[Notifications] Created notification after permission: ${id}`\n                );\n                return id;\n              } else {\n                console.warn(\n                  \"[Notifications] Permission denied for notifications\"\n                );\n                return id;\n              }\n            } else {\n              console.warn(\"[Notifications] Notifications are blocked\");\n              return id;\n            }\n          } else {\n            console.warn(\n              \"[Notifications] Native notifications not supported, using console fallback\"\n            );\n            console.log(`[Notification] ${title}: ${message}`);\n            return id;\n          }\n        } catch (error) {\n          console.error(\n            \"[Notifications] Error creating notification:\",\n            error.message\n          );\n          throw error;\n        }\n      },\n      clear: async (notificationId) => {\n        console.log(`[Notifications] Clear notification: ${notificationId}`);\n        // For native notifications, there's no direct way to clear by ID\n        // This is a limitation of the Web Notifications API\n        return true;\n      },\n      getAll: async () => {\n        console.warn(\"[Notifications] getAll not fully supported in polyfill\");\n        return {};\n      },\n      getPermissionLevel: async () => {\n        if (\"Notification\" in window) {\n          const permission = Notification.permission;\n          return { level: permission === \"granted\" ? \"granted\" : \"denied\" };\n        }\n        return { level: \"denied\" };\n      },\n    },\n    contextMenus: {\n      create: (createProperties, callback) => {\n        try {\n          if (!createProperties || typeof createProperties !== \"object\") {\n            throw new Error(\"Context menu create properties must be an object\");\n          }\n\n          const { id, title, contexts = [\"page\"], onclick } = createProperties;\n          const menuId =\n            id || `menu_${Math.random().toString(36).substring(2, 15)}`;\n\n          if (!title || typeof title !== \"string\") {\n            throw new Error(\"Context menu must have a title\");\n          }\n\n          // Store menu items for potential use\n          if (!window._polyfillContextMenus) {\n            window._polyfillContextMenus = new Map();\n          }\n\n          window._polyfillContextMenus.set(menuId, {\n            id: menuId,\n            title,\n            contexts,\n            onclick,\n            enabled: createProperties.enabled !== false,\n          });\n\n          console.log(\n            `[ContextMenus] Created context menu item: ${title} (${menuId})`\n          );\n\n          // Try to register a menu command as fallback\n          if (typeof _registerMenuCommand === \"function\") {\n            try {\n              _registerMenuCommand(\n                title,\n                onclick ||\n                  (() => {\n                    console.log(`Context menu clicked: ${title}`);\n                  })\n              );\n            } catch (e) {\n              console.warn(\n                \"[ContextMenus] Failed to register as menu command:\",\n                e.message\n              );\n            }\n          }\n\n          if (callback && typeof callback === \"function\") {\n            setTimeout(() => callback(), 0);\n          }\n\n          return menuId;\n        } catch (error) {\n          console.error(\n            \"[ContextMenus] Error creating context menu:\",\n            error.message\n          );\n          if (callback && typeof callback === \"function\") {\n            setTimeout(() => callback(), 0);\n          }\n          throw error;\n        }\n      },\n      update: (id, updateProperties, callback) => {\n        try {\n          if (\n            !window._polyfillContextMenus ||\n            !window._polyfillContextMenus.has(id)\n          ) {\n            throw new Error(`Context menu item not found: ${id}`);\n          }\n\n          const menuItem = window._polyfillContextMenus.get(id);\n          Object.assign(menuItem, updateProperties);\n\n          console.log(`[ContextMenus] Updated context menu item: ${id}`);\n\n          if (callback && typeof callback === \"function\") {\n            setTimeout(() => callback(), 0);\n          }\n        } catch (error) {\n          console.error(\n            \"[ContextMenus] Error updating context menu:\",\n            error.message\n          );\n          if (callback && typeof callback === \"function\") {\n            setTimeout(() => callback(), 0);\n          }\n        }\n      },\n      remove: (menuItemId, callback) => {\n        try {\n          if (\n            window._polyfillContextMenus &&\n            window._polyfillContextMenus.has(menuItemId)\n          ) {\n            window._polyfillContextMenus.delete(menuItemId);\n            console.log(\n              `[ContextMenus] Removed context menu item: ${menuItemId}`\n            );\n          } else {\n            console.warn(\n              `[ContextMenus] Context menu item not found for removal: ${menuItemId}`\n            );\n          }\n\n          if (callback && typeof callback === \"function\") {\n            setTimeout(() => callback(), 0);\n          }\n        } catch (error) {\n          console.error(\n            \"[ContextMenus] Error removing context menu:\",\n            error.message\n          );\n          if (callback && typeof callback === \"function\") {\n            setTimeout(() => callback(), 0);\n          }\n        }\n      },\n      removeAll: (callback) => {\n        try {\n          if (window._polyfillContextMenus) {\n            const count = window._polyfillContextMenus.size;\n            window._polyfillContextMenus.clear();\n            console.log(\n              `[ContextMenus] Removed all ${count} context menu items`\n            );\n          }\n\n          if (callback && typeof callback === \"function\") {\n            setTimeout(() => callback(), 0);\n          }\n        } catch (error) {\n          console.error(\n            \"[ContextMenus] Error removing all context menus:\",\n            error.message\n          );\n          if (callback && typeof callback === \"function\") {\n            setTimeout(() => callback(), 0);\n          }\n        }\n      },\n      onClicked: {\n        addListener: (callback) => {\n          if (!window._polyfillContextMenuListeners) {\n            window._polyfillContextMenuListeners = new Set();\n          }\n          window._polyfillContextMenuListeners.add(callback);\n          console.log(\"[ContextMenus] Added click listener\");\n        },\n        removeListener: (callback) => {\n          if (window._polyfillContextMenuListeners) {\n            window._polyfillContextMenuListeners.delete(callback);\n            console.log(\"[ContextMenus] Removed click listener\");\n          }\n        },\n      },\n    },\n  };\n\n  const tc = (fn) => {\n    try {\n      fn();\n    } catch (e) {}\n  };\n  const loggingProxyHandler = (_key) => ({\n    get(target, key, receiver) {\n      tc(() =>\n        console.log(`[${contextType}] [CHROME - ${_key}] Getting ${key}`)\n      );\n      return Reflect.get(target, key, receiver);\n    },\n    set(target, key, value, receiver) {\n      tc(() =>\n        console.log(\n          `[${contextType}] [CHROME - ${_key}] Setting ${key} to ${value}`\n        )\n      );\n      return Reflect.set(target, key, value, receiver);\n    },\n    has(target, key) {\n      tc(() =>\n        console.log(\n          `[${contextType}] [CHROME - ${_key}] Checking if ${key} exists`\n        )\n      );\n      return Reflect.has(target, key);\n    },\n  });\n  chrome = Object.fromEntries(\n    Object.entries(chrome).map(([key, value]) => [\n      key,\n      new Proxy(value, loggingProxyHandler(key)),\n    ])\n  );\n\n  // Alias browser to chrome for common Firefox pattern\n  const browser = new Proxy(chrome, loggingProxyHandler);\n\n  const oldGlobalThis = globalThis;\n  const oldWindow = window;\n  const oldSelf = self;\n  const oldGlobal = globalThis;\n  const __globalsStorage = {};\n\n  const TO_MODIFY = [oldGlobalThis, oldWindow, oldSelf, oldGlobal];\n  const set = (k, v) => {\n    __globalsStorage[k] = v;\n    TO_MODIFY.forEach((target) => {\n      target[k] = v;\n    });\n  };\n  const proxyHandler = {\n    get(target, key, receiver) {\n      try {\n        return __globalsStorage[key] || Reflect.get(target, key, receiver);\n      } catch (e) {\n        console.error(\"Error getting\", key, e);\n        return undefined;\n      }\n    },\n    set(target, key, value, receiver) {\n      try {\n        tc(() => console.log(`[${contextType}] Setting ${key} to ${value}`));\n        set(key, value);\n        return Reflect.set(target, key, value, receiver);\n      } catch (e) {\n        console.error(\"Error setting\", key, value, e);\n        return false;\n      }\n    },\n    has(target, key) {\n      try {\n        return key in __globalsStorage || key in target;\n      } catch (e) {\n        console.error(\"Error has\", key, e);\n        return false;\n      }\n    },\n    getOwnPropertyDescriptor(target, key) {\n      try {\n        if (key in __globalsStorage) {\n          return {\n            configurable: true,\n            enumerable: true,\n            writable: true,\n            value: __globalsStorage[key],\n          };\n        }\n        // fall back to the real globalThis\n        const desc = Reflect.getOwnPropertyDescriptor(target, key);\n        // ensure it's configurable so the with‑scope binding logic can override it\n        if (desc && !desc.configurable) {\n          desc.configurable = true;\n        }\n        return desc;\n      } catch (e) {\n        console.error(\"Error getOwnPropertyDescriptor\", key, e);\n        return {\n          configurable: true,\n          enumerable: true,\n          writable: true,\n          value: undefined,\n        };\n      }\n    },\n\n    defineProperty(target, key, descriptor) {\n      try {\n        // Normalize descriptor to avoid mixed accessor & data attributes\n        const hasAccessor = \"get\" in descriptor || \"set\" in descriptor;\n\n        if (hasAccessor) {\n          // Build a clean descriptor without value/writable when accessors present\n          const normalized = {\n            configurable:\n              \"configurable\" in descriptor ? descriptor.configurable : true,\n            enumerable:\n              \"enumerable\" in descriptor ? descriptor.enumerable : false,\n          };\n          if (\"get\" in descriptor) normalized.get = descriptor.get;\n          if (\"set\" in descriptor) normalized.set = descriptor.set;\n\n          // Store accessor references for inspection but avoid breaking invariants\n          set(key, {\n            get: descriptor.get,\n            set: descriptor.set,\n          });\n\n          return Reflect.defineProperty(target, key, normalized);\n        }\n\n        // Data descriptor path\n        set(key, descriptor.value);\n        return Reflect.defineProperty(target, key, descriptor);\n      } catch (e) {\n        console.error(\"Error defineProperty\", key, descriptor, e);\n        return false;\n      }\n    },\n  };\n\n  // Create proxies once proxyHandler is defined\n  const proxyWindow = new Proxy(oldWindow, proxyHandler);\n  const proxyGlobalThis = new Proxy(oldGlobalThis, proxyHandler);\n  const proxyGlobal = new Proxy(oldGlobal, proxyHandler);\n  const proxySelf = new Proxy(oldSelf, proxyHandler);\n\n  // Seed storage with core globals so lookups succeed inside `with` blocks\n  Object.assign(__globalsStorage, {\n    chrome,\n    browser,\n    window: proxyWindow,\n    globalThis: proxyGlobalThis,\n    global: proxyGlobal,\n    self: proxySelf,\n  });\n\n  const __globals = {\n    chrome,\n    browser,\n    window: proxyWindow,\n    globalThis: proxyGlobalThis,\n    global: proxyGlobal,\n    self: proxySelf,\n    __globals: __globalsStorage,\n  };\n\n  __globalsStorage.contextId = contextId;\n  __globalsStorage.contextType = contextType;\n  __globalsStorage.module = undefined;\n  __globalsStorage.amd = undefined;\n  __globalsStorage.define = undefined;\n\n  return __globals;\n}\n\n\nif (typeof window !== 'undefined') {\n    window.buildPolyfill = buildPolyfill;\n}\n"
+			    const polyfillString = "\n// -- Messaging implementation\n\nfunction createEventBus(\n  scopeId,\n  type = \"page\", // \"page\" or \"iframe\"\n  { allowedOrigin = \"*\", children = [], parentWindow = null } = {}\n) {\n  if (!scopeId) throw new Error(\"createEventBus requires a scopeId\");\n\n  const handlers = {};\n\n  function handleIncoming(ev) {\n    if (allowedOrigin !== \"*\" && ev.origin !== allowedOrigin) return;\n\n    const msg = ev.data;\n    if (!msg || msg.__eventBus !== true || msg.scopeId !== scopeId) return;\n\n    const { event, payload } = msg;\n\n    // PAGE: if it's an INIT from an iframe, adopt it\n    if (type === \"page\" && event === \"__INIT__\") {\n      const win = ev.source;\n      if (win && !children.includes(win)) {\n        children.push(win);\n      }\n      return;\n    }\n\n    (handlers[event] || []).forEach((fn) =>\n      fn(payload, { origin: ev.origin, source: ev.source })\n    );\n  }\n\n  window.addEventListener(\"message\", handleIncoming);\n\n  function emitTo(win, event, payload) {\n    const envelope = {\n      __eventBus: true,\n      scopeId,\n      event,\n      payload,\n    };\n    win.postMessage(envelope, allowedOrigin);\n  }\n\n  // IFRAME: announce to page on startup\n  if (type === \"iframe\") {\n    setTimeout(() => {\n      const pw = parentWindow || window.parent;\n      if (pw && pw.postMessage) {\n        emitTo(pw, \"__INIT__\", null);\n      }\n    }, 0);\n  }\n\n  return {\n    on(event, fn) {\n      handlers[event] = handlers[event] || [];\n      handlers[event].push(fn);\n    },\n    off(event, fn) {\n      if (!handlers[event]) return;\n      handlers[event] = handlers[event].filter((h) => h !== fn);\n    },\n    /**\n     * Emits an event.\n     * @param {string} event - The event name.\n     * @param {any} payload - The event payload.\n     * @param {object} [options] - Emission options.\n     * @param {Window} [options.to] - A specific window to target. If provided, message is ONLY sent to the target.\n     */\n    emit(event, payload, { to } = {}) {\n      // If a specific target window is provided, send only to it and DO NOT dispatch locally.\n      // This prevents a port from receiving its own messages.\n      if (to) {\n        if (to && typeof to.postMessage === \"function\") {\n          emitTo(to, event, payload);\n        }\n        return; // Exit after targeted send.\n      }\n\n      // For broadcast messages (no 'to' target), dispatch locally first.\n      (handlers[event] || []).forEach((fn) =>\n        fn(payload, { origin: location.origin, source: window })\n      );\n\n      // Then propagate the broadcast to other windows.\n      if (type === \"page\") {\n        children.forEach((win) => emitTo(win, event, payload));\n      } else {\n        const pw = parentWindow || window.parent;\n        if (pw && pw.postMessage) {\n          emitTo(pw, event, payload);\n        }\n      }\n    },\n  };\n}\n\nfunction createRuntime(type = \"background\", bus) {\n  let nextId = 1;\n  const pending = {};\n  const msgListeners = [];\n\n  let nextPortId = 1;\n  const ports = {};\n  const onConnectListeners = [];\n\n  function parseArgs(args) {\n    let target, message, options, callback;\n    const arr = [...args];\n    if (arr.length === 0) {\n      throw new Error(\"sendMessage requires at least one argument\");\n    }\n    if (arr.length === 1) {\n      return { message: arr[0] };\n    }\n    // last object could be options\n    if (\n      arr.length &&\n      typeof arr[arr.length - 1] === \"object\" &&\n      !Array.isArray(arr[arr.length - 1])\n    ) {\n      options = arr.pop();\n    }\n    // last function is callback\n    if (arr.length && typeof arr[arr.length - 1] === \"function\") {\n      callback = arr.pop();\n    }\n    if (\n      arr.length === 2 &&\n      (typeof arr[0] === \"string\" || typeof arr[0] === \"number\")\n    ) {\n      [target, message] = arr;\n    } else {\n      [message] = arr;\n    }\n    return { target, message, options, callback };\n  }\n\n  if (type === \"background\") {\n    bus.on(\"__REQUEST__\", ({ id, message }, { source }) => {\n      let responded = false,\n        isAsync = false;\n      function sendResponse(resp) {\n        if (responded) return;\n        responded = true;\n        // Target the response directly back to the window that sent the request.\n        bus.emit(\"__RESPONSE__\", { id, response: resp }, { to: source });\n      }\n      const results = msgListeners\n        .map((fn) => {\n          try {\n            // msg, sender, sendResponse\n            const ret = fn(message, { id, tab: { id: source } }, sendResponse);\n            if (ret === true || (ret && typeof ret.then === \"function\")) {\n              isAsync = true;\n              return ret;\n            }\n            return ret;\n          } catch (e) {\n            _error(e);\n          }\n        })\n        .filter((r) => r !== undefined);\n\n      const promises = results.filter((r) => r && typeof r.then === \"function\");\n      if (!isAsync && promises.length === 0) {\n        const out = results.length === 1 ? results[0] : results;\n        sendResponse(out);\n      } else if (promises.length) {\n        Promise.all(promises).then((vals) => {\n          if (!responded) {\n            const out = vals.length === 1 ? vals[0] : vals;\n            sendResponse(out);\n          }\n        });\n      }\n    });\n  }\n\n  if (type !== \"background\") {\n    bus.on(\"__RESPONSE__\", ({ id, response }) => {\n      const entry = pending[id];\n      if (!entry) return;\n      entry.resolve(response);\n      if (entry.callback) entry.callback(response);\n      delete pending[id];\n    });\n  }\n\n  function sendMessage(...args) {\n    // Background should be able to send message to itself\n    // if (type === \"background\") {\n    //   throw new Error(\"Background cannot sendMessage to itself\");\n    // }\n    const { target, message, callback } = parseArgs(args);\n    const id = nextId++;\n    const promise = new Promise((resolve) => {\n      pending[id] = { resolve, callback };\n      bus.emit(\"__REQUEST__\", { id, message });\n    });\n    return promise;\n  }\n\n  bus.on(\"__PORT_CONNECT__\", ({ portId, name }, { source }) => {\n    if (type !== \"background\") return;\n    const backgroundPort = makePort(\"background\", portId, name, source);\n    ports[portId] = backgroundPort;\n\n    onConnectListeners.forEach((fn) => fn(backgroundPort));\n\n    // send back a CONNECT_ACK so the client can\n    // start listening on its end:\n    bus.emit(\"__PORT_CONNECT_ACK__\", { portId, name }, { to: source });\n  });\n\n  // Clients handle the ACK and finalize their Port object by learning the remote window.\n  bus.on(\"__PORT_CONNECT_ACK__\", ({ portId, name }, { source }) => {\n    if (type === \"background\") return; // ignore\n    const p = ports[portId];\n    if (!p) return;\n    // Call the port's internal finalize method to complete the handshake\n    if (p._finalize) {\n      p._finalize(source);\n    }\n  });\n\n  // Any port message travels via \"__PORT_MESSAGE__\"\n  bus.on(\"__PORT_MESSAGE__\", (envelope, { source }) => {\n    const { portId } = envelope;\n    const p = ports[portId];\n    if (!p) return;\n    p._receive(envelope, source);\n  });\n\n  // Any port disconnect:\n  bus.on(\"__PORT_DISCONNECT__\", ({ portId }) => {\n    const p = ports[portId];\n    if (!p) return;\n    p._disconnect();\n    delete ports[portId];\n  });\n\n  // Refactored makePort to correctly manage internal state and the connection handshake.\n  function makePort(side, portId, name, remoteWindow) {\n    let onMessageHandlers = [];\n    let onDisconnectHandlers = [];\n    let buffer = [];\n    // Unique instance ID for this port instance\n    const instanceId = Math.random().toString(36).slice(2) + Date.now();\n    // These state variables are part of the closure and are updated by _finalize\n    let _ready = side === \"background\";\n\n    function _drainBuffer() {\n      buffer.forEach((m) => _post(m));\n      buffer = [];\n    }\n\n    function _post(msg) {\n      // Always use the 'to' parameter for port messages, making them directional.\n      // Include senderInstanceId\n      bus.emit(\n        \"__PORT_MESSAGE__\",\n        { portId, msg, senderInstanceId: instanceId },\n        { to: remoteWindow }\n      );\n    }\n\n    function postMessage(msg) {\n      if (!_ready) {\n        buffer.push(msg);\n      } else {\n        _post(msg);\n      }\n    }\n\n    function _receive(envelope, source) {\n      // envelope: { msg, senderInstanceId }\n      if (envelope.senderInstanceId === instanceId) return; // Don't dispatch to self\n      onMessageHandlers.forEach((fn) =>\n        fn(envelope.msg, { id: portId, tab: { id: source } })\n      );\n    }\n\n    function disconnect() {\n      // Also use the 'to' parameter for disconnect messages\n      bus.emit(\"__PORT_DISCONNECT__\", { portId }, { to: remoteWindow });\n      _disconnect();\n      delete ports[portId];\n    }\n\n    function _disconnect() {\n      onDisconnectHandlers.forEach((fn) => fn());\n      onMessageHandlers = [];\n      onDisconnectHandlers = [];\n    }\n\n    // This function is called on the client port when the ACK is received from background.\n    // It updates the port's state, completing the connection.\n    function _finalize(win) {\n      remoteWindow = win; // <-- This is the crucial part: learn the destination\n      _ready = true;\n      _drainBuffer();\n    }\n\n    return {\n      name,\n      sender: {\n        id: portId,\n      },\n      onMessage: {\n        addListener(fn) {\n          onMessageHandlers.push(fn);\n        },\n        removeListener(fn) {\n          onMessageHandlers = onMessageHandlers.filter((x) => x !== fn);\n        },\n      },\n      onDisconnect: {\n        addListener(fn) {\n          onDisconnectHandlers.push(fn);\n        },\n        removeListener(fn) {\n          onDisconnectHandlers = onDisconnectHandlers.filter((x) => x !== fn);\n        },\n      },\n      postMessage,\n      disconnect,\n      // Internal methods used by the runtime\n      _receive,\n      _disconnect,\n      _finalize, // Expose the finalizer for the ACK handler\n    };\n  }\n\n  function connect(connectInfo = {}) {\n    if (type === \"background\") {\n      throw new Error(\"Background must use onConnect, not connect()\");\n    }\n    const name = connectInfo.name || \"\";\n    const portId = nextPortId++;\n    // create the client side port\n    // remoteWindow is initially null; it will be set by _finalize upon ACK.\n    const clientPort = makePort(\"client\", portId, name, null);\n    ports[portId] = clientPort;\n\n    // fire the connect event across the bus\n    bus.emit(\"__PORT_CONNECT__\", { portId, name });\n    return clientPort;\n  }\n\n  function onConnect(fn) {\n    if (type !== \"background\") {\n      throw new Error(\"connect event only fires in background\");\n    }\n    onConnectListeners.push(fn);\n  }\n\n  return {\n    // rpc:\n    sendMessage,\n    onMessage: {\n      addListener(fn) {\n        msgListeners.push(fn);\n      },\n      removeListener(fn) {\n        const i = msgListeners.indexOf(fn);\n        if (i >= 0) msgListeners.splice(i, 1);\n      },\n    },\n\n    // port API:\n    connect,\n    onConnect: {\n      addListener(fn) {\n        onConnect(fn);\n      },\n      removeListener(fn) {\n        const i = onConnectListeners.indexOf(fn);\n        if (i >= 0) onConnectListeners.splice(i, 1);\n      },\n    },\n  };\n}\n\n\n// --- Abstraction Layer: PostMessage Target\n\nlet nextRequestId = 1;\nconst pendingRequests = new Map(); // requestId -> { resolve, reject, timeout }\n\nfunction sendAbstractionRequest(method, args = []) {\n  return new Promise((resolve, reject) => {\n    const requestId = nextRequestId++;\n\n    const timeout = setTimeout(() => {\n      pendingRequests.delete(requestId);\n      reject(new Error(`PostMessage request timeout for method: ${method}`));\n    }, 10000);\n\n    pendingRequests.set(requestId, { resolve, reject, timeout });\n\n    window.parent.postMessage({\n      type: \"abstraction-request\",\n      requestId,\n      method,\n      args,\n    });\n  });\n}\n\nwindow.addEventListener(\"message\", (event) => {\n  const { type, requestId, success, result, error } = event.data;\n\n  if (type === \"abstraction-response\") {\n    const pending = pendingRequests.get(requestId);\n    if (pending) {\n      clearTimeout(pending.timeout);\n      pendingRequests.delete(requestId);\n\n      if (success) {\n        pending.resolve(result);\n      } else {\n        const err = new Error(error.message);\n        err.stack = error.stack;\n        pending.reject(err);\n      }\n    }\n  }\n});\n\nasync function _storageSet(items) {\n  return sendAbstractionRequest(\"_storageSet\", [items]);\n}\n\nasync function _storageGet(keys) {\n  return sendAbstractionRequest(\"_storageGet\", [keys]);\n}\n\nasync function _storageRemove(keysToRemove) {\n  return sendAbstractionRequest(\"_storageRemove\", [keysToRemove]);\n}\n\nasync function _storageClear() {\n  return sendAbstractionRequest(\"_storageClear\");\n}\n\nasync function _cookieList(details) {\n  return sendAbstractionRequest(\"_cookieList\", [details]);\n}\n\nasync function _cookieSet(details) {\n  return sendAbstractionRequest(\"_cookieSet\", [details]);\n}\n\nasync function _cookieDelete(details) {\n  return sendAbstractionRequest(\"_cookieDelete\", [details]);\n}\n\nasync function _fetch(url, options) {\n  return sendAbstractionRequest(\"_fetch\", [url, options]);\n}\n\nfunction _registerMenuCommand(name, func) {\n  _warn(\"_registerMenuCommand called from iframe context:\", name);\n  return sendAbstractionRequest(\"_registerMenuCommand\", [\n    name,\n    func.toString(),\n  ]);\n}\n\nfunction _openTab(url, active) {\n  return sendAbstractionRequest(\"_openTab\", [url, active]);\n}\n\nasync function _initStorage() {\n  return sendAbstractionRequest(\"_initStorage\");\n}\n\n\nconst EXTENSION_ASSETS_MAP = {{EXTENSION_ASSETS_MAP}};\n\n// -- Polyfill Implementation\nfunction buildPolyfill({ isBackground = false, isOtherPage = false } = {}) {\n  // Generate a unique context ID for this polyfill instance\n  const contextType = isBackground\n    ? \"background\"\n    : isOtherPage\n      ? \"options\"\n      : \"content\";\n  const contextId = `${contextType}_${Math.random()\n    .toString(36)\n    .substring(2, 15)}`;\n\n  const IS_IFRAME = \"true\" === \"true\";\n  const BUS = (function () {\n    if (globalThis.__BUS) {\n      return globalThis.__BUS;\n    }\n    globalThis.__BUS = createEventBus(\n      \"modern-for-wikipedia\",\n      IS_IFRAME ? \"iframe\" : \"page\"\n    );\n    return globalThis.__BUS;\n  })();\n  const RUNTIME = createRuntime(isBackground ? \"background\" : \"tab\", BUS);\n  const createNoopListeners = () => ({\n    addListener: (callback) => {\n      _log(\"addListener\", callback);\n    },\n    removeListener: (callback) => {\n      _log(\"removeListener\", callback);\n    },\n  });\n  // TODO: Stub\n  const storageChangeListeners = new Set();\n  function broadcastStorageChange(changes, areaName) {\n    storageChangeListeners.forEach((listener) => {\n      listener(changes, areaName);\n    });\n  }\n\n  let REQ_PERMS = [];\n\n  // --- Chrome polyfill\n  let chrome = {\n    extension: {\n      isAllowedIncognitoAccess: () => Promise.resolve(true),\n      sendMessage: (...args) => _messagingHandler.sendMessage(...args),\n    },\n    permissions: {\n      // TODO: Remove origin permission means exclude from origin in startup\n      request: (permissions, callback) => {\n        _log(\"permissions.request\", permissions, callback);\n        if (Array.isArray(permissions)) {\n          REQ_PERMS = [...REQ_PERMS, ...permissions];\n        }\n        if (typeof callback === \"function\") {\n          callback(permissions);\n        }\n        return Promise.resolve(permissions);\n      },\n      contains: (permissions, callback) => {\n        if (typeof callback === \"function\") {\n          callback(true);\n        }\n        return Promise.resolve(true);\n      },\n      getAll: () => {\n        return Promise.resolve({\n          permissions: EXTENSION_PERMISSIONS,\n          origins: ORIGIN_PERMISSIONS,\n        });\n      },\n      onAdded: createNoopListeners(),\n      onRemoved: createNoopListeners(),\n    },\n    i18n: {\n      getUILanguage: () => {\n        return USED_LOCALE || \"en\";\n      },\n      getMessage: (key, substitutions = []) => {\n        if (typeof substitutions === \"string\") {\n          substitutions = [substitutions];\n        }\n        if (typeof LOCALE_KEYS !== \"undefined\" && LOCALE_KEYS[key]) {\n          return LOCALE_KEYS[key].message?.replace(\n            /\\$(\\d+)/g,\n            (match, p1) => substitutions[p1 - 1] || match\n          );\n        }\n        return key;\n      },\n    },\n    alarms: {\n      onAlarm: createNoopListeners(),\n      create: () => {\n        _log(\"alarms.create\", arguments);\n      },\n      get: () => {\n        _log(\"alarms.get\", arguments);\n      },\n    },\n    runtime: {\n      ...RUNTIME,\n      onInstalled: createNoopListeners(),\n      onStartup: createNoopListeners(),\n      // TODO: Postmessage to parent to open options page or call openOptionsPage\n      openOptionsPage: () => {\n        // const url = chrome.runtime.getURL(OPTIONS_PAGE_PATH);\n        // console.log(\"openOptionsPage\", _openTab, url, EXTENSION_ASSETS_MAP);\n        // _openTab(url);\n        if (typeof openOptionsPage === \"function\") {\n          openOptionsPage();\n        } else if (window.parent) {\n          window.parent.postMessage({ type: \"openOptionsPage\" }, \"*\");\n        } else {\n          _warn(\"openOptionsPage not available.\");\n        }\n      },\n      getManifest: () => {\n        // The manifest object will be injected into the scope where buildPolyfill is called\n        if (typeof INJECTED_MANIFEST !== \"undefined\") {\n          return JSON.parse(JSON.stringify(INJECTED_MANIFEST)); // Return deep copy\n        }\n        _warn(\"INJECTED_MANIFEST not found for chrome.runtime.getManifest\");\n        return { name: \"Unknown\", version: \"0.0\", manifest_version: 2 };\n      },\n      getURL: (path) => {\n        if (!path) return \"\";\n        if (path.startsWith(\"/\")) {\n          path = path.substring(1);\n        }\n\n        if (typeof _createAssetUrl === \"function\") {\n          return _createAssetUrl(path);\n        }\n\n        _warn(\n          `chrome.runtime.getURL fallback for '${path}'. Assets may not be available.`\n        );\n        // Attempt a relative path resolution (highly context-dependent and likely wrong)\n        try {\n          if (window.location.protocol.startsWith(\"http\")) {\n            return new URL(path, window.location.href).toString();\n          }\n        } catch (e) {\n          /* ignore error, fallback */\n        }\n        return path;\n      },\n      id: \"polyfilled-extension-\" + Math.random().toString(36).substring(2, 15),\n      lastError: null,\n      getPlatformInfo: async () => {\n        const platform = {\n          os: \"unknown\",\n          arch: \"unknown\",\n          nacl_arch: \"unknown\",\n        };\n\n        if (typeof navigator !== \"undefined\") {\n          const userAgent = navigator.userAgent.toLowerCase();\n          if (userAgent.includes(\"mac\")) platform.os = \"mac\";\n          else if (userAgent.includes(\"win\")) platform.os = \"win\";\n          else if (userAgent.includes(\"linux\")) platform.os = \"linux\";\n          else if (userAgent.includes(\"android\")) platform.os = \"android\";\n          else if (userAgent.includes(\"ios\")) platform.os = \"ios\";\n\n          if (userAgent.includes(\"x86_64\") || userAgent.includes(\"amd64\")) {\n            platform.arch = \"x86-64\";\n          } else if (userAgent.includes(\"i386\") || userAgent.includes(\"i686\")) {\n            platform.arch = \"x86-32\";\n          } else if (userAgent.includes(\"arm\")) {\n            platform.arch = \"arm\";\n          }\n        }\n\n        return platform;\n      },\n      getBrowserInfo: async () => {\n        const info = {\n          name: \"unknown\",\n          version: \"unknown\",\n          buildID: \"unknown\",\n        };\n\n        if (typeof navigator !== \"undefined\") {\n          const userAgent = navigator.userAgent;\n          if (userAgent.includes(\"Chrome\")) {\n            info.name = \"Chrome\";\n            const match = userAgent.match(/Chrome\\/([0-9.]+)/);\n            if (match) info.version = match[1];\n          } else if (userAgent.includes(\"Firefox\")) {\n            info.name = \"Firefox\";\n            const match = userAgent.match(/Firefox\\/([0-9.]+)/);\n            if (match) info.version = match[1];\n          } else if (userAgent.includes(\"Safari\")) {\n            info.name = \"Safari\";\n            const match = userAgent.match(/Version\\/([0-9.]+)/);\n            if (match) info.version = match[1];\n          }\n        }\n\n        return info;\n      },\n    },\n    storage: {\n      local: {\n        get: function (keys, callback) {\n          if (typeof _storageGet !== \"function\")\n            throw new Error(\"_storageGet not defined\");\n\n          const promise = _storageGet(keys);\n\n          if (typeof callback === \"function\") {\n            promise\n              .then((result) => {\n                try {\n                  callback(result);\n                } catch (e) {\n                  _error(\"Error in storage.get callback:\", e);\n                }\n              })\n              .catch((error) => {\n                _error(\"Storage.get error:\", error);\n                callback({});\n              });\n            return;\n          }\n\n          return promise;\n        },\n        set: function (items, callback) {\n          if (typeof _storageSet !== \"function\")\n            throw new Error(\"_storageSet not defined\");\n\n          const promise = _storageSet(items).then((result) => {\n            broadcastStorageChange(items, \"local\");\n            return result;\n          });\n\n          if (typeof callback === \"function\") {\n            promise\n              .then((result) => {\n                try {\n                  callback(result);\n                } catch (e) {\n                  _error(\"Error in storage.set callback:\", e);\n                }\n              })\n              .catch((error) => {\n                _error(\"Storage.set error:\", error);\n                callback();\n              });\n            return;\n          }\n\n          return promise;\n        },\n        remove: function (keys, callback) {\n          if (typeof _storageRemove !== \"function\")\n            throw new Error(\"_storageRemove not defined\");\n\n          const promise = _storageRemove(keys).then((result) => {\n            const changes = {};\n            const keyList = Array.isArray(keys) ? keys : [keys];\n            keyList.forEach((key) => {\n              changes[key] = { oldValue: undefined, newValue: undefined };\n            });\n            broadcastStorageChange(changes, \"local\");\n            return result;\n          });\n\n          if (typeof callback === \"function\") {\n            promise\n              .then((result) => {\n                try {\n                  callback(result);\n                } catch (e) {\n                  _error(\"Error in storage.remove callback:\", e);\n                }\n              })\n              .catch((error) => {\n                _error(\"Storage.remove error:\", error);\n                callback();\n              });\n            return;\n          }\n\n          return promise;\n        },\n        clear: function (callback) {\n          if (typeof _storageClear !== \"function\")\n            throw new Error(\"_storageClear not defined\");\n\n          const promise = _storageClear().then((result) => {\n            broadcastStorageChange({}, \"local\");\n            return result;\n          });\n\n          if (typeof callback === \"function\") {\n            promise\n              .then((result) => {\n                try {\n                  callback(result);\n                } catch (e) {\n                  _error(\"Error in storage.clear callback:\", e);\n                }\n              })\n              .catch((error) => {\n                _error(\"Storage.clear error:\", error);\n                callback();\n              });\n            return;\n          }\n\n          return promise;\n        },\n        onChanged: {\n          addListener: (callback) => {\n            storageChangeListeners.add(callback);\n          },\n          removeListener: (callback) => {\n            storageChangeListeners.delete(callback);\n          },\n        },\n      },\n      sync: {\n        get: function (keys, callback) {\n          _warn(\"chrome.storage.sync polyfill maps to local\");\n          return chrome.storage.local.get(keys, callback);\n        },\n        set: function (items, callback) {\n          _warn(\"chrome.storage.sync polyfill maps to local\");\n\n          const promise = chrome.storage.local.set(items).then((result) => {\n            broadcastStorageChange(items, \"sync\");\n            return result;\n          });\n\n          if (typeof callback === \"function\") {\n            promise\n              .then((result) => {\n                try {\n                  callback(result);\n                } catch (e) {\n                  _error(\"Error in storage.sync.set callback:\", e);\n                }\n              })\n              .catch((error) => {\n                _error(\"Storage.sync.set error:\", error);\n                callback();\n              });\n            return;\n          }\n\n          return promise;\n        },\n        remove: function (keys, callback) {\n          _warn(\"chrome.storage.sync polyfill maps to local\");\n\n          const promise = chrome.storage.local.remove(keys).then((result) => {\n            const changes = {};\n            const keyList = Array.isArray(keys) ? keys : [keys];\n            keyList.forEach((key) => {\n              changes[key] = { oldValue: undefined, newValue: undefined };\n            });\n            broadcastStorageChange(changes, \"sync\");\n            return result;\n          });\n\n          if (typeof callback === \"function\") {\n            promise\n              .then((result) => {\n                try {\n                  callback(result);\n                } catch (e) {\n                  _error(\"Error in storage.sync.remove callback:\", e);\n                }\n              })\n              .catch((error) => {\n                _error(\"Storage.sync.remove error:\", error);\n                callback();\n              });\n            return;\n          }\n\n          return promise;\n        },\n        clear: function (callback) {\n          _warn(\"chrome.storage.sync polyfill maps to local\");\n\n          const promise = chrome.storage.local.clear().then((result) => {\n            broadcastStorageChange({}, \"sync\");\n            return result;\n          });\n\n          if (typeof callback === \"function\") {\n            promise\n              .then((result) => {\n                try {\n                  callback(result);\n                } catch (e) {\n                  _error(\"Error in storage.sync.clear callback:\", e);\n                }\n              })\n              .catch((error) => {\n                _error(\"Storage.sync.clear error:\", error);\n                callback();\n              });\n            return;\n          }\n\n          return promise;\n        },\n        onChanged: {\n          addListener: (callback) => {\n            storageChangeListeners.add(callback);\n          },\n          removeListener: (callback) => {\n            storageChangeListeners.delete(callback);\n          },\n        },\n      },\n      onChanged: {\n        addListener: (callback) => {\n          storageChangeListeners.add(callback);\n        },\n        removeListener: (callback) => {\n          storageChangeListeners.delete(callback);\n        },\n      },\n      managed: {\n        get: function (keys, callback) {\n          _warn(\"chrome.storage.managed polyfill is read-only empty.\");\n\n          const promise = Promise.resolve({});\n\n          if (typeof callback === \"function\") {\n            promise.then((result) => {\n              try {\n                callback(result);\n              } catch (e) {\n                _error(\"Error in storage.managed.get callback:\", e);\n              }\n            });\n            return;\n          }\n\n          return promise;\n        },\n      },\n    },\n    cookies: (function () {\n      const cookieChangeListeners = new Set();\n      function broadcastCookieChange(changeInfo) {\n        cookieChangeListeners.forEach((listener) => {\n          try {\n            listener(changeInfo);\n          } catch (e) {\n            _error(\"Error in cookies.onChanged listener:\", e);\n          }\n        });\n      }\n\n      function handlePromiseCallback(promise, callback) {\n        if (typeof callback === \"function\") {\n          promise\n            .then((result) => callback(result))\n            .catch((error) => {\n              // chrome.runtime.lastError = { message: error.message }; // TODO: Implement lastError\n              _error(error);\n              callback(); // Call with undefined on error\n            });\n          return;\n        }\n        return promise;\n      }\n\n      return {\n        get: function (details, callback) {\n          if (typeof _cookieList !== \"function\") {\n            return handlePromiseCallback(\n              Promise.reject(new Error(\"_cookieList not defined\")),\n              callback\n            );\n          }\n          const promise = _cookieList({\n            url: details.url,\n            name: details.name,\n            storeId: details.storeId,\n            partitionKey: details.partitionKey,\n          }).then((cookies) => {\n            if (!cookies || cookies.length === 0) {\n              return null;\n            }\n            // Sort by path length (longest first), then creation time (earliest first, if available)\n            cookies.sort((a, b) => {\n              const pathLenDiff = (b.path || \"\").length - (a.path || \"\").length;\n              if (pathLenDiff !== 0) return pathLenDiff;\n              return (a.creationTime || 0) - (b.creationTime || 0);\n            });\n            return cookies[0];\n          });\n          return handlePromiseCallback(promise, callback);\n        },\n\n        getAll: function (details, callback) {\n          if (typeof _cookieList !== \"function\") {\n            return handlePromiseCallback(\n              Promise.reject(new Error(\"_cookieList not defined\")),\n              callback\n            );\n          }\n          if (details.partitionKey) {\n            _warn(\n              \"cookies.getAll: partitionKey is not fully supported in this environment.\"\n            );\n          }\n          const promise = _cookieList(details);\n          return handlePromiseCallback(promise, callback);\n        },\n\n        set: function (details, callback) {\n          const promise = (async () => {\n            if (\n              typeof _cookieSet !== \"function\" ||\n              typeof _cookieList !== \"function\"\n            ) {\n              throw new Error(\"_cookieSet or _cookieList not defined\");\n            }\n            if (details.partitionKey) {\n              _warn(\n                \"cookies.set: partitionKey is not fully supported in this environment.\"\n              );\n            }\n\n            const getDetails = {\n              url: details.url,\n              name: details.name,\n              storeId: details.storeId,\n            };\n            const oldCookies = await _cookieList(getDetails);\n            const oldCookie = oldCookies && oldCookies[0];\n\n            if (oldCookie) {\n              broadcastCookieChange({\n                cause: \"overwrite\",\n                cookie: oldCookie,\n                removed: true,\n              });\n            }\n\n            await _cookieSet(details);\n            const newCookies = await _cookieList(getDetails);\n            const newCookie = newCookies && newCookies[0];\n\n            if (newCookie) {\n              broadcastCookieChange({\n                cause: \"explicit\",\n                cookie: newCookie,\n                removed: false,\n              });\n            }\n            return newCookie || null;\n          })();\n          return handlePromiseCallback(promise, callback);\n        },\n\n        remove: function (details, callback) {\n          const promise = (async () => {\n            if (\n              typeof _cookieDelete !== \"function\" ||\n              typeof _cookieList !== \"function\"\n            ) {\n              throw new Error(\"_cookieDelete or _cookieList not defined\");\n            }\n            const oldCookies = await _cookieList(details);\n            const oldCookie = oldCookies && oldCookies[0];\n\n            if (!oldCookie) return null; // Nothing to remove\n\n            await _cookieDelete(details);\n\n            broadcastCookieChange({\n              cause: \"explicit\",\n              cookie: oldCookie,\n              removed: true,\n            });\n\n            return {\n              url: details.url,\n              name: details.name,\n              storeId: details.storeId || \"0\",\n              partitionKey: details.partitionKey,\n            };\n          })();\n          return handlePromiseCallback(promise, callback);\n        },\n\n        getAllCookieStores: function (callback) {\n          const promise = Promise.resolve([\n            { id: \"0\", tabIds: [1] }, // Mock store for the current context\n          ]);\n          return handlePromiseCallback(promise, callback);\n        },\n\n        getPartitionKey: function (details, callback) {\n          _warn(\n            \"chrome.cookies.getPartitionKey is not supported in this environment.\"\n          );\n          const promise = Promise.resolve({ partitionKey: {} }); // Return empty partition key\n          return handlePromiseCallback(promise, callback);\n        },\n\n        onChanged: {\n          addListener: (callback) => {\n            if (typeof callback === \"function\") {\n              cookieChangeListeners.add(callback);\n            }\n          },\n          removeListener: (callback) => {\n            cookieChangeListeners.delete(callback);\n          },\n        },\n      };\n    })(),\n    tabs: {\n      query: async (queryInfo) => {\n        _warn(\"chrome.tabs.query polyfill only returns current tab info.\");\n        const dummyId = Math.floor(Math.random() * 1000) + 1;\n        return [\n          {\n            id: dummyId,\n            url: CURRENT_LOCATION,\n            active: true,\n            windowId: 1,\n            status: \"complete\",\n          },\n        ];\n      },\n      create: async ({ url, active = true }) => {\n        _log(`[Polyfill tabs.create] URL: ${url}`);\n        if (typeof _openTab !== \"function\")\n          throw new Error(\"_openTab not defined\");\n        _openTab(url, active);\n        const dummyId = Math.floor(Math.random() * 1000) + 1001;\n        return Promise.resolve({\n          id: dummyId,\n          url: url,\n          active,\n          windowId: 1,\n        });\n      },\n      sendMessage: async (tabId, message) => {\n        _warn(\n          `chrome.tabs.sendMessage polyfill (to tab ${tabId}) redirects to runtime.sendMessage (current context).`\n        );\n        return chrome.runtime.sendMessage(message);\n      },\n    },\n    notifications: {\n      create: async (notificationId, options) => {\n        try {\n          let id = notificationId;\n          let notificationOptions = options;\n\n          if (typeof notificationId === \"object\" && notificationId !== null) {\n            notificationOptions = notificationId;\n            id = \"notification_\" + Math.random().toString(36).substring(2, 15);\n          } else if (typeof notificationId === \"string\" && options) {\n            id = notificationId;\n            notificationOptions = options;\n          } else {\n            throw new Error(\"Invalid parameters for notifications.create\");\n          }\n\n          if (!notificationOptions || typeof notificationOptions !== \"object\") {\n            throw new Error(\"Notification options must be an object\");\n          }\n\n          const {\n            title,\n            message,\n            iconUrl,\n            type = \"basic\",\n          } = notificationOptions;\n\n          if (!title || !message) {\n            throw new Error(\"Notification must have title and message\");\n          }\n\n          if (\"Notification\" in window) {\n            if (Notification.permission === \"granted\") {\n              const notification = new Notification(title, {\n                body: message,\n                icon: iconUrl,\n                tag: id,\n              });\n\n              _log(`[Notifications] Created notification: ${id}`);\n              return id;\n            } else if (Notification.permission === \"default\") {\n              const permission = await Notification.requestPermission();\n              if (permission === \"granted\") {\n                const notification = new Notification(title, {\n                  body: message,\n                  icon: iconUrl,\n                  tag: id,\n                });\n                _log(\n                  `[Notifications] Created notification after permission: ${id}`\n                );\n                return id;\n              } else {\n                _warn(\"[Notifications] Permission denied for notifications\");\n                return id;\n              }\n            } else {\n              _warn(\"[Notifications] Notifications are blocked\");\n              return id;\n            }\n          } else {\n            _warn(\n              \"[Notifications] Native notifications not supported, using console fallback\"\n            );\n            _log(`[Notification] ${title}: ${message}`);\n            return id;\n          }\n        } catch (error) {\n          _error(\"[Notifications] Error creating notification:\", error.message);\n          throw error;\n        }\n      },\n      clear: async (notificationId) => {\n        _log(`[Notifications] Clear notification: ${notificationId}`);\n        // For native notifications, there's no direct way to clear by ID\n        // This is a limitation of the Web Notifications API\n        return true;\n      },\n      getAll: async () => {\n        _warn(\"[Notifications] getAll not fully supported in polyfill\");\n        return {};\n      },\n      getPermissionLevel: async () => {\n        if (\"Notification\" in window) {\n          const permission = Notification.permission;\n          return { level: permission === \"granted\" ? \"granted\" : \"denied\" };\n        }\n        return { level: \"denied\" };\n      },\n    },\n    contextMenus: {\n      create: (createProperties, callback) => {\n        try {\n          if (!createProperties || typeof createProperties !== \"object\") {\n            throw new Error(\"Context menu create properties must be an object\");\n          }\n\n          const { id, title, contexts = [\"page\"], onclick } = createProperties;\n          const menuId =\n            id || `menu_${Math.random().toString(36).substring(2, 15)}`;\n\n          if (!title || typeof title !== \"string\") {\n            throw new Error(\"Context menu must have a title\");\n          }\n\n          // Store menu items for potential use\n          if (!window._polyfillContextMenus) {\n            window._polyfillContextMenus = new Map();\n          }\n\n          window._polyfillContextMenus.set(menuId, {\n            id: menuId,\n            title,\n            contexts,\n            onclick,\n            enabled: createProperties.enabled !== false,\n          });\n\n          _log(\n            `[ContextMenus] Created context menu item: ${title} (${menuId})`\n          );\n\n          // Try to register a menu command as fallback\n          if (typeof _registerMenuCommand === \"function\") {\n            try {\n              _registerMenuCommand(\n                title,\n                onclick ||\n                  (() => {\n                    _log(`Context menu clicked: ${title}`);\n                  })\n              );\n            } catch (e) {\n              _warn(\n                \"[ContextMenus] Failed to register as menu command:\",\n                e.message\n              );\n            }\n          }\n\n          if (callback && typeof callback === \"function\") {\n            setTimeout(() => callback(), 0);\n          }\n\n          return menuId;\n        } catch (error) {\n          _error(\"[ContextMenus] Error creating context menu:\", error.message);\n          if (callback && typeof callback === \"function\") {\n            setTimeout(() => callback(), 0);\n          }\n          throw error;\n        }\n      },\n      update: (id, updateProperties, callback) => {\n        try {\n          if (\n            !window._polyfillContextMenus ||\n            !window._polyfillContextMenus.has(id)\n          ) {\n            throw new Error(`Context menu item not found: ${id}`);\n          }\n\n          const menuItem = window._polyfillContextMenus.get(id);\n          Object.assign(menuItem, updateProperties);\n\n          _log(`[ContextMenus] Updated context menu item: ${id}`);\n\n          if (callback && typeof callback === \"function\") {\n            setTimeout(() => callback(), 0);\n          }\n        } catch (error) {\n          _error(\"[ContextMenus] Error updating context menu:\", error.message);\n          if (callback && typeof callback === \"function\") {\n            setTimeout(() => callback(), 0);\n          }\n        }\n      },\n      remove: (menuItemId, callback) => {\n        try {\n          if (\n            window._polyfillContextMenus &&\n            window._polyfillContextMenus.has(menuItemId)\n          ) {\n            window._polyfillContextMenus.delete(menuItemId);\n            _log(`[ContextMenus] Removed context menu item: ${menuItemId}`);\n          } else {\n            _warn(\n              `[ContextMenus] Context menu item not found for removal: ${menuItemId}`\n            );\n          }\n\n          if (callback && typeof callback === \"function\") {\n            setTimeout(() => callback(), 0);\n          }\n        } catch (error) {\n          _error(\"[ContextMenus] Error removing context menu:\", error.message);\n          if (callback && typeof callback === \"function\") {\n            setTimeout(() => callback(), 0);\n          }\n        }\n      },\n      removeAll: (callback) => {\n        try {\n          if (window._polyfillContextMenus) {\n            const count = window._polyfillContextMenus.size;\n            window._polyfillContextMenus.clear();\n            _log(`[ContextMenus] Removed all ${count} context menu items`);\n          }\n\n          if (callback && typeof callback === \"function\") {\n            setTimeout(() => callback(), 0);\n          }\n        } catch (error) {\n          _error(\n            \"[ContextMenus] Error removing all context menus:\",\n            error.message\n          );\n          if (callback && typeof callback === \"function\") {\n            setTimeout(() => callback(), 0);\n          }\n        }\n      },\n      onClicked: {\n        addListener: (callback) => {\n          if (!window._polyfillContextMenuListeners) {\n            window._polyfillContextMenuListeners = new Set();\n          }\n          window._polyfillContextMenuListeners.add(callback);\n          _log(\"[ContextMenus] Added click listener\");\n        },\n        removeListener: (callback) => {\n          if (window._polyfillContextMenuListeners) {\n            window._polyfillContextMenuListeners.delete(callback);\n            _log(\"[ContextMenus] Removed click listener\");\n          }\n        },\n      },\n    },\n  };\n\n  const tc = (fn) => {\n    try {\n      fn();\n    } catch (e) {}\n  };\n  const loggingProxyHandler = (_key) => ({\n    get(target, key, receiver) {\n      tc(() => _log(`[${contextType}] [CHROME - ${_key}] Getting ${key}`));\n      return Reflect.get(target, key, receiver);\n    },\n    set(target, key, value, receiver) {\n      tc(() =>\n        _log(`[${contextType}] [CHROME - ${_key}] Setting ${key} to ${value}`)\n      );\n      return Reflect.set(target, key, value, receiver);\n    },\n    has(target, key) {\n      tc(() =>\n        _log(`[${contextType}] [CHROME - ${_key}] Checking if ${key} exists`)\n      );\n      return Reflect.has(target, key);\n    },\n  });\n  chrome = Object.fromEntries(\n    Object.entries(chrome).map(([key, value]) => [\n      key,\n      new Proxy(value, loggingProxyHandler(key)),\n    ])\n  );\n\n  // Alias browser to chrome for common Firefox pattern\n  const browser = new Proxy(chrome, loggingProxyHandler);\n\n  const oldGlobalThis = globalThis;\n  const oldWindow = window;\n  const oldSelf = self;\n  const oldGlobal = globalThis;\n  const __globalsStorage = {};\n\n  const TO_MODIFY = [oldGlobalThis, oldWindow, oldSelf, oldGlobal];\n  const set = (k, v) => {\n    __globalsStorage[k] = v;\n    TO_MODIFY.forEach((target) => {\n      target[k] = v;\n    });\n  };\n  const proxyHandler = {\n    get(target, key, receiver) {\n      try {\n        return __globalsStorage[key] || Reflect.get(target, key, receiver);\n      } catch (e) {\n        _error(\"Error getting\", key, e);\n        return undefined;\n      }\n    },\n    set(target, key, value, receiver) {\n      try {\n        tc(() => _log(`[${contextType}] Setting ${key} to ${value}`));\n        set(key, value);\n        return Reflect.set(target, key, value, receiver);\n      } catch (e) {\n        _error(\"Error setting\", key, value, e);\n        return false;\n      }\n    },\n    has(target, key) {\n      try {\n        return key in __globalsStorage || key in target;\n      } catch (e) {\n        _error(\"Error has\", key, e);\n        return false;\n      }\n    },\n    getOwnPropertyDescriptor(target, key) {\n      try {\n        if (key in __globalsStorage) {\n          return {\n            configurable: true,\n            enumerable: true,\n            writable: true,\n            value: __globalsStorage[key],\n          };\n        }\n        // fall back to the real globalThis\n        const desc = Reflect.getOwnPropertyDescriptor(target, key);\n        // ensure it's configurable so the with‑scope binding logic can override it\n        if (desc && !desc.configurable) {\n          desc.configurable = true;\n        }\n        return desc;\n      } catch (e) {\n        _error(\"Error getOwnPropertyDescriptor\", key, e);\n        return {\n          configurable: true,\n          enumerable: true,\n          writable: true,\n          value: undefined,\n        };\n      }\n    },\n\n    defineProperty(target, key, descriptor) {\n      try {\n        // Normalize descriptor to avoid mixed accessor & data attributes\n        const hasAccessor = \"get\" in descriptor || \"set\" in descriptor;\n\n        if (hasAccessor) {\n          // Build a clean descriptor without value/writable when accessors present\n          const normalized = {\n            configurable:\n              \"configurable\" in descriptor ? descriptor.configurable : true,\n            enumerable:\n              \"enumerable\" in descriptor ? descriptor.enumerable : false,\n          };\n          if (\"get\" in descriptor) normalized.get = descriptor.get;\n          if (\"set\" in descriptor) normalized.set = descriptor.set;\n\n          // Store accessor references for inspection but avoid breaking invariants\n          set(key, {\n            get: descriptor.get,\n            set: descriptor.set,\n          });\n\n          return Reflect.defineProperty(target, key, normalized);\n        }\n\n        // Data descriptor path\n        set(key, descriptor.value);\n        return Reflect.defineProperty(target, key, descriptor);\n      } catch (e) {\n        _error(\"Error defineProperty\", key, descriptor, e);\n        return false;\n      }\n    },\n  };\n\n  // Create proxies once proxyHandler is defined\n  const proxyWindow = new Proxy(oldWindow, proxyHandler);\n  const proxyGlobalThis = new Proxy(oldGlobalThis, proxyHandler);\n  const proxyGlobal = new Proxy(oldGlobal, proxyHandler);\n  const proxySelf = new Proxy(oldSelf, proxyHandler);\n\n  // Seed storage with core globals so lookups succeed inside `with` blocks\n  Object.assign(__globalsStorage, {\n    chrome,\n    browser,\n    window: proxyWindow,\n    globalThis: proxyGlobalThis,\n    global: proxyGlobal,\n    self: proxySelf,\n  });\n\n  const __globals = {\n    chrome,\n    browser,\n    window: proxyWindow,\n    globalThis: proxyGlobalThis,\n    global: proxyGlobal,\n    self: proxySelf,\n    __globals: __globalsStorage,\n  };\n\n  __globalsStorage.contextId = contextId;\n  __globalsStorage.contextType = contextType;\n  __globalsStorage.module = undefined;\n  __globalsStorage.amd = undefined;\n  __globalsStorage.define = undefined;\n\n  return __globals;\n}\n\n\nif (typeof window !== 'undefined') {\n    window.buildPolyfill = buildPolyfill;\n}\n"
 			    let newMap = JSON.parse(JSON.stringify(EXTENSION_ASSETS_MAP));
 			    delete newMap[OPTIONS_PAGE_PATH];
 			    const PASS_ON = Object.fromEntries(Object.entries({
@@ -2639,6 +2625,9 @@ const e=!0,t=e=>e,s="passthrough";let o,c={createHTML:t,createScript:t,createScr
 			        _createAssetUrl,
 			        _matchGlobPattern,
 			        _isWebAccessibleResource,
+			        _log,
+			        _warn,
+			        _error,
 			    }).map(i => {
 			      let out = [...i];
 			      if (typeof i[1] === 'function'){
@@ -2648,11 +2637,11 @@ const e=!0,t=e=>e,s="passthrough";let o,c={createHTML:t,createScript:t,createScr
 			      }
 			      return out;
 			    }))
-			    console.log(PASS_ON);
+			    _log(PASS_ON);
 			    return `
 			    ${Object.entries(PASS_ON).map(i => `const ${i[0]} = ${i[1]};\nwindow[${JSON.stringify(i[0])}] = ${i[0]}`).join('\n')}
 			
-			        console.log("Initialized polyfill", {${Object.keys(PASS_ON).join(', ')}})
+			        _log("Initialized polyfill", {${Object.keys(PASS_ON).join(', ')}})
 			        ${polyfillString.replaceAll("{{EXTENSION_ASSETS_MAP}}", `JSON.parse(atob("${btoa(JSON.stringify(EXTENSION_ASSETS_MAP))}"))`)}
 			
 			        // Initialize the polyfill context for options page
@@ -2667,22 +2656,25 @@ const e=!0,t=e=>e,s="passthrough";let o,c={createHTML:t,createScript:t,createScr
 			}
 			
 			async function main() {
-			    console.log(`[${SCRIPT_NAME}] Initializing...`);
+			    _log(`Initializing...`, performance.now());
 			
 			    if (typeof _initStorage === 'function') {
 			        try {
-			            await _initStorage();
-			            console.log(`[${SCRIPT_NAME}] Storage initialized.`);
+			            _initStorage().then(() => {
+			                _log(`Storage initialized.`);
+			            }).catch(e => {
+			                _error('Error during storage initialization:', e);
+			            });
 			        } catch (e) {
-			            console.error('Error during storage initialization:', e);
+			            _error('Error during storage initialization:', e);
 			        }
 			    }
 			
-			    console.log(`[${SCRIPT_NAME}] Starting content scripts...`);
+			    _log(`Starting content scripts...`);
 			
 			    const currentUrl = window.location.href;
 			    let shouldRunAnyScript = false;
-			    console.log(`[${SCRIPT_NAME}] Checking URL: ${currentUrl}`);
+			    _log(`Checking URL: ${currentUrl}`);
 			
 			    if (CONTENT_SCRIPT_CONFIGS_FOR_MATCHING && CONTENT_SCRIPT_CONFIGS_FOR_MATCHING.length > 0) {
 			        for (const config of CONTENT_SCRIPT_CONFIGS_FOR_MATCHING) {
@@ -2694,17 +2686,17 @@ const e=!0,t=e=>e,s="passthrough";let o,c={createHTML:t,createScript:t,createScr
 			                    }
 			                    return false;
 			                } catch (e) {
-			                    console.error(`[${SCRIPT_NAME}] Error testing match pattern "${pattern}":`, e);
+			                    _error(`Error testing match pattern "${pattern}":`, e);
 			                    return false;
 			                }
 			            })) {
 			                shouldRunAnyScript = true;
-			                console.log(`[${SCRIPT_NAME}] URL match found via config:`, config);
+			                _log(`URL match found via config:`, config);
 			                break;
 			            }
 			        }
 			    } else {
-			        console.log(`[${SCRIPT_NAME}] No content script configurations found in manifest data.`);
+			        _log(`No content script configurations found in manifest data.`);
 			    }
 			
 			
@@ -2713,25 +2705,25 @@ const e=!0,t=e=>e,s="passthrough";let o,c={createHTML:t,createScript:t,createScr
 			        try {
 			            polyfillContext = buildPolyfill({ isBackground: false });
 			        } catch (e) {
-			            console.error(`[${SCRIPT_NAME}] Failed to build polyfill:`, e);
+			            _error(`Failed to build polyfill:`, e);
 			            return;
 			        }
 			
-			        console.log(`[${SCRIPT_NAME}] Polyfill built. Executing combined script logic...`);
+			        _log(`Polyfill built. Executing combined script logic...`);
 			        // async function executeAllScripts({chrome, browser, global, window, globalThis, self, __globals}, extensionCssData) {
 			        await executeAllScripts.call(polyfillContext.globalThis, polyfillContext, extensionCssData);
 			
 			    } else {
-			        console.log(`[${SCRIPT_NAME}] No matching content script patterns for this URL. No scripts will be executed.`);
+			        _log(`No matching content script patterns for this URL. No scripts will be executed.`);
 			    }
 			
 			    if (OPTIONS_PAGE_PATH) {
 			        if (typeof _registerMenuCommand === 'function') {
 			            try {
 			                _registerMenuCommand('Open Options', openOptionsPage);
-			                console.log(`[${SCRIPT_NAME}] Options menu command registered.`);
+			                _log(`Options menu command registered.`);
 			            } catch(e) {
-			                console.error('Failed to register menu command', e);
+			                _error('Failed to register menu command', e);
 			            }
 			        }
 			    }
@@ -2740,18 +2732,18 @@ const e=!0,t=e=>e,s="passthrough";let o,c={createHTML:t,createScript:t,createScr
 			        if (typeof _registerMenuCommand === 'function') {
 			            try {
 			                _registerMenuCommand('Open Popup', openPopupPage);
-			                console.log(`[${SCRIPT_NAME}] Popup menu command registered.`);
+			                _log(`Popup menu command registered.`);
 			            } catch(e) {
-			                console.error('Failed to register popup menu command', e);
+			                _error('Failed to register popup menu command', e);
 			            }
 			        }
 			    }
 			
-			    console.log(`[${SCRIPT_NAME}] Initialization sequence complete.`);
+			    _log(`Initialization sequence complete.`);
 			
 			}
 			
-			main().catch(e => console.error(`[${SCRIPT_NAME}] Error during script initialization:`, e));
+			main().catch(e => _error(`Error during script initialization:`, e));
 			
 			try {
 			    const fnKey = 'OPEN_OPTIONS_PAGE_' + String(SCRIPT_NAME).replace(/\s+/g, '_');

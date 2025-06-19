@@ -24,22 +24,22 @@ async function _initStorage() {
             request.error?.message || "Unknown error"
           }`
         );
-        console.error("IndexedDB initialization error:", error);
+        _error("IndexedDB initialization error:", error);
         reject(error);
       };
 
       request.onsuccess = () => {
         vanillaStorageDB = request.result;
-        console.log("IndexedDB storage initialized successfully");
+        _log("IndexedDB storage initialized successfully");
         resolve(vanillaStorageDB);
 
         vanillaStorageDB.onclose = () => {
-          console.warn("IndexedDB connection closed unexpectedly");
+          _warn("IndexedDB connection closed unexpectedly");
           vanillaStorageDB = null;
         };
 
         vanillaStorageDB.onerror = (event) => {
-          console.error("IndexedDB error:", event.target.error);
+          _error("IndexedDB error:", event.target.error);
         };
       };
 
@@ -51,10 +51,10 @@ async function _initStorage() {
             const store = db.createObjectStore(STORAGE_STORE_NAME, {
               keyPath: "key",
             });
-            console.log("Created IndexedDB object store:", STORAGE_STORE_NAME);
+            _log("Created IndexedDB object store:", STORAGE_STORE_NAME);
           }
         } catch (storeError) {
-          console.error("Error creating object store:", storeError);
+          _error("Error creating object store:", storeError);
           reject(
             new Error(`Failed to create object store: ${storeError.message}`)
           );
@@ -62,14 +62,14 @@ async function _initStorage() {
       };
 
       request.onblocked = () => {
-        console.warn("IndexedDB upgrade blocked by another connection");
+        _warn("IndexedDB upgrade blocked by another connection");
         reject(
           new Error("IndexedDB upgrade blocked. Please close other tabs.")
         );
       };
     } catch (error) {
       const errorMsg = `IndexedDB not supported or initialization failed: ${error.message}`;
-      console.error(errorMsg);
+      _error(errorMsg);
       reject(new Error(errorMsg));
     }
   });
@@ -91,7 +91,7 @@ async function getStorageStore(mode = "readonly") {
     const store = transaction.objectStore(STORAGE_STORE_NAME);
 
     transaction.onerror = () => {
-      console.error("Transaction error:", transaction.error);
+      _error("Transaction error:", transaction.error);
     };
 
     return store;
@@ -157,7 +157,7 @@ async function _storageSet(items) {
 
     const keys = Object.keys(items);
     if (keys.length === 0) {
-      console.warn("No items to set in storage");
+      _warn("No items to set in storage");
       return;
     }
 
@@ -186,13 +186,10 @@ async function _storageSet(items) {
     }
 
     await Promise.all(promises);
-    console.log(
-      `Successfully stored ${keys.length} item(s) to IndexedDB:`,
-      keys
-    );
+    _log(`Successfully stored ${keys.length} item(s) to IndexedDB:`, keys);
   } catch (error) {
     const errorMsg = `Storage set operation failed: ${error.message}`;
-    console.error(errorMsg);
+    _error(errorMsg);
     throw new Error(errorMsg);
   }
 }
@@ -281,7 +278,7 @@ async function _storageGet(keys) {
       }
     }
 
-    console.log(
+    _log(
       `Retrieved ${
         Object.keys(finalResult).length
       } item(s) from IndexedDB storage`
@@ -289,7 +286,7 @@ async function _storageGet(keys) {
     return finalResult;
   } catch (error) {
     const errorMsg = `Storage get operation failed: ${error.message}`;
-    console.error(errorMsg);
+    _error(errorMsg);
     throw new Error(errorMsg);
   }
 }
@@ -308,7 +305,7 @@ async function _storageRemove(keysToRemove) {
     }
 
     if (keyList.length === 0) {
-      console.warn("No keys to remove from storage");
+      _warn("No keys to remove from storage");
       return;
     }
 
@@ -332,13 +329,10 @@ async function _storageRemove(keysToRemove) {
     });
 
     await Promise.all(promises);
-    console.log(
-      `Removed ${keyList.length} item(s) from IndexedDB storage:`,
-      keyList
-    );
+    _log(`Removed ${keyList.length} item(s) from IndexedDB storage:`, keyList);
   } catch (error) {
     const errorMsg = `Storage remove operation failed: ${error.message}`;
-    console.error(errorMsg);
+    _error(errorMsg);
     throw new Error(errorMsg);
   }
 }
@@ -350,7 +344,7 @@ async function _storageClear() {
     return new Promise((resolve, reject) => {
       const request = store.clear();
       request.onsuccess = () => {
-        console.log("Cleared all items from IndexedDB storage");
+        _log("Cleared all items from IndexedDB storage");
         resolve();
       };
       request.onerror = () => {
@@ -365,7 +359,7 @@ async function _storageClear() {
     });
   } catch (error) {
     const errorMsg = `Storage clear operation failed: ${error.message}`;
-    console.error(errorMsg);
+    _error(errorMsg);
     throw new Error(errorMsg);
   }
 }
@@ -446,7 +440,7 @@ async function _cookieSet(details = {}) {
     }
 
     if (details.httpOnly) {
-      console.warn("`httpOnly` flag cannot be set for cookies via JavaScript.");
+      _warn("`httpOnly` flag cannot be set for cookies via JavaScript.");
     }
 
     document.cookie = cookieString;
@@ -523,16 +517,16 @@ async function _fetch(url, options = {}) {
 
 function _registerMenuCommand(name, func) {
   if (!name || typeof name !== "string") {
-    console.warn("Invalid menu command name:", name);
+    _warn("Invalid menu command name:", name);
     return;
   }
 
   if (!func || typeof func !== "function") {
-    console.warn("Invalid menu command function for:", name);
+    _warn("Invalid menu command function for:", name);
     return;
   }
 
-  console.log(`Menu command registered (vanilla mode): ${name}`);
+  _log(`Menu command registered (vanilla mode): ${name}`);
 
   if (!window._vanillaMenuCommands) {
     window._vanillaMenuCommands = new Map();
@@ -541,7 +535,7 @@ function _registerMenuCommand(name, func) {
 
   // Note: In vanilla JS, there's no standard browser equivalent to GM_registerMenuCommand
   // Extensions could implement their own UI for this, but for now we just store it
-  console.warn(
+  _warn(
     `Vanilla menu command registration: "${name}" - No standard browser equivalent available`
   );
 }
@@ -563,7 +557,7 @@ function _openTab(url) {
     const newTab = window.open(url, "_blank", "noopener,noreferrer");
 
     if (!newTab) {
-      console.warn(`Tab opening was blocked by popup blocker for: ${url}`);
+      _warn(`Tab opening was blocked by popup blocker for: ${url}`);
 
       // Fallback: try to create a clickable link for user action
       const fallbackNotification = () => {
@@ -596,7 +590,7 @@ function _openTab(url) {
           }
         }, 10000);
 
-        console.log("Created fallback link for blocked popup:", url);
+        _log("Created fallback link for blocked popup:", url);
       };
 
       // Only create fallback if we're in a document context
@@ -604,11 +598,11 @@ function _openTab(url) {
         fallbackNotification();
       }
     } else {
-      console.log(`Successfully opened tab: ${url}`);
+      _log(`Successfully opened tab: ${url}`);
     }
   } catch (error) {
     const errorMsg = `Tab opening failed: ${error.message}`;
-    console.error(errorMsg);
+    _error(errorMsg);
     throw new Error(errorMsg);
   }
 }

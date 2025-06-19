@@ -1,5 +1,4 @@
-const SCRIPT_NAME = {{SCRIPT_NAME}};
-
+// Other globals currently defined at this spot: SCRIPT_NAME, _log, _warn, _error
 const INJECTED_MANIFEST = {{INJECTED_MANIFEST}};
 const CONTENT_SCRIPT_CONFIGS_FOR_MATCHING = {{CONTENT_SCRIPT_CONFIGS_FOR_MATCHING_ONLY}};
 const OPTIONS_PAGE_PATH = {{OPTIONS_PAGE_PATH}};
@@ -59,8 +58,17 @@ function _testBlobCSP() {
 
 let CAN_USE_BLOB_CSP = false;
 
-_testBlobCSP().then((result) => {
-  CAN_USE_BLOB_CSP = result;
+const waitForDOMEnd = () => {
+    if (document.readyState === 'loading') {
+      return new Promise(resolve => document.addEventListener('DOMContentLoaded', resolve, { once: true }));
+    }
+    return Promise.resolve();
+};
+
+waitForDOMEnd().then(() => {
+  _testBlobCSP().then((result) => {
+    CAN_USE_BLOB_CSP = result;
+  });
 });
 
 function _base64ToBlob(base64, mimeType = 'application/octet-stream') {
@@ -103,7 +111,7 @@ function _createAssetUrl(path = '') {
   if (path.startsWith('/')) path = path.slice(1);
   const assetData = EXTENSION_ASSETS_MAP[path];
   if (typeof assetData === 'undefined') {
-    console.warn('[runtime.getURL] Asset not found for', path);
+    _warn('[runtime.getURL] Asset not found for', path);
     return path;
   }
 
@@ -148,7 +156,7 @@ function _matchGlobPattern(pattern, path) {
     const regex = new RegExp(regexPattern);
     return regex.test(path);
   } catch (e) {
-    console.error(`Invalid glob pattern: ${pattern}`, e);
+    _error(`Invalid glob pattern: ${pattern}`, e);
     return false;
   }
 }
@@ -260,7 +268,7 @@ function closePopupModal() {
 
 async function openPopupPage() {
     if (!POPUP_PAGE_PATH || typeof EXTENSION_ASSETS_MAP === 'undefined') {
-        console.warn('No popup page available.');
+        _warn('No popup page available.');
         return;
     }
     await openModal({
@@ -273,7 +281,7 @@ async function openPopupPage() {
 
 async function openOptionsPage() {
     if (!OPTIONS_PAGE_PATH || typeof EXTENSION_ASSETS_MAP === 'undefined') {
-        console.warn('No options page available.');
+        _warn('No options page available.');
         return;
     }
     await openModal({
@@ -384,7 +392,7 @@ async function openModal(config) {
     const { type, pagePath, defaultTitle, closeFn } = config;
     const html = EXTENSION_ASSETS_MAP[pagePath];
     if (!html) {
-        console.warn(`${defaultTitle} HTML not found in asset map`);
+        _warn(`${defaultTitle} HTML not found in asset map`);
         return;
     }
 
@@ -459,7 +467,7 @@ async function openModal(config) {
         doc.head.insertAdjacentElement("afterbegin", script);
         iframe.srcdoc = doc.documentElement.outerHTML;
     } catch (e) {
-        console.error('Error generating complete polyfill for iframe', e);
+        _error('Error generating complete polyfill for iframe', e);
         iframe.srcdoc = html;
     }
 }
@@ -485,6 +493,9 @@ function generateCompletePolyfillForIframe() {
         _createAssetUrl,
         _matchGlobPattern,
         _isWebAccessibleResource,
+        _log,
+        _warn,
+        _error,
     }).map(i => {
       let out = [...i];
       if (typeof i[1] === 'function'){
@@ -494,11 +505,11 @@ function generateCompletePolyfillForIframe() {
       }
       return out;
     }))
-    console.log(PASS_ON);
+    _log(PASS_ON);
     return `
     ${Object.entries(PASS_ON).map(i => `const ${i[0]} = ${i[1]};\nwindow[${JSON.stringify(i[0])}] = ${i[0]}`).join('\n')}
 
-        console.log("Initialized polyfill", {${Object.keys(PASS_ON).join(', ')}})
+        _log("Initialized polyfill", {${Object.keys(PASS_ON).join(', ')}})
         ${polyfillString.replaceAll("{{EXTENSION_ASSETS_MAP}}", `JSON.parse(atob("${btoa(JSON.stringify(EXTENSION_ASSETS_MAP))}"))`)}
 
         // Initialize the polyfill context for options page
@@ -513,22 +524,25 @@ function generateCompletePolyfillForIframe() {
 }
 
 async function main() {
-    console.log(`[${SCRIPT_NAME}] Initializing...`);
+    _log(`Initializing...`, performance.now());
 
     if (typeof _initStorage === 'function') {
         try {
-            await _initStorage();
-            console.log(`[${SCRIPT_NAME}] Storage initialized.`);
+            _initStorage().then(() => {
+                _log(`Storage initialized.`);
+            }).catch(e => {
+                _error('Error during storage initialization:', e);
+            });
         } catch (e) {
-            console.error('Error during storage initialization:', e);
+            _error('Error during storage initialization:', e);
         }
     }
 
-    console.log(`[${SCRIPT_NAME}] Starting content scripts...`);
+    _log(`Starting content scripts...`);
 
     const currentUrl = window.location.href;
     let shouldRunAnyScript = false;
-    console.log(`[${SCRIPT_NAME}] Checking URL: ${currentUrl}`);
+    _log(`Checking URL: ${currentUrl}`);
 
     if (CONTENT_SCRIPT_CONFIGS_FOR_MATCHING && CONTENT_SCRIPT_CONFIGS_FOR_MATCHING.length > 0) {
         for (const config of CONTENT_SCRIPT_CONFIGS_FOR_MATCHING) {
@@ -540,17 +554,17 @@ async function main() {
                     }
                     return false;
                 } catch (e) {
-                    console.error(`[${SCRIPT_NAME}] Error testing match pattern "${pattern}":`, e);
+                    _error(`Error testing match pattern "${pattern}":`, e);
                     return false;
                 }
             })) {
                 shouldRunAnyScript = true;
-                console.log(`[${SCRIPT_NAME}] URL match found via config:`, config);
+                _log(`URL match found via config:`, config);
                 break;
             }
         }
     } else {
-        console.log(`[${SCRIPT_NAME}] No content script configurations found in manifest data.`);
+        _log(`No content script configurations found in manifest data.`);
     }
 
 
@@ -559,25 +573,25 @@ async function main() {
         try {
             polyfillContext = buildPolyfill({ isBackground: false });
         } catch (e) {
-            console.error(`[${SCRIPT_NAME}] Failed to build polyfill:`, e);
+            _error(`Failed to build polyfill:`, e);
             return;
         }
 
-        console.log(`[${SCRIPT_NAME}] Polyfill built. Executing combined script logic...`);
+        _log(`Polyfill built. Executing combined script logic...`);
         // async function executeAllScripts({chrome, browser, global, window, globalThis, self, __globals}, extensionCssData) {
         await executeAllScripts.call(polyfillContext.globalThis, polyfillContext, extensionCssData);
 
     } else {
-        console.log(`[${SCRIPT_NAME}] No matching content script patterns for this URL. No scripts will be executed.`);
+        _log(`No matching content script patterns for this URL. No scripts will be executed.`);
     }
 
     if (OPTIONS_PAGE_PATH) {
         if (typeof _registerMenuCommand === 'function') {
             try {
                 _registerMenuCommand('Open Options', openOptionsPage);
-                console.log(`[${SCRIPT_NAME}] Options menu command registered.`);
+                _log(`Options menu command registered.`);
             } catch(e) {
-                console.error('Failed to register menu command', e);
+                _error('Failed to register menu command', e);
             }
         }
     }
@@ -586,18 +600,18 @@ async function main() {
         if (typeof _registerMenuCommand === 'function') {
             try {
                 _registerMenuCommand('Open Popup', openPopupPage);
-                console.log(`[${SCRIPT_NAME}] Popup menu command registered.`);
+                _log(`Popup menu command registered.`);
             } catch(e) {
-                console.error('Failed to register popup menu command', e);
+                _error('Failed to register popup menu command', e);
             }
         }
     }
 
-    console.log(`[${SCRIPT_NAME}] Initialization sequence complete.`);
+    _log(`Initialization sequence complete.`);
 
 }
 
-main().catch(e => console.error(`[${SCRIPT_NAME}] Error during script initialization:`, e));
+main().catch(e => _error(`Error during script initialization:`, e));
 
 try {
     const fnKey = 'OPEN_OPTIONS_PAGE_' + String(SCRIPT_NAME).replace(/\s+/g, '_');

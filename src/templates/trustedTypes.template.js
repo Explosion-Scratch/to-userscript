@@ -1,4 +1,5 @@
 // Needed on some sites for scripts to set .innerHTML of things.
+console.log("Script start:", performance.now());
 const overwrite_default = true;
 const passThroughFunc = (string) => string;
 const TTPName = "passthrough";

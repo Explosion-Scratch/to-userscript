@@ -76,7 +76,7 @@ async function _fetch(url, options) {
 }
 
 function _registerMenuCommand(name, func) {
-  console.warn("_registerMenuCommand called from iframe context:", name);
+  _warn("_registerMenuCommand called from iframe context:", name);
   return sendAbstractionRequest("_registerMenuCommand", [
     name,
     func.toString(),

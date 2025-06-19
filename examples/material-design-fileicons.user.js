@@ -23,9 +23,17 @@
 // @run-at      document-start
 // ==/UserScript==
 
-const e=!0,t=e=>e,s="passthrough";let o,c={createHTML:t,createScript:t,createScriptURL:t},i=!1;const r=()=>{try{void 0!==window.isSecureContext&&window.isSecureContext&&window.trustedTypes&&window.trustedTypes.createPolicy&&(i=!0,trustedTypes.defaultPolicy?(d("TT Default Policy exists"),c=window.trustedTypes.createPolicy("default",c),o=trustedTypes.defaultPolicy,d(`Created custom passthrough policy, in case the default policy is too restrictive: Use Policy '${s}' in var 'TTP':`,c)):o=c=window.trustedTypes.createPolicy("default",c),d("Trusted-Type Policies: TTP:",c,"TTP_default:",o))}catch(e){d(e)}},d=(...e)=>{console.log(...e)};r();
+console.log("Script start:",performance.now());const e=!0,t=e=>e,o="passthrough";let s,c={createHTML:t,createScript:t,createScriptURL:t},i=!1;const r=()=>{try{void 0!==window.isSecureContext&&window.isSecureContext&&window.trustedTypes&&window.trustedTypes.createPolicy&&(i=!0,trustedTypes.defaultPolicy?(l("TT Default Policy exists"),c=window.trustedTypes.createPolicy("default",c),s=trustedTypes.defaultPolicy,l(`Created custom passthrough policy, in case the default policy is too restrictive: Use Policy '${o}' in var 'TTP':`,c)):s=c=window.trustedTypes.createPolicy("default",c),l("Trusted-Type Policies: TTP:",c,"TTP_default:",s))}catch(e){l(e)}},l=(...e)=>{console.log(...e)};r();
 
 (function() {
+    // #region Logging
+	
+	  const SCRIPT_NAME = "Material Icons for GitHub";
+	  const _log = (...args) => {};
+	  const _warn = (...args) => console.warn(`[${typeof SCRIPT_NAME === 'string' ? SCRIPT_NAME : '[USERSCRIPT_CONVERTED]'}]`, ...args);
+	  const _error = (...args) => console.error(`[${typeof SCRIPT_NAME === 'string' ? SCRIPT_NAME : '[USERSCRIPT_CONVERTED]'}]`, ...args);
+	  
+    // #endregion
     // #region Unified Polyfill
 	
 // #region Messaging implementation
@@ -33,7 +41,7 @@ const e=!0,t=e=>e,s="passthrough";let o,c={createHTML:t,createScript:t,createScr
 		function createEventBus(
 		  scopeId,
 		  type = "page", // "page" or "iframe"
-		  { allowedOrigin = "*", children = [], parentWindow = null } = {},
+		  { allowedOrigin = "*", children = [], parentWindow = null } = {}
 		) {
 		  if (!scopeId) throw new Error("createEventBus requires a scopeId");
 		
@@ -57,7 +65,7 @@ const e=!0,t=e=>e,s="passthrough";let o,c={createHTML:t,createScript:t,createScr
 		    }
 		
 		    (handlers[event] || []).forEach((fn) =>
-		      fn(payload, { origin: ev.origin, source: ev.source }),
+		      fn(payload, { origin: ev.origin, source: ev.source })
 		    );
 		  }
 		
@@ -111,7 +119,7 @@ const e=!0,t=e=>e,s="passthrough";let o,c={createHTML:t,createScript:t,createScr
 		
 		      // For broadcast messages (no 'to' target), dispatch locally first.
 		      (handlers[event] || []).forEach((fn) =>
-		        fn(payload, { origin: location.origin, source: window }),
+		        fn(payload, { origin: location.origin, source: window })
 		      );
 		
 		      // Then propagate the broadcast to other windows.
@@ -189,7 +197,7 @@ const e=!0,t=e=>e,s="passthrough";let o,c={createHTML:t,createScript:t,createScr
 		            }
 		            return ret;
 		          } catch (e) {
-		            console.error(e);
+		            _error(e);
 		          }
 		        })
 		        .filter((r) => r !== undefined);
@@ -293,7 +301,7 @@ const e=!0,t=e=>e,s="passthrough";let o,c={createHTML:t,createScript:t,createScr
 		      bus.emit(
 		        "__PORT_MESSAGE__",
 		        { portId, msg, senderInstanceId: instanceId },
-		        { to: remoteWindow },
+		        { to: remoteWindow }
 		      );
 		    }
 		
@@ -309,7 +317,7 @@ const e=!0,t=e=>e,s="passthrough";let o,c={createHTML:t,createScript:t,createScr
 		      // envelope: { msg, senderInstanceId }
 		      if (envelope.senderInstanceId === instanceId) return; // Don't dispatch to self
 		      onMessageHandlers.forEach((fn) =>
-		        fn(envelope.msg, { id: portId, tab: { id: source } }),
+		        fn(envelope.msg, { id: portId, tab: { id: source } })
 		      );
 		    }
 		
@@ -485,9 +493,7 @@ const e=!0,t=e=>e,s="passthrough";let o,c={createHTML:t,createScript:t,createScr
 			    }
 			  });
 			
-			  console.log(
-			    "[PostMessage Handler] Abstraction layer message handler initialized"
-			  );
+			  _log("[PostMessage Handler] Abstraction layer message handler initialized");
 			})();
 			
 			
@@ -503,7 +509,7 @@ const e=!0,t=e=>e,s="passthrough";let o,c={createHTML:t,createScript:t,createScr
 			    }
 			    return Promise.resolve();
 			  } catch (e) {
-			    console.error("GM_setValue error:", e);
+			    _error("GM_setValue error:", e);
 			    return Promise.reject(e);
 			  }
 			}
@@ -538,7 +544,7 @@ const e=!0,t=e=>e,s="passthrough";let o,c={createHTML:t,createScript:t,createScr
 			      requestedKeys = [...keyList];
 			      defaults = keys;
 			    } else {
-			      console.error("_storageGet error: Invalid keys format", keys);
+			      _error("_storageGet error: Invalid keys format", keys);
 			      return Promise.reject(new Error("Invalid keys format for get"));
 			    }
 			
@@ -561,7 +567,7 @@ const e=!0,t=e=>e,s="passthrough";let o,c={createHTML:t,createScript:t,createScr
 			
 			    return Promise.resolve(finalResult);
 			  } catch (e) {
-			    console.error("GM_getValue/GM_listValues error:", e);
+			    _error("GM_getValue/GM_listValues error:", e);
 			    return Promise.reject(e);
 			  }
 			}
@@ -574,7 +580,7 @@ const e=!0,t=e=>e,s="passthrough";let o,c={createHTML:t,createScript:t,createScr
 			    } else if (Array.isArray(keysToRemove)) {
 			      keyList = keysToRemove;
 			    } else {
-			      console.error("_storageRemove error: Invalid keys format", keysToRemove);
+			      _error("_storageRemove error: Invalid keys format", keysToRemove);
 			      return Promise.reject(new Error("Invalid keys format for remove"));
 			    }
 			
@@ -583,7 +589,7 @@ const e=!0,t=e=>e,s="passthrough";let o,c={createHTML:t,createScript:t,createScr
 			    }
 			    return Promise.resolve();
 			  } catch (e) {
-			    console.error("GM_deleteValue error:", e);
+			    _error("GM_deleteValue error:", e);
 			    return Promise.reject(e);
 			  }
 			}
@@ -594,7 +600,7 @@ const e=!0,t=e=>e,s="passthrough";let o,c={createHTML:t,createScript:t,createScr
 			    await Promise.all(keys.map((key) => GM_deleteValue(key)));
 			    return Promise.resolve();
 			  } catch (e) {
-			    console.error("GM_listValues/GM_deleteValue error during clear:", e);
+			    _error("GM_listValues/GM_deleteValue error during clear:", e);
 			    return Promise.reject(e);
 			  }
 			}
@@ -737,7 +743,7 @@ const e=!0,t=e=>e,s="passthrough";let o,c={createHTML:t,createScript:t,createScr
 			        },
 			      });
 			    } catch (e) {
-			      console.error("_fetch (GM_xmlhttpRequest) error:", e);
+			      _error("_fetch (GM_xmlhttpRequest) error:", e);
 			      reject(e);
 			    }
 			  });
@@ -748,10 +754,10 @@ const e=!0,t=e=>e,s="passthrough";let o,c={createHTML:t,createScript:t,createScr
 			    try {
 			      GM_registerMenuCommand(name, func);
 			    } catch (e) {
-			      console.error("GM_registerMenuCommand failed:", e);
+			      _error("GM_registerMenuCommand failed:", e);
 			    }
 			  } else {
-			    console.warn("GM_registerMenuCommand not available.");
+			    _warn("GM_registerMenuCommand not available.");
 			  }
 			}
 			
@@ -760,14 +766,14 @@ const e=!0,t=e=>e,s="passthrough";let o,c={createHTML:t,createScript:t,createScr
 			    try {
 			      GM_openInTab(url, { loadInBackground: !active });
 			    } catch (e) {
-			      console.error("GM_openInTab failed:", e);
+			      _error("GM_openInTab failed:", e);
 			    }
 			  } else {
-			    console.warn("GM_openInTab not available, using window.open as fallback.");
+			    _warn("GM_openInTab not available, using window.open as fallback.");
 			    try {
 			      window.open(url);
 			    } catch (e) {
-			      console.error("window.open fallback failed:", e);
+			      _error("window.open fallback failed:", e);
 			    }
 			  }
 			}
@@ -1921,10 +1927,10 @@ const e=!0,t=e=>e,s="passthrough";let o,c={createHTML:t,createScript:t,createScr
 		  const RUNTIME = createRuntime(isBackground ? "background" : "tab", BUS);
 		  const createNoopListeners = () => ({
 		    addListener: (callback) => {
-		      console.log("addListener", callback);
+		      _log("addListener", callback);
 		    },
 		    removeListener: (callback) => {
-		      console.log("removeListener", callback);
+		      _log("removeListener", callback);
 		    },
 		  });
 		  // TODO: Stub
@@ -1946,7 +1952,7 @@ const e=!0,t=e=>e,s="passthrough";let o,c={createHTML:t,createScript:t,createScr
 			    permissions: {
 			      // TODO: Remove origin permission means exclude from origin in startup
 			      request: (permissions, callback) => {
-			        console.log("permissions.request", permissions, callback);
+			        _log("permissions.request", permissions, callback);
 			        if (Array.isArray(permissions)) {
 			          REQ_PERMS = [...REQ_PERMS, ...permissions];
 			        }
@@ -1990,10 +1996,10 @@ const e=!0,t=e=>e,s="passthrough";let o,c={createHTML:t,createScript:t,createScr
 			    alarms: {
 			      onAlarm: createNoopListeners(),
 			      create: () => {
-			        console.log("alarms.create", arguments);
+			        _log("alarms.create", arguments);
 			      },
 			      get: () => {
-			        console.log("alarms.get", arguments);
+			        _log("alarms.get", arguments);
 			      },
 			    },
 			    runtime: {
@@ -2010,7 +2016,7 @@ const e=!0,t=e=>e,s="passthrough";let o,c={createHTML:t,createScript:t,createScr
 			        } else if (window.parent) {
 			          window.parent.postMessage({ type: "openOptionsPage" }, "*");
 			        } else {
-			          console.warn("openOptionsPage not available.");
+			          _warn("openOptionsPage not available.");
 			        }
 			      },
 			      getManifest: () => {
@@ -2018,9 +2024,7 @@ const e=!0,t=e=>e,s="passthrough";let o,c={createHTML:t,createScript:t,createScr
 			        if (typeof INJECTED_MANIFEST !== "undefined") {
 			          return JSON.parse(JSON.stringify(INJECTED_MANIFEST)); // Return deep copy
 			        }
-			        console.warn(
-			          "INJECTED_MANIFEST not found for chrome.runtime.getManifest"
-			        );
+			        _warn("INJECTED_MANIFEST not found for chrome.runtime.getManifest");
 			        return { name: "Unknown", version: "0.0", manifest_version: 2 };
 			      },
 			      getURL: (path) => {
@@ -2033,7 +2037,7 @@ const e=!0,t=e=>e,s="passthrough";let o,c={createHTML:t,createScript:t,createScr
 			          return _createAssetUrl(path);
 			        }
 			
-			        console.warn(
+			        _warn(
 			          `chrome.runtime.getURL fallback for '${path}'. Assets may not be available.`
 			        );
 			        // Attempt a relative path resolution (highly context-dependent and likely wrong)
@@ -2115,11 +2119,11 @@ const e=!0,t=e=>e,s="passthrough";let o,c={createHTML:t,createScript:t,createScr
 			                try {
 			                  callback(result);
 			                } catch (e) {
-			                  console.error("Error in storage.get callback:", e);
+			                  _error("Error in storage.get callback:", e);
 			                }
 			              })
 			              .catch((error) => {
-			                console.error("Storage.get error:", error);
+			                _error("Storage.get error:", error);
 			                callback({});
 			              });
 			            return;
@@ -2142,11 +2146,11 @@ const e=!0,t=e=>e,s="passthrough";let o,c={createHTML:t,createScript:t,createScr
 			                try {
 			                  callback(result);
 			                } catch (e) {
-			                  console.error("Error in storage.set callback:", e);
+			                  _error("Error in storage.set callback:", e);
 			                }
 			              })
 			              .catch((error) => {
-			                console.error("Storage.set error:", error);
+			                _error("Storage.set error:", error);
 			                callback();
 			              });
 			            return;
@@ -2174,11 +2178,11 @@ const e=!0,t=e=>e,s="passthrough";let o,c={createHTML:t,createScript:t,createScr
 			                try {
 			                  callback(result);
 			                } catch (e) {
-			                  console.error("Error in storage.remove callback:", e);
+			                  _error("Error in storage.remove callback:", e);
 			                }
 			              })
 			              .catch((error) => {
-			                console.error("Storage.remove error:", error);
+			                _error("Storage.remove error:", error);
 			                callback();
 			              });
 			            return;
@@ -2201,11 +2205,11 @@ const e=!0,t=e=>e,s="passthrough";let o,c={createHTML:t,createScript:t,createScr
 			                try {
 			                  callback(result);
 			                } catch (e) {
-			                  console.error("Error in storage.clear callback:", e);
+			                  _error("Error in storage.clear callback:", e);
 			                }
 			              })
 			              .catch((error) => {
-			                console.error("Storage.clear error:", error);
+			                _error("Storage.clear error:", error);
 			                callback();
 			              });
 			            return;
@@ -2224,11 +2228,11 @@ const e=!0,t=e=>e,s="passthrough";let o,c={createHTML:t,createScript:t,createScr
 			      },
 			      sync: {
 			        get: function (keys, callback) {
-			          console.warn("chrome.storage.sync polyfill maps to local");
+			          _warn("chrome.storage.sync polyfill maps to local");
 			          return chrome.storage.local.get(keys, callback);
 			        },
 			        set: function (items, callback) {
-			          console.warn("chrome.storage.sync polyfill maps to local");
+			          _warn("chrome.storage.sync polyfill maps to local");
 			
 			          const promise = chrome.storage.local.set(items).then((result) => {
 			            broadcastStorageChange(items, "sync");
@@ -2241,11 +2245,11 @@ const e=!0,t=e=>e,s="passthrough";let o,c={createHTML:t,createScript:t,createScr
 			                try {
 			                  callback(result);
 			                } catch (e) {
-			                  console.error("Error in storage.sync.set callback:", e);
+			                  _error("Error in storage.sync.set callback:", e);
 			                }
 			              })
 			              .catch((error) => {
-			                console.error("Storage.sync.set error:", error);
+			                _error("Storage.sync.set error:", error);
 			                callback();
 			              });
 			            return;
@@ -2254,7 +2258,7 @@ const e=!0,t=e=>e,s="passthrough";let o,c={createHTML:t,createScript:t,createScr
 			          return promise;
 			        },
 			        remove: function (keys, callback) {
-			          console.warn("chrome.storage.sync polyfill maps to local");
+			          _warn("chrome.storage.sync polyfill maps to local");
 			
 			          const promise = chrome.storage.local.remove(keys).then((result) => {
 			            const changes = {};
@@ -2272,11 +2276,11 @@ const e=!0,t=e=>e,s="passthrough";let o,c={createHTML:t,createScript:t,createScr
 			                try {
 			                  callback(result);
 			                } catch (e) {
-			                  console.error("Error in storage.sync.remove callback:", e);
+			                  _error("Error in storage.sync.remove callback:", e);
 			                }
 			              })
 			              .catch((error) => {
-			                console.error("Storage.sync.remove error:", error);
+			                _error("Storage.sync.remove error:", error);
 			                callback();
 			              });
 			            return;
@@ -2285,7 +2289,7 @@ const e=!0,t=e=>e,s="passthrough";let o,c={createHTML:t,createScript:t,createScr
 			          return promise;
 			        },
 			        clear: function (callback) {
-			          console.warn("chrome.storage.sync polyfill maps to local");
+			          _warn("chrome.storage.sync polyfill maps to local");
 			
 			          const promise = chrome.storage.local.clear().then((result) => {
 			            broadcastStorageChange({}, "sync");
@@ -2298,11 +2302,11 @@ const e=!0,t=e=>e,s="passthrough";let o,c={createHTML:t,createScript:t,createScr
 			                try {
 			                  callback(result);
 			                } catch (e) {
-			                  console.error("Error in storage.sync.clear callback:", e);
+			                  _error("Error in storage.sync.clear callback:", e);
 			                }
 			              })
 			              .catch((error) => {
-			                console.error("Storage.sync.clear error:", error);
+			                _error("Storage.sync.clear error:", error);
 			                callback();
 			              });
 			            return;
@@ -2329,7 +2333,7 @@ const e=!0,t=e=>e,s="passthrough";let o,c={createHTML:t,createScript:t,createScr
 			      },
 			      managed: {
 			        get: function (keys, callback) {
-			          console.warn("chrome.storage.managed polyfill is read-only empty.");
+			          _warn("chrome.storage.managed polyfill is read-only empty.");
 			
 			          const promise = Promise.resolve({});
 			
@@ -2338,7 +2342,7 @@ const e=!0,t=e=>e,s="passthrough";let o,c={createHTML:t,createScript:t,createScr
 			              try {
 			                callback(result);
 			              } catch (e) {
-			                console.error("Error in storage.managed.get callback:", e);
+			                _error("Error in storage.managed.get callback:", e);
 			              }
 			            });
 			            return;
@@ -2355,7 +2359,7 @@ const e=!0,t=e=>e,s="passthrough";let o,c={createHTML:t,createScript:t,createScr
 			          try {
 			            listener(changeInfo);
 			          } catch (e) {
-			            console.error("Error in cookies.onChanged listener:", e);
+			            _error("Error in cookies.onChanged listener:", e);
 			          }
 			        });
 			      }
@@ -2366,7 +2370,7 @@ const e=!0,t=e=>e,s="passthrough";let o,c={createHTML:t,createScript:t,createScr
 			            .then((result) => callback(result))
 			            .catch((error) => {
 			              // chrome.runtime.lastError = { message: error.message }; // TODO: Implement lastError
-			              console.error(error);
+			              _error(error);
 			              callback(); // Call with undefined on error
 			            });
 			          return;
@@ -2410,7 +2414,7 @@ const e=!0,t=e=>e,s="passthrough";let o,c={createHTML:t,createScript:t,createScr
 			            );
 			          }
 			          if (details.partitionKey) {
-			            console.warn(
+			            _warn(
 			              "cookies.getAll: partitionKey is not fully supported in this environment."
 			            );
 			          }
@@ -2427,7 +2431,7 @@ const e=!0,t=e=>e,s="passthrough";let o,c={createHTML:t,createScript:t,createScr
 			              throw new Error("_cookieSet or _cookieList not defined");
 			            }
 			            if (details.partitionKey) {
-			              console.warn(
+			              _warn(
 			                "cookies.set: partitionKey is not fully supported in this environment."
 			              );
 			            }
@@ -2503,7 +2507,7 @@ const e=!0,t=e=>e,s="passthrough";let o,c={createHTML:t,createScript:t,createScr
 			        },
 			
 			        getPartitionKey: function (details, callback) {
-			          console.warn(
+			          _warn(
 			            "chrome.cookies.getPartitionKey is not supported in this environment."
 			          );
 			          const promise = Promise.resolve({ partitionKey: {} }); // Return empty partition key
@@ -2524,9 +2528,7 @@ const e=!0,t=e=>e,s="passthrough";let o,c={createHTML:t,createScript:t,createScr
 			    })(),
 			    tabs: {
 			      query: async (queryInfo) => {
-			        console.warn(
-			          "chrome.tabs.query polyfill only returns current tab info."
-			        );
+			        _warn("chrome.tabs.query polyfill only returns current tab info.");
 			        const dummyId = Math.floor(Math.random() * 1000) + 1;
 			        return [
 			          {
@@ -2539,7 +2541,7 @@ const e=!0,t=e=>e,s="passthrough";let o,c={createHTML:t,createScript:t,createScr
 			        ];
 			      },
 			      create: async ({ url, active = true }) => {
-			        console.log(`[Polyfill tabs.create] URL: ${url}`);
+			        _log(`[Polyfill tabs.create] URL: ${url}`);
 			        if (typeof _openTab !== "function")
 			          throw new Error("_openTab not defined");
 			        _openTab(url, active);
@@ -2552,7 +2554,7 @@ const e=!0,t=e=>e,s="passthrough";let o,c={createHTML:t,createScript:t,createScr
 			        });
 			      },
 			      sendMessage: async (tabId, message) => {
-			        console.warn(
+			        _warn(
 			          `chrome.tabs.sendMessage polyfill (to tab ${tabId}) redirects to runtime.sendMessage (current context).`
 			        );
 			        return chrome.runtime.sendMessage(message);
@@ -2597,7 +2599,7 @@ const e=!0,t=e=>e,s="passthrough";let o,c={createHTML:t,createScript:t,createScr
 			                tag: id,
 			              });
 			
-			              console.log(`[Notifications] Created notification: ${id}`);
+			              _log(`[Notifications] Created notification: ${id}`);
 			              return id;
 			            } else if (Notification.permission === "default") {
 			              const permission = await Notification.requestPermission();
@@ -2607,43 +2609,38 @@ const e=!0,t=e=>e,s="passthrough";let o,c={createHTML:t,createScript:t,createScr
 			                  icon: iconUrl,
 			                  tag: id,
 			                });
-			                console.log(
+			                _log(
 			                  `[Notifications] Created notification after permission: ${id}`
 			                );
 			                return id;
 			              } else {
-			                console.warn(
-			                  "[Notifications] Permission denied for notifications"
-			                );
+			                _warn("[Notifications] Permission denied for notifications");
 			                return id;
 			              }
 			            } else {
-			              console.warn("[Notifications] Notifications are blocked");
+			              _warn("[Notifications] Notifications are blocked");
 			              return id;
 			            }
 			          } else {
-			            console.warn(
+			            _warn(
 			              "[Notifications] Native notifications not supported, using console fallback"
 			            );
-			            console.log(`[Notification] ${title}: ${message}`);
+			            _log(`[Notification] ${title}: ${message}`);
 			            return id;
 			          }
 			        } catch (error) {
-			          console.error(
-			            "[Notifications] Error creating notification:",
-			            error.message
-			          );
+			          _error("[Notifications] Error creating notification:", error.message);
 			          throw error;
 			        }
 			      },
 			      clear: async (notificationId) => {
-			        console.log(`[Notifications] Clear notification: ${notificationId}`);
+			        _log(`[Notifications] Clear notification: ${notificationId}`);
 			        // For native notifications, there's no direct way to clear by ID
 			        // This is a limitation of the Web Notifications API
 			        return true;
 			      },
 			      getAll: async () => {
-			        console.warn("[Notifications] getAll not fully supported in polyfill");
+			        _warn("[Notifications] getAll not fully supported in polyfill");
 			        return {};
 			      },
 			      getPermissionLevel: async () => {
@@ -2682,7 +2679,7 @@ const e=!0,t=e=>e,s="passthrough";let o,c={createHTML:t,createScript:t,createScr
 			            enabled: createProperties.enabled !== false,
 			          });
 			
-			          console.log(
+			          _log(
 			            `[ContextMenus] Created context menu item: ${title} (${menuId})`
 			          );
 			
@@ -2693,11 +2690,11 @@ const e=!0,t=e=>e,s="passthrough";let o,c={createHTML:t,createScript:t,createScr
 			                title,
 			                onclick ||
 			                  (() => {
-			                    console.log(`Context menu clicked: ${title}`);
+			                    _log(`Context menu clicked: ${title}`);
 			                  })
 			              );
 			            } catch (e) {
-			              console.warn(
+			              _warn(
 			                "[ContextMenus] Failed to register as menu command:",
 			                e.message
 			              );
@@ -2710,10 +2707,7 @@ const e=!0,t=e=>e,s="passthrough";let o,c={createHTML:t,createScript:t,createScr
 			
 			          return menuId;
 			        } catch (error) {
-			          console.error(
-			            "[ContextMenus] Error creating context menu:",
-			            error.message
-			          );
+			          _error("[ContextMenus] Error creating context menu:", error.message);
 			          if (callback && typeof callback === "function") {
 			            setTimeout(() => callback(), 0);
 			          }
@@ -2732,16 +2726,13 @@ const e=!0,t=e=>e,s="passthrough";let o,c={createHTML:t,createScript:t,createScr
 			          const menuItem = window._polyfillContextMenus.get(id);
 			          Object.assign(menuItem, updateProperties);
 			
-			          console.log(`[ContextMenus] Updated context menu item: ${id}`);
+			          _log(`[ContextMenus] Updated context menu item: ${id}`);
 			
 			          if (callback && typeof callback === "function") {
 			            setTimeout(() => callback(), 0);
 			          }
 			        } catch (error) {
-			          console.error(
-			            "[ContextMenus] Error updating context menu:",
-			            error.message
-			          );
+			          _error("[ContextMenus] Error updating context menu:", error.message);
 			          if (callback && typeof callback === "function") {
 			            setTimeout(() => callback(), 0);
 			          }
@@ -2754,11 +2745,9 @@ const e=!0,t=e=>e,s="passthrough";let o,c={createHTML:t,createScript:t,createScr
 			            window._polyfillContextMenus.has(menuItemId)
 			          ) {
 			            window._polyfillContextMenus.delete(menuItemId);
-			            console.log(
-			              `[ContextMenus] Removed context menu item: ${menuItemId}`
-			            );
+			            _log(`[ContextMenus] Removed context menu item: ${menuItemId}`);
 			          } else {
-			            console.warn(
+			            _warn(
 			              `[ContextMenus] Context menu item not found for removal: ${menuItemId}`
 			            );
 			          }
@@ -2767,10 +2756,7 @@ const e=!0,t=e=>e,s="passthrough";let o,c={createHTML:t,createScript:t,createScr
 			            setTimeout(() => callback(), 0);
 			          }
 			        } catch (error) {
-			          console.error(
-			            "[ContextMenus] Error removing context menu:",
-			            error.message
-			          );
+			          _error("[ContextMenus] Error removing context menu:", error.message);
 			          if (callback && typeof callback === "function") {
 			            setTimeout(() => callback(), 0);
 			          }
@@ -2781,16 +2767,14 @@ const e=!0,t=e=>e,s="passthrough";let o,c={createHTML:t,createScript:t,createScr
 			          if (window._polyfillContextMenus) {
 			            const count = window._polyfillContextMenus.size;
 			            window._polyfillContextMenus.clear();
-			            console.log(
-			              `[ContextMenus] Removed all ${count} context menu items`
-			            );
+			            _log(`[ContextMenus] Removed all ${count} context menu items`);
 			          }
 			
 			          if (callback && typeof callback === "function") {
 			            setTimeout(() => callback(), 0);
 			          }
 			        } catch (error) {
-			          console.error(
+			          _error(
 			            "[ContextMenus] Error removing all context menus:",
 			            error.message
 			          );
@@ -2805,12 +2789,12 @@ const e=!0,t=e=>e,s="passthrough";let o,c={createHTML:t,createScript:t,createScr
 			            window._polyfillContextMenuListeners = new Set();
 			          }
 			          window._polyfillContextMenuListeners.add(callback);
-			          console.log("[ContextMenus] Added click listener");
+			          _log("[ContextMenus] Added click listener");
 			        },
 			        removeListener: (callback) => {
 			          if (window._polyfillContextMenuListeners) {
 			            window._polyfillContextMenuListeners.delete(callback);
-			            console.log("[ContextMenus] Removed click listener");
+			            _log("[ContextMenus] Removed click listener");
 			          }
 			        },
 			      },
@@ -2824,24 +2808,18 @@ const e=!0,t=e=>e,s="passthrough";let o,c={createHTML:t,createScript:t,createScr
 			  };
 			  const loggingProxyHandler = (_key) => ({
 			    get(target, key, receiver) {
-			      tc(() =>
-			        console.log(`[${contextType}] [CHROME - ${_key}] Getting ${key}`)
-			      );
+			      tc(() => _log(`[${contextType}] [CHROME - ${_key}] Getting ${key}`));
 			      return Reflect.get(target, key, receiver);
 			    },
 			    set(target, key, value, receiver) {
 			      tc(() =>
-			        console.log(
-			          `[${contextType}] [CHROME - ${_key}] Setting ${key} to ${value}`
-			        )
+			        _log(`[${contextType}] [CHROME - ${_key}] Setting ${key} to ${value}`)
 			      );
 			      return Reflect.set(target, key, value, receiver);
 			    },
 			    has(target, key) {
 			      tc(() =>
-			        console.log(
-			          `[${contextType}] [CHROME - ${_key}] Checking if ${key} exists`
-			        )
+			        _log(`[${contextType}] [CHROME - ${_key}] Checking if ${key} exists`)
 			      );
 			      return Reflect.has(target, key);
 			    },
@@ -2874,17 +2852,17 @@ const e=!0,t=e=>e,s="passthrough";let o,c={createHTML:t,createScript:t,createScr
 			      try {
 			        return __globalsStorage[key] || Reflect.get(target, key, receiver);
 			      } catch (e) {
-			        console.error("Error getting", key, e);
+			        _error("Error getting", key, e);
 			        return undefined;
 			      }
 			    },
 			    set(target, key, value, receiver) {
 			      try {
-			        tc(() => console.log(`[${contextType}] Setting ${key} to ${value}`));
+			        tc(() => _log(`[${contextType}] Setting ${key} to ${value}`));
 			        set(key, value);
 			        return Reflect.set(target, key, value, receiver);
 			      } catch (e) {
-			        console.error("Error setting", key, value, e);
+			        _error("Error setting", key, value, e);
 			        return false;
 			      }
 			    },
@@ -2892,7 +2870,7 @@ const e=!0,t=e=>e,s="passthrough";let o,c={createHTML:t,createScript:t,createScr
 			      try {
 			        return key in __globalsStorage || key in target;
 			      } catch (e) {
-			        console.error("Error has", key, e);
+			        _error("Error has", key, e);
 			        return false;
 			      }
 			    },
@@ -2914,7 +2892,7 @@ const e=!0,t=e=>e,s="passthrough";let o,c={createHTML:t,createScript:t,createScr
 			        }
 			        return desc;
 			      } catch (e) {
-			        console.error("Error getOwnPropertyDescriptor", key, e);
+			        _error("Error getOwnPropertyDescriptor", key, e);
 			        return {
 			          configurable: true,
 			          enumerable: true,
@@ -2953,7 +2931,7 @@ const e=!0,t=e=>e,s="passthrough";let o,c={createHTML:t,createScript:t,createScr
 			        set(key, descriptor.value);
 			        return Reflect.defineProperty(target, key, descriptor);
 			      } catch (e) {
-			        console.error("Error defineProperty", key, descriptor, e);
+			        _error("Error defineProperty", key, descriptor, e);
 			        return false;
 			      }
 			    },
@@ -3007,8 +2985,7 @@ const e=!0,t=e=>e,s="passthrough";let o,c={createHTML:t,createScript:t,createScr
 	
    // #endregion
     // #region Orchestration Logic
-	const SCRIPT_NAME = "Material Icons for GitHub";
-	
+	// Other globals currently defined at this spot: SCRIPT_NAME, _log, _warn, _error
 	const INJECTED_MANIFEST = {"manifest_version":3,"name":"Material Icons for GitHub","version":"1.10.4","description":"Material icons for the file browser of popular websites like GitHub, Azure, Bitbucket etc.","permissions":["storage","activeTab","scripting"],"optional_permissions":[],"content_scripts":[{"matches":["*://github.com/*","*://bitbucket.org/*","*://dev.azure.com/*","*://*.visualstudio.com/*","*://gitea.com/*","*://gitlab.com/*","*://gitee.com/*","*://sourceforge.net/*"],"js":["main.js"],"css":["injected-styles.css"],"run_at":"document_start"}],"options_ui":{"page":"options.html","open_in_tab":true},"browser_action":{},"page_action":{},"action":{"default_title":"Material Icons Settings","default_popup":"settings-popup.html","default_icon":{"16":"icon-16.png","32":"icon-32.png","48":"icon-48.png","128":"icon-128.png"}},"icons":{"16":"icon-16.png","32":"icon-32.png","48":"icon-48.png","128":"icon-128.png"},"web_accessible_resources":[{"resources":["*.svg"],"matches":["*://github.com/*","*://bitbucket.org/*","*://dev.azure.com/*","*://*.visualstudio.com/*","*://gitea.com/*","*://gitlab.com/*","*://gitee.com/*","*://sourceforge.net/*","*://*/*"]}],"background":{},"_id":"material-icons-for-github"};
 	const CONTENT_SCRIPT_CONFIGS_FOR_MATCHING = [
 	  {
@@ -3123,8 +3100,17 @@ const e=!0,t=e=>e,s="passthrough";let o,c={createHTML:t,createScript:t,createScr
 	
 	let CAN_USE_BLOB_CSP = false;
 	
-	_testBlobCSP().then((result) => {
-	  CAN_USE_BLOB_CSP = result;
+	const waitForDOMEnd = () => {
+	    if (document.readyState === 'loading') {
+	      return new Promise(resolve => document.addEventListener('DOMContentLoaded', resolve, { once: true }));
+	    }
+	    return Promise.resolve();
+	};
+	
+	waitForDOMEnd().then(() => {
+	  _testBlobCSP().then((result) => {
+	    CAN_USE_BLOB_CSP = result;
+	  });
 	});
 	
 	function _base64ToBlob(base64, mimeType = 'application/octet-stream') {
@@ -3167,7 +3153,7 @@ const e=!0,t=e=>e,s="passthrough";let o,c={createHTML:t,createScript:t,createScr
 	  if (path.startsWith('/')) path = path.slice(1);
 	  const assetData = EXTENSION_ASSETS_MAP[path];
 	  if (typeof assetData === 'undefined') {
-	    console.warn('[runtime.getURL] Asset not found for', path);
+	    _warn('[runtime.getURL] Asset not found for', path);
 	    return path;
 	  }
 	
@@ -3212,7 +3198,7 @@ const e=!0,t=e=>e,s="passthrough";let o,c={createHTML:t,createScript:t,createScr
 	    const regex = new RegExp(regexPattern);
 	    return regex.test(path);
 	  } catch (e) {
-	    console.error(`Invalid glob pattern: ${pattern}`, e);
+	    _error(`Invalid glob pattern: ${pattern}`, e);
 	    return false;
 	  }
 	}
@@ -3258,24 +3244,24 @@ const e=!0,t=e=>e,s="passthrough";let o,c={createHTML:t,createScript:t,createScr
 		async function executeAllScripts(globalThis, extensionCssData) {
 		  const {chrome, browser, global, window, self} = globalThis;
 		  const scriptName = "Material Icons for GitHub";
-		  console.log(`[${scriptName}] Starting execution phases...`);
+		  _log(`Starting execution phases...`);
 		
   // #region Document Start
 			  if (typeof document !== 'undefined') {
-			    console.log(`[${scriptName}] Executing document-start phase...`);
+			    _log(`Executing document-start phase...`);
 			    
 			        const cssKey_0 = "injected-styles.css";
 			    try {
 			      if (extensionCssData[cssKey_0]) {
-			        console.log(`  Injecting CSS (start): ${cssKey_0}`);
+			        _log(`  Injecting CSS (start): ${cssKey_0}`);
 			        const style = document.createElement('style');
 			        style.textContent = extensionCssData[cssKey_0];
 			        (document.head || document.documentElement).appendChild(style);
 			      } else { console.warn(`  CSS not found (start): ${cssKey_0}`); }
-			    } catch(e) { console.error(`  Failed injecting CSS (${cssKey_0}) in phase start`, e, extensionCssData); }
+			    } catch(e) { _error(`  Failed injecting CSS (${cssKey_0}) in phase start`, e, extensionCssData); }
 			  
 			    const scriptPaths = ["main.js"];
-			   console.log(`  Executing JS (start): ${scriptPaths}`);
+			   _log(`  Executing JS (start): ${scriptPaths}`);
 			
 			   try {
 			       // Keep variables from being redeclared for global scope, but also make them apply to global scope. (Theoretically)
@@ -3315,77 +3301,77 @@ const e=!0,t=e=>e,s="passthrough";let o,c={createHTML:t,createScript:t,createScr
 			        .gl-link svg.gl-icon[data-testid="doc-code-icon"]`,detect:'head meta[content="GitLab"]'},canSelfHost:!0,isCustom:!1,getIsLightTheme:()=>!document.querySelector("body")?.classList.contains("gl-dark"),getIsDirectory:({icon:e})=>e.getAttribute("data-testid")==="folder-icon",getIsSubmodule:({row:e})=>e.querySelector("a")?.classList.contains("is-submodule")||!1,getIsSymlink:({icon:e})=>e.getAttribute("data-testid")==="symlink-icon",replaceIcon:(e,s)=>{e.getAttributeNames().forEach(o=>o!=="src"&&!/^data-material-icons-extension/.test(o)&&s.setAttribute(o,e.getAttribute(o)??"")),s.style.height="16px",s.style.width="16px",e.parentNode?.replaceChild(s,e)},onAdd:()=>{},transformFileName:(e,s,o)=>e.parentElement?.parentElement?.classList.contains("js-assets-list")&&o.includes("Source code")?o.replace(/\s+\((.*?)\)$/,".$1"):o}}function Me(){return{name:"sourceforge",domains:[{host:"sourceforge.net",test:/^sourceforge\.net$/}],selectors:{row:"table#files_list tr, #content_base tr td:first-child",filename:'th[headers="files_name_h"], td:first-child > a.icon',icon:'th[headers="files_name_h"] > a, a.icon > i.fa',detect:null},canSelfHost:!1,isCustom:!1,getIsLightTheme:()=>!0,getIsDirectory:({row:e,icon:s})=>s.nodeName==="I"?s.classList.contains("fa-folder"):e.classList.contains("folder"),getIsSubmodule:()=>!1,getIsSymlink:({icon:e})=>e.nodeName==="I"?e.classList.contains("fa-star"):!1,replaceIcon:(e,s)=>{if(s.style.verticalAlign="text-bottom",e.nodeName==="I")s.style.height="14px",s.style.width="14px",e.parentNode?.replaceChild(s,e);else{if(e.querySelector('img[data-material-icons-extension="icon"]'))return;s.style.height="20px",s.style.width="20px";let o=e.querySelector("svg");o?o.parentNode?.replaceChild(s,o):e.prepend(s)}},onAdd:()=>{},transformFileName:(e,s,o)=>o}}var zs={azure:$e,bitbucket:Ie,gitea:qe,gitee:Pe,github:Se,gitlab:Te,sourceforge:Me},te={};for(let e of Object.values(zs)){let s=e();te[s.name]=s}function nn(e){return e.replace(/[-[\]{}()*+!<=:?./\\^$|#\s,]/g,"\\$&")}var rn=(e,s)=>{s=typeof s=="string"?zs[s]:s;let o=s();o.isCustom=!0,o.name=e,o.domains=[{host:e,test:new RegExp(`^${nn(e)}$`)}],te[e]=o};var tn=()=>As().then(e=>{for(let[s,o]of Object.entries(e))te[s]||rn(s,o);return te}),Cs=e=>(e.startsWith("http")?e=new URL(e).host:e=new URL(`http://${e}`).host,tn().then(s=>{for(let o of Object.values(s))for(let n of o.domains)if(n.test.test(e))return o;return null}));var $s=async()=>{Be();let{href:e}=window.location;await ln(e)},ln=async e=>{let s=await Cs(e);if(!s)return;let o=await C("iconPack"),n=await C("fileIconBindings"),r=await C("folderIconBindings"),t=await C("languageIconBindings"),l=await C("extEnabled");!await C("extEnabled","default")||!l||(ws(s,o,n,r,t),W("iconPack",()=>Ns(s)))},Fe={init:$s,guessProvider:e=>{for(let[s,o]of Object.entries(e))if(document.querySelector(o))return s;return null}};Ls.default.runtime.onMessage.addListener((e,s,o)=>{if(!Fe[e.cmd])return o(null);if(e.cmd==="init")return Fe.init(),o(null);if(e.cmd==="guessProvider"){let n=Fe[e.cmd]((e.args||[])[0]);return o(n)}});$s();})();
 			// END: main.js
 			;}
-			   } catch(e) { console.error(`  Error executing scripts ${scriptPaths}`, e); }
+			   } catch(e) { _error(`  Error executing scripts ${scriptPaths}`, e); }
 			  
 			  } else {
-			      console.log(`[${scriptName}] Skipping document-start phase (no document).`);
+			      _log(`Skipping document-start phase (no document).`);
 			  }
 			
 			  /*
   // #endregion
   // #region Wait for Document End DOMContentLoaded ---
 			  if (typeof document !== 'undefined' && document.readyState === 'loading') {
-			    console.log(`[${scriptName}] Waiting for DOMContentLoaded...`);
+			    _log(`Waiting for DOMContentLoaded...`);
 			    await new Promise(resolve => document.addEventListener('DOMContentLoaded', resolve, { once: true }));
-			    console.log(`[${scriptName}] DOMContentLoaded fired.`);
+			    _log(`DOMContentLoaded fired.`);
 			  } else if (typeof document !== 'undefined') {
-			    console.log(`[${scriptName}] DOMContentLoaded already passed or not applicable.`);
+			    _log(`DOMContentLoaded already passed or not applicable.`);
 			  }
 			  */
 			
   // #endregion
   // #region Document End
 			   if (typeof document !== 'undefined') {
-			    console.log(`[${scriptName}] Executing document-end phase...`);
+			    _log(`Executing document-end phase...`);
 			    
 			    const scriptPaths = [];
-			   console.log(`  Executing JS (end): ${scriptPaths}`);
+			   _log(`  Executing JS (end): ${scriptPaths}`);
 			
 			   try {
 			       // Keep variables from being redeclared for global scope, but also make them apply to global scope. (Theoretically)
 			      with (globalThis){;
 			
 			;}
-			   } catch(e) { console.error(`  Error executing scripts ${scriptPaths}`, e); }
+			   } catch(e) { _error(`  Error executing scripts ${scriptPaths}`, e); }
 			  
 			  } else {
-			      console.log(`[${scriptName}] Skipping document-end phase (no document).`);
+			      _log(`Skipping document-end phase (no document).`);
 			  }
 			
-			  /*
+			  
   // #endregion
   // #region Wait for Document Idle
-			  console.log(`[${scriptName}] Waiting for document idle state...`);
+			  _log(`Waiting for document idle state...`);
 			  if (typeof window !== 'undefined' && typeof window.requestIdleCallback === 'function') {
 			      await new Promise(resolve => window.requestIdleCallback(resolve, { timeout: 2000 })); // 2-second timeout fallback
-			      console.log(`[${scriptName}] requestIdleCallback fired or timed out.`);
+			      _log(`requestIdleCallback fired or timed out.`);
 			  } else {
 			      // Fallback: wait a short period after DOMContentLoaded/current execution if requestIdleCallback is unavailable
 			      await new Promise(resolve => setTimeout(resolve, 50));
-			      console.log(`[${scriptName}] Idle fallback timer completed.`);
+			      _log(`Idle fallback timer completed.`);
 			  }
-			  */
+			  
 			
   // #endregion
   // #region Document Idle
 			   if (typeof document !== 'undefined') {
-			    console.log(`[${scriptName}] Executing document-idle phase...`);
+			    _log(`Executing document-idle phase...`);
 			    
 			    const scriptPaths = [];
-			   console.log(`  Executing JS (idle): ${scriptPaths}`);
+			   _log(`  Executing JS (idle): ${scriptPaths}`);
 			
 			   try {
 			       // Keep variables from being redeclared for global scope, but also make them apply to global scope. (Theoretically)
 			      with (globalThis){;
 			
 			;}
-			   } catch(e) { console.error(`  Error executing scripts ${scriptPaths}`, e); }
+			   } catch(e) { _error(`  Error executing scripts ${scriptPaths}`, e); }
 			  
 			  } else {
-			      console.log(`[${scriptName}] Skipping document-idle phase (no document).`);
+			      _log(`Skipping document-idle phase (no document).`);
 			  }
 			
-			  console.log(`[${scriptName}] All execution phases complete, re-firing load events.`);
+			  _log(`All execution phases complete, re-firing load events.`);
 			  document.dispatchEvent(new Event("DOMContentLoaded", {
 			    bubbles: true,
 			    cancelable: true
@@ -3464,7 +3450,7 @@ const e=!0,t=e=>e,s="passthrough";let o,c={createHTML:t,createScript:t,createScr
 			
 			async function openPopupPage() {
 			    if (!POPUP_PAGE_PATH || typeof EXTENSION_ASSETS_MAP === 'undefined') {
-			        console.warn('No popup page available.');
+			        _warn('No popup page available.');
 			        return;
 			    }
 			    await openModal({
@@ -3477,7 +3463,7 @@ const e=!0,t=e=>e,s="passthrough";let o,c={createHTML:t,createScript:t,createScr
 			
 			async function openOptionsPage() {
 			    if (!OPTIONS_PAGE_PATH || typeof EXTENSION_ASSETS_MAP === 'undefined') {
-			        console.warn('No options page available.');
+			        _warn('No options page available.');
 			        return;
 			    }
 			    await openModal({
@@ -3589,7 +3575,7 @@ const e=!0,t=e=>e,s="passthrough";let o,c={createHTML:t,createScript:t,createScr
 			    const { type, pagePath, defaultTitle, closeFn } = config;
 			    const html = EXTENSION_ASSETS_MAP[pagePath];
 			    if (!html) {
-			        console.warn(`${defaultTitle} HTML not found in asset map`);
+			        _warn(`${defaultTitle} HTML not found in asset map`);
 			        return;
 			    }
 			
@@ -3665,13 +3651,13 @@ const e=!0,t=e=>e,s="passthrough";let o,c={createHTML:t,createScript:t,createScr
 			        doc.head.insertAdjacentElement("afterbegin", script);
 			        iframe.srcdoc = doc.documentElement.outerHTML;
 			    } catch (e) {
-			        console.error('Error generating complete polyfill for iframe', e);
+			        _error('Error generating complete polyfill for iframe', e);
 			        iframe.srcdoc = html;
 			    }
 			}
 			
 			function generateCompletePolyfillForIframe() {
-			    const polyfillString = "\n// -- Messaging implementation\n\nfunction createEventBus(\n  scopeId,\n  type = \"page\", // \"page\" or \"iframe\"\n  { allowedOrigin = \"*\", children = [], parentWindow = null } = {},\n) {\n  if (!scopeId) throw new Error(\"createEventBus requires a scopeId\");\n\n  const handlers = {};\n\n  function handleIncoming(ev) {\n    if (allowedOrigin !== \"*\" && ev.origin !== allowedOrigin) return;\n\n    const msg = ev.data;\n    if (!msg || msg.__eventBus !== true || msg.scopeId !== scopeId) return;\n\n    const { event, payload } = msg;\n\n    // PAGE: if it's an INIT from an iframe, adopt it\n    if (type === \"page\" && event === \"__INIT__\") {\n      const win = ev.source;\n      if (win && !children.includes(win)) {\n        children.push(win);\n      }\n      return;\n    }\n\n    (handlers[event] || []).forEach((fn) =>\n      fn(payload, { origin: ev.origin, source: ev.source }),\n    );\n  }\n\n  window.addEventListener(\"message\", handleIncoming);\n\n  function emitTo(win, event, payload) {\n    const envelope = {\n      __eventBus: true,\n      scopeId,\n      event,\n      payload,\n    };\n    win.postMessage(envelope, allowedOrigin);\n  }\n\n  // IFRAME: announce to page on startup\n  if (type === \"iframe\") {\n    setTimeout(() => {\n      const pw = parentWindow || window.parent;\n      if (pw && pw.postMessage) {\n        emitTo(pw, \"__INIT__\", null);\n      }\n    }, 0);\n  }\n\n  return {\n    on(event, fn) {\n      handlers[event] = handlers[event] || [];\n      handlers[event].push(fn);\n    },\n    off(event, fn) {\n      if (!handlers[event]) return;\n      handlers[event] = handlers[event].filter((h) => h !== fn);\n    },\n    /**\n     * Emits an event.\n     * @param {string} event - The event name.\n     * @param {any} payload - The event payload.\n     * @param {object} [options] - Emission options.\n     * @param {Window} [options.to] - A specific window to target. If provided, message is ONLY sent to the target.\n     */\n    emit(event, payload, { to } = {}) {\n      // If a specific target window is provided, send only to it and DO NOT dispatch locally.\n      // This prevents a port from receiving its own messages.\n      if (to) {\n        if (to && typeof to.postMessage === \"function\") {\n          emitTo(to, event, payload);\n        }\n        return; // Exit after targeted send.\n      }\n\n      // For broadcast messages (no 'to' target), dispatch locally first.\n      (handlers[event] || []).forEach((fn) =>\n        fn(payload, { origin: location.origin, source: window }),\n      );\n\n      // Then propagate the broadcast to other windows.\n      if (type === \"page\") {\n        children.forEach((win) => emitTo(win, event, payload));\n      } else {\n        const pw = parentWindow || window.parent;\n        if (pw && pw.postMessage) {\n          emitTo(pw, event, payload);\n        }\n      }\n    },\n  };\n}\n\nfunction createRuntime(type = \"background\", bus) {\n  let nextId = 1;\n  const pending = {};\n  const msgListeners = [];\n\n  let nextPortId = 1;\n  const ports = {};\n  const onConnectListeners = [];\n\n  function parseArgs(args) {\n    let target, message, options, callback;\n    const arr = [...args];\n    if (arr.length === 0) {\n      throw new Error(\"sendMessage requires at least one argument\");\n    }\n    if (arr.length === 1) {\n      return { message: arr[0] };\n    }\n    // last object could be options\n    if (\n      arr.length &&\n      typeof arr[arr.length - 1] === \"object\" &&\n      !Array.isArray(arr[arr.length - 1])\n    ) {\n      options = arr.pop();\n    }\n    // last function is callback\n    if (arr.length && typeof arr[arr.length - 1] === \"function\") {\n      callback = arr.pop();\n    }\n    if (\n      arr.length === 2 &&\n      (typeof arr[0] === \"string\" || typeof arr[0] === \"number\")\n    ) {\n      [target, message] = arr;\n    } else {\n      [message] = arr;\n    }\n    return { target, message, options, callback };\n  }\n\n  if (type === \"background\") {\n    bus.on(\"__REQUEST__\", ({ id, message }, { source }) => {\n      let responded = false,\n        isAsync = false;\n      function sendResponse(resp) {\n        if (responded) return;\n        responded = true;\n        // Target the response directly back to the window that sent the request.\n        bus.emit(\"__RESPONSE__\", { id, response: resp }, { to: source });\n      }\n      const results = msgListeners\n        .map((fn) => {\n          try {\n            // msg, sender, sendResponse\n            const ret = fn(message, { id, tab: { id: source } }, sendResponse);\n            if (ret === true || (ret && typeof ret.then === \"function\")) {\n              isAsync = true;\n              return ret;\n            }\n            return ret;\n          } catch (e) {\n            console.error(e);\n          }\n        })\n        .filter((r) => r !== undefined);\n\n      const promises = results.filter((r) => r && typeof r.then === \"function\");\n      if (!isAsync && promises.length === 0) {\n        const out = results.length === 1 ? results[0] : results;\n        sendResponse(out);\n      } else if (promises.length) {\n        Promise.all(promises).then((vals) => {\n          if (!responded) {\n            const out = vals.length === 1 ? vals[0] : vals;\n            sendResponse(out);\n          }\n        });\n      }\n    });\n  }\n\n  if (type !== \"background\") {\n    bus.on(\"__RESPONSE__\", ({ id, response }) => {\n      const entry = pending[id];\n      if (!entry) return;\n      entry.resolve(response);\n      if (entry.callback) entry.callback(response);\n      delete pending[id];\n    });\n  }\n\n  function sendMessage(...args) {\n    // Background should be able to send message to itself\n    // if (type === \"background\") {\n    //   throw new Error(\"Background cannot sendMessage to itself\");\n    // }\n    const { target, message, callback } = parseArgs(args);\n    const id = nextId++;\n    const promise = new Promise((resolve) => {\n      pending[id] = { resolve, callback };\n      bus.emit(\"__REQUEST__\", { id, message });\n    });\n    return promise;\n  }\n\n  bus.on(\"__PORT_CONNECT__\", ({ portId, name }, { source }) => {\n    if (type !== \"background\") return;\n    const backgroundPort = makePort(\"background\", portId, name, source);\n    ports[portId] = backgroundPort;\n\n    onConnectListeners.forEach((fn) => fn(backgroundPort));\n\n    // send back a CONNECT_ACK so the client can\n    // start listening on its end:\n    bus.emit(\"__PORT_CONNECT_ACK__\", { portId, name }, { to: source });\n  });\n\n  // Clients handle the ACK and finalize their Port object by learning the remote window.\n  bus.on(\"__PORT_CONNECT_ACK__\", ({ portId, name }, { source }) => {\n    if (type === \"background\") return; // ignore\n    const p = ports[portId];\n    if (!p) return;\n    // Call the port's internal finalize method to complete the handshake\n    if (p._finalize) {\n      p._finalize(source);\n    }\n  });\n\n  // Any port message travels via \"__PORT_MESSAGE__\"\n  bus.on(\"__PORT_MESSAGE__\", (envelope, { source }) => {\n    const { portId } = envelope;\n    const p = ports[portId];\n    if (!p) return;\n    p._receive(envelope, source);\n  });\n\n  // Any port disconnect:\n  bus.on(\"__PORT_DISCONNECT__\", ({ portId }) => {\n    const p = ports[portId];\n    if (!p) return;\n    p._disconnect();\n    delete ports[portId];\n  });\n\n  // Refactored makePort to correctly manage internal state and the connection handshake.\n  function makePort(side, portId, name, remoteWindow) {\n    let onMessageHandlers = [];\n    let onDisconnectHandlers = [];\n    let buffer = [];\n    // Unique instance ID for this port instance\n    const instanceId = Math.random().toString(36).slice(2) + Date.now();\n    // These state variables are part of the closure and are updated by _finalize\n    let _ready = side === \"background\";\n\n    function _drainBuffer() {\n      buffer.forEach((m) => _post(m));\n      buffer = [];\n    }\n\n    function _post(msg) {\n      // Always use the 'to' parameter for port messages, making them directional.\n      // Include senderInstanceId\n      bus.emit(\n        \"__PORT_MESSAGE__\",\n        { portId, msg, senderInstanceId: instanceId },\n        { to: remoteWindow },\n      );\n    }\n\n    function postMessage(msg) {\n      if (!_ready) {\n        buffer.push(msg);\n      } else {\n        _post(msg);\n      }\n    }\n\n    function _receive(envelope, source) {\n      // envelope: { msg, senderInstanceId }\n      if (envelope.senderInstanceId === instanceId) return; // Don't dispatch to self\n      onMessageHandlers.forEach((fn) =>\n        fn(envelope.msg, { id: portId, tab: { id: source } }),\n      );\n    }\n\n    function disconnect() {\n      // Also use the 'to' parameter for disconnect messages\n      bus.emit(\"__PORT_DISCONNECT__\", { portId }, { to: remoteWindow });\n      _disconnect();\n      delete ports[portId];\n    }\n\n    function _disconnect() {\n      onDisconnectHandlers.forEach((fn) => fn());\n      onMessageHandlers = [];\n      onDisconnectHandlers = [];\n    }\n\n    // This function is called on the client port when the ACK is received from background.\n    // It updates the port's state, completing the connection.\n    function _finalize(win) {\n      remoteWindow = win; // <-- This is the crucial part: learn the destination\n      _ready = true;\n      _drainBuffer();\n    }\n\n    return {\n      name,\n      sender: {\n        id: portId,\n      },\n      onMessage: {\n        addListener(fn) {\n          onMessageHandlers.push(fn);\n        },\n        removeListener(fn) {\n          onMessageHandlers = onMessageHandlers.filter((x) => x !== fn);\n        },\n      },\n      onDisconnect: {\n        addListener(fn) {\n          onDisconnectHandlers.push(fn);\n        },\n        removeListener(fn) {\n          onDisconnectHandlers = onDisconnectHandlers.filter((x) => x !== fn);\n        },\n      },\n      postMessage,\n      disconnect,\n      // Internal methods used by the runtime\n      _receive,\n      _disconnect,\n      _finalize, // Expose the finalizer for the ACK handler\n    };\n  }\n\n  function connect(connectInfo = {}) {\n    if (type === \"background\") {\n      throw new Error(\"Background must use onConnect, not connect()\");\n    }\n    const name = connectInfo.name || \"\";\n    const portId = nextPortId++;\n    // create the client side port\n    // remoteWindow is initially null; it will be set by _finalize upon ACK.\n    const clientPort = makePort(\"client\", portId, name, null);\n    ports[portId] = clientPort;\n\n    // fire the connect event across the bus\n    bus.emit(\"__PORT_CONNECT__\", { portId, name });\n    return clientPort;\n  }\n\n  function onConnect(fn) {\n    if (type !== \"background\") {\n      throw new Error(\"connect event only fires in background\");\n    }\n    onConnectListeners.push(fn);\n  }\n\n  return {\n    // rpc:\n    sendMessage,\n    onMessage: {\n      addListener(fn) {\n        msgListeners.push(fn);\n      },\n      removeListener(fn) {\n        const i = msgListeners.indexOf(fn);\n        if (i >= 0) msgListeners.splice(i, 1);\n      },\n    },\n\n    // port API:\n    connect,\n    onConnect: {\n      addListener(fn) {\n        onConnect(fn);\n      },\n      removeListener(fn) {\n        const i = onConnectListeners.indexOf(fn);\n        if (i >= 0) onConnectListeners.splice(i, 1);\n      },\n    },\n  };\n}\n\n\n// --- Abstraction Layer: PostMessage Target\n\nlet nextRequestId = 1;\nconst pendingRequests = new Map(); // requestId -> { resolve, reject, timeout }\n\nfunction sendAbstractionRequest(method, args = []) {\n  return new Promise((resolve, reject) => {\n    const requestId = nextRequestId++;\n\n    const timeout = setTimeout(() => {\n      pendingRequests.delete(requestId);\n      reject(new Error(`PostMessage request timeout for method: ${method}`));\n    }, 10000);\n\n    pendingRequests.set(requestId, { resolve, reject, timeout });\n\n    window.parent.postMessage({\n      type: \"abstraction-request\",\n      requestId,\n      method,\n      args,\n    });\n  });\n}\n\nwindow.addEventListener(\"message\", (event) => {\n  const { type, requestId, success, result, error } = event.data;\n\n  if (type === \"abstraction-response\") {\n    const pending = pendingRequests.get(requestId);\n    if (pending) {\n      clearTimeout(pending.timeout);\n      pendingRequests.delete(requestId);\n\n      if (success) {\n        pending.resolve(result);\n      } else {\n        const err = new Error(error.message);\n        err.stack = error.stack;\n        pending.reject(err);\n      }\n    }\n  }\n});\n\nasync function _storageSet(items) {\n  return sendAbstractionRequest(\"_storageSet\", [items]);\n}\n\nasync function _storageGet(keys) {\n  return sendAbstractionRequest(\"_storageGet\", [keys]);\n}\n\nasync function _storageRemove(keysToRemove) {\n  return sendAbstractionRequest(\"_storageRemove\", [keysToRemove]);\n}\n\nasync function _storageClear() {\n  return sendAbstractionRequest(\"_storageClear\");\n}\n\nasync function _cookieList(details) {\n  return sendAbstractionRequest(\"_cookieList\", [details]);\n}\n\nasync function _cookieSet(details) {\n  return sendAbstractionRequest(\"_cookieSet\", [details]);\n}\n\nasync function _cookieDelete(details) {\n  return sendAbstractionRequest(\"_cookieDelete\", [details]);\n}\n\nasync function _fetch(url, options) {\n  return sendAbstractionRequest(\"_fetch\", [url, options]);\n}\n\nfunction _registerMenuCommand(name, func) {\n  console.warn(\"_registerMenuCommand called from iframe context:\", name);\n  return sendAbstractionRequest(\"_registerMenuCommand\", [\n    name,\n    func.toString(),\n  ]);\n}\n\nfunction _openTab(url, active) {\n  return sendAbstractionRequest(\"_openTab\", [url, active]);\n}\n\nasync function _initStorage() {\n  return sendAbstractionRequest(\"_initStorage\");\n}\n\n\nconst EXTENSION_ASSETS_MAP = {{EXTENSION_ASSETS_MAP}};\n\n// -- Polyfill Implementation\nfunction buildPolyfill({ isBackground = false, isOtherPage = false } = {}) {\n  // Generate a unique context ID for this polyfill instance\n  const contextType = isBackground\n    ? \"background\"\n    : isOtherPage\n      ? \"options\"\n      : \"content\";\n  const contextId = `${contextType}_${Math.random()\n    .toString(36)\n    .substring(2, 15)}`;\n\n  const IS_IFRAME = \"true\" === \"true\";\n  const BUS = (function () {\n    if (globalThis.__BUS) {\n      return globalThis.__BUS;\n    }\n    globalThis.__BUS = createEventBus(\n      \"material-icons-for-github\",\n      IS_IFRAME ? \"iframe\" : \"page\"\n    );\n    return globalThis.__BUS;\n  })();\n  const RUNTIME = createRuntime(isBackground ? \"background\" : \"tab\", BUS);\n  const createNoopListeners = () => ({\n    addListener: (callback) => {\n      console.log(\"addListener\", callback);\n    },\n    removeListener: (callback) => {\n      console.log(\"removeListener\", callback);\n    },\n  });\n  // TODO: Stub\n  const storageChangeListeners = new Set();\n  function broadcastStorageChange(changes, areaName) {\n    storageChangeListeners.forEach((listener) => {\n      listener(changes, areaName);\n    });\n  }\n\n  let REQ_PERMS = [];\n\n  // --- Chrome polyfill\n  let chrome = {\n    extension: {\n      isAllowedIncognitoAccess: () => Promise.resolve(true),\n      sendMessage: (...args) => _messagingHandler.sendMessage(...args),\n    },\n    permissions: {\n      // TODO: Remove origin permission means exclude from origin in startup\n      request: (permissions, callback) => {\n        console.log(\"permissions.request\", permissions, callback);\n        if (Array.isArray(permissions)) {\n          REQ_PERMS = [...REQ_PERMS, ...permissions];\n        }\n        if (typeof callback === \"function\") {\n          callback(permissions);\n        }\n        return Promise.resolve(permissions);\n      },\n      contains: (permissions, callback) => {\n        if (typeof callback === \"function\") {\n          callback(true);\n        }\n        return Promise.resolve(true);\n      },\n      getAll: () => {\n        return Promise.resolve({\n          permissions: EXTENSION_PERMISSIONS,\n          origins: ORIGIN_PERMISSIONS,\n        });\n      },\n      onAdded: createNoopListeners(),\n      onRemoved: createNoopListeners(),\n    },\n    i18n: {\n      getUILanguage: () => {\n        return USED_LOCALE || \"en\";\n      },\n      getMessage: (key, substitutions = []) => {\n        if (typeof substitutions === \"string\") {\n          substitutions = [substitutions];\n        }\n        if (typeof LOCALE_KEYS !== \"undefined\" && LOCALE_KEYS[key]) {\n          return LOCALE_KEYS[key].message?.replace(\n            /\\$(\\d+)/g,\n            (match, p1) => substitutions[p1 - 1] || match\n          );\n        }\n        return key;\n      },\n    },\n    alarms: {\n      onAlarm: createNoopListeners(),\n      create: () => {\n        console.log(\"alarms.create\", arguments);\n      },\n      get: () => {\n        console.log(\"alarms.get\", arguments);\n      },\n    },\n    runtime: {\n      ...RUNTIME,\n      onInstalled: createNoopListeners(),\n      onStartup: createNoopListeners(),\n      // TODO: Postmessage to parent to open options page or call openOptionsPage\n      openOptionsPage: () => {\n        // const url = chrome.runtime.getURL(OPTIONS_PAGE_PATH);\n        // console.log(\"openOptionsPage\", _openTab, url, EXTENSION_ASSETS_MAP);\n        // _openTab(url);\n        if (typeof openOptionsPage === \"function\") {\n          openOptionsPage();\n        } else if (window.parent) {\n          window.parent.postMessage({ type: \"openOptionsPage\" }, \"*\");\n        } else {\n          console.warn(\"openOptionsPage not available.\");\n        }\n      },\n      getManifest: () => {\n        // The manifest object will be injected into the scope where buildPolyfill is called\n        if (typeof INJECTED_MANIFEST !== \"undefined\") {\n          return JSON.parse(JSON.stringify(INJECTED_MANIFEST)); // Return deep copy\n        }\n        console.warn(\n          \"INJECTED_MANIFEST not found for chrome.runtime.getManifest\"\n        );\n        return { name: \"Unknown\", version: \"0.0\", manifest_version: 2 };\n      },\n      getURL: (path) => {\n        if (!path) return \"\";\n        if (path.startsWith(\"/\")) {\n          path = path.substring(1);\n        }\n\n        if (typeof _createAssetUrl === \"function\") {\n          return _createAssetUrl(path);\n        }\n\n        console.warn(\n          `chrome.runtime.getURL fallback for '${path}'. Assets may not be available.`\n        );\n        // Attempt a relative path resolution (highly context-dependent and likely wrong)\n        try {\n          if (window.location.protocol.startsWith(\"http\")) {\n            return new URL(path, window.location.href).toString();\n          }\n        } catch (e) {\n          /* ignore error, fallback */\n        }\n        return path;\n      },\n      id: \"polyfilled-extension-\" + Math.random().toString(36).substring(2, 15),\n      lastError: null,\n      getPlatformInfo: async () => {\n        const platform = {\n          os: \"unknown\",\n          arch: \"unknown\",\n          nacl_arch: \"unknown\",\n        };\n\n        if (typeof navigator !== \"undefined\") {\n          const userAgent = navigator.userAgent.toLowerCase();\n          if (userAgent.includes(\"mac\")) platform.os = \"mac\";\n          else if (userAgent.includes(\"win\")) platform.os = \"win\";\n          else if (userAgent.includes(\"linux\")) platform.os = \"linux\";\n          else if (userAgent.includes(\"android\")) platform.os = \"android\";\n          else if (userAgent.includes(\"ios\")) platform.os = \"ios\";\n\n          if (userAgent.includes(\"x86_64\") || userAgent.includes(\"amd64\")) {\n            platform.arch = \"x86-64\";\n          } else if (userAgent.includes(\"i386\") || userAgent.includes(\"i686\")) {\n            platform.arch = \"x86-32\";\n          } else if (userAgent.includes(\"arm\")) {\n            platform.arch = \"arm\";\n          }\n        }\n\n        return platform;\n      },\n      getBrowserInfo: async () => {\n        const info = {\n          name: \"unknown\",\n          version: \"unknown\",\n          buildID: \"unknown\",\n        };\n\n        if (typeof navigator !== \"undefined\") {\n          const userAgent = navigator.userAgent;\n          if (userAgent.includes(\"Chrome\")) {\n            info.name = \"Chrome\";\n            const match = userAgent.match(/Chrome\\/([0-9.]+)/);\n            if (match) info.version = match[1];\n          } else if (userAgent.includes(\"Firefox\")) {\n            info.name = \"Firefox\";\n            const match = userAgent.match(/Firefox\\/([0-9.]+)/);\n            if (match) info.version = match[1];\n          } else if (userAgent.includes(\"Safari\")) {\n            info.name = \"Safari\";\n            const match = userAgent.match(/Version\\/([0-9.]+)/);\n            if (match) info.version = match[1];\n          }\n        }\n\n        return info;\n      },\n    },\n    storage: {\n      local: {\n        get: function (keys, callback) {\n          if (typeof _storageGet !== \"function\")\n            throw new Error(\"_storageGet not defined\");\n\n          const promise = _storageGet(keys);\n\n          if (typeof callback === \"function\") {\n            promise\n              .then((result) => {\n                try {\n                  callback(result);\n                } catch (e) {\n                  console.error(\"Error in storage.get callback:\", e);\n                }\n              })\n              .catch((error) => {\n                console.error(\"Storage.get error:\", error);\n                callback({});\n              });\n            return;\n          }\n\n          return promise;\n        },\n        set: function (items, callback) {\n          if (typeof _storageSet !== \"function\")\n            throw new Error(\"_storageSet not defined\");\n\n          const promise = _storageSet(items).then((result) => {\n            broadcastStorageChange(items, \"local\");\n            return result;\n          });\n\n          if (typeof callback === \"function\") {\n            promise\n              .then((result) => {\n                try {\n                  callback(result);\n                } catch (e) {\n                  console.error(\"Error in storage.set callback:\", e);\n                }\n              })\n              .catch((error) => {\n                console.error(\"Storage.set error:\", error);\n                callback();\n              });\n            return;\n          }\n\n          return promise;\n        },\n        remove: function (keys, callback) {\n          if (typeof _storageRemove !== \"function\")\n            throw new Error(\"_storageRemove not defined\");\n\n          const promise = _storageRemove(keys).then((result) => {\n            const changes = {};\n            const keyList = Array.isArray(keys) ? keys : [keys];\n            keyList.forEach((key) => {\n              changes[key] = { oldValue: undefined, newValue: undefined };\n            });\n            broadcastStorageChange(changes, \"local\");\n            return result;\n          });\n\n          if (typeof callback === \"function\") {\n            promise\n              .then((result) => {\n                try {\n                  callback(result);\n                } catch (e) {\n                  console.error(\"Error in storage.remove callback:\", e);\n                }\n              })\n              .catch((error) => {\n                console.error(\"Storage.remove error:\", error);\n                callback();\n              });\n            return;\n          }\n\n          return promise;\n        },\n        clear: function (callback) {\n          if (typeof _storageClear !== \"function\")\n            throw new Error(\"_storageClear not defined\");\n\n          const promise = _storageClear().then((result) => {\n            broadcastStorageChange({}, \"local\");\n            return result;\n          });\n\n          if (typeof callback === \"function\") {\n            promise\n              .then((result) => {\n                try {\n                  callback(result);\n                } catch (e) {\n                  console.error(\"Error in storage.clear callback:\", e);\n                }\n              })\n              .catch((error) => {\n                console.error(\"Storage.clear error:\", error);\n                callback();\n              });\n            return;\n          }\n\n          return promise;\n        },\n        onChanged: {\n          addListener: (callback) => {\n            storageChangeListeners.add(callback);\n          },\n          removeListener: (callback) => {\n            storageChangeListeners.delete(callback);\n          },\n        },\n      },\n      sync: {\n        get: function (keys, callback) {\n          console.warn(\"chrome.storage.sync polyfill maps to local\");\n          return chrome.storage.local.get(keys, callback);\n        },\n        set: function (items, callback) {\n          console.warn(\"chrome.storage.sync polyfill maps to local\");\n\n          const promise = chrome.storage.local.set(items).then((result) => {\n            broadcastStorageChange(items, \"sync\");\n            return result;\n          });\n\n          if (typeof callback === \"function\") {\n            promise\n              .then((result) => {\n                try {\n                  callback(result);\n                } catch (e) {\n                  console.error(\"Error in storage.sync.set callback:\", e);\n                }\n              })\n              .catch((error) => {\n                console.error(\"Storage.sync.set error:\", error);\n                callback();\n              });\n            return;\n          }\n\n          return promise;\n        },\n        remove: function (keys, callback) {\n          console.warn(\"chrome.storage.sync polyfill maps to local\");\n\n          const promise = chrome.storage.local.remove(keys).then((result) => {\n            const changes = {};\n            const keyList = Array.isArray(keys) ? keys : [keys];\n            keyList.forEach((key) => {\n              changes[key] = { oldValue: undefined, newValue: undefined };\n            });\n            broadcastStorageChange(changes, \"sync\");\n            return result;\n          });\n\n          if (typeof callback === \"function\") {\n            promise\n              .then((result) => {\n                try {\n                  callback(result);\n                } catch (e) {\n                  console.error(\"Error in storage.sync.remove callback:\", e);\n                }\n              })\n              .catch((error) => {\n                console.error(\"Storage.sync.remove error:\", error);\n                callback();\n              });\n            return;\n          }\n\n          return promise;\n        },\n        clear: function (callback) {\n          console.warn(\"chrome.storage.sync polyfill maps to local\");\n\n          const promise = chrome.storage.local.clear().then((result) => {\n            broadcastStorageChange({}, \"sync\");\n            return result;\n          });\n\n          if (typeof callback === \"function\") {\n            promise\n              .then((result) => {\n                try {\n                  callback(result);\n                } catch (e) {\n                  console.error(\"Error in storage.sync.clear callback:\", e);\n                }\n              })\n              .catch((error) => {\n                console.error(\"Storage.sync.clear error:\", error);\n                callback();\n              });\n            return;\n          }\n\n          return promise;\n        },\n        onChanged: {\n          addListener: (callback) => {\n            storageChangeListeners.add(callback);\n          },\n          removeListener: (callback) => {\n            storageChangeListeners.delete(callback);\n          },\n        },\n      },\n      onChanged: {\n        addListener: (callback) => {\n          storageChangeListeners.add(callback);\n        },\n        removeListener: (callback) => {\n          storageChangeListeners.delete(callback);\n        },\n      },\n      managed: {\n        get: function (keys, callback) {\n          console.warn(\"chrome.storage.managed polyfill is read-only empty.\");\n\n          const promise = Promise.resolve({});\n\n          if (typeof callback === \"function\") {\n            promise.then((result) => {\n              try {\n                callback(result);\n              } catch (e) {\n                console.error(\"Error in storage.managed.get callback:\", e);\n              }\n            });\n            return;\n          }\n\n          return promise;\n        },\n      },\n    },\n    cookies: (function () {\n      const cookieChangeListeners = new Set();\n      function broadcastCookieChange(changeInfo) {\n        cookieChangeListeners.forEach((listener) => {\n          try {\n            listener(changeInfo);\n          } catch (e) {\n            console.error(\"Error in cookies.onChanged listener:\", e);\n          }\n        });\n      }\n\n      function handlePromiseCallback(promise, callback) {\n        if (typeof callback === \"function\") {\n          promise\n            .then((result) => callback(result))\n            .catch((error) => {\n              // chrome.runtime.lastError = { message: error.message }; // TODO: Implement lastError\n              console.error(error);\n              callback(); // Call with undefined on error\n            });\n          return;\n        }\n        return promise;\n      }\n\n      return {\n        get: function (details, callback) {\n          if (typeof _cookieList !== \"function\") {\n            return handlePromiseCallback(\n              Promise.reject(new Error(\"_cookieList not defined\")),\n              callback\n            );\n          }\n          const promise = _cookieList({\n            url: details.url,\n            name: details.name,\n            storeId: details.storeId,\n            partitionKey: details.partitionKey,\n          }).then((cookies) => {\n            if (!cookies || cookies.length === 0) {\n              return null;\n            }\n            // Sort by path length (longest first), then creation time (earliest first, if available)\n            cookies.sort((a, b) => {\n              const pathLenDiff = (b.path || \"\").length - (a.path || \"\").length;\n              if (pathLenDiff !== 0) return pathLenDiff;\n              return (a.creationTime || 0) - (b.creationTime || 0);\n            });\n            return cookies[0];\n          });\n          return handlePromiseCallback(promise, callback);\n        },\n\n        getAll: function (details, callback) {\n          if (typeof _cookieList !== \"function\") {\n            return handlePromiseCallback(\n              Promise.reject(new Error(\"_cookieList not defined\")),\n              callback\n            );\n          }\n          if (details.partitionKey) {\n            console.warn(\n              \"cookies.getAll: partitionKey is not fully supported in this environment.\"\n            );\n          }\n          const promise = _cookieList(details);\n          return handlePromiseCallback(promise, callback);\n        },\n\n        set: function (details, callback) {\n          const promise = (async () => {\n            if (\n              typeof _cookieSet !== \"function\" ||\n              typeof _cookieList !== \"function\"\n            ) {\n              throw new Error(\"_cookieSet or _cookieList not defined\");\n            }\n            if (details.partitionKey) {\n              console.warn(\n                \"cookies.set: partitionKey is not fully supported in this environment.\"\n              );\n            }\n\n            const getDetails = {\n              url: details.url,\n              name: details.name,\n              storeId: details.storeId,\n            };\n            const oldCookies = await _cookieList(getDetails);\n            const oldCookie = oldCookies && oldCookies[0];\n\n            if (oldCookie) {\n              broadcastCookieChange({\n                cause: \"overwrite\",\n                cookie: oldCookie,\n                removed: true,\n              });\n            }\n\n            await _cookieSet(details);\n            const newCookies = await _cookieList(getDetails);\n            const newCookie = newCookies && newCookies[0];\n\n            if (newCookie) {\n              broadcastCookieChange({\n                cause: \"explicit\",\n                cookie: newCookie,\n                removed: false,\n              });\n            }\n            return newCookie || null;\n          })();\n          return handlePromiseCallback(promise, callback);\n        },\n\n        remove: function (details, callback) {\n          const promise = (async () => {\n            if (\n              typeof _cookieDelete !== \"function\" ||\n              typeof _cookieList !== \"function\"\n            ) {\n              throw new Error(\"_cookieDelete or _cookieList not defined\");\n            }\n            const oldCookies = await _cookieList(details);\n            const oldCookie = oldCookies && oldCookies[0];\n\n            if (!oldCookie) return null; // Nothing to remove\n\n            await _cookieDelete(details);\n\n            broadcastCookieChange({\n              cause: \"explicit\",\n              cookie: oldCookie,\n              removed: true,\n            });\n\n            return {\n              url: details.url,\n              name: details.name,\n              storeId: details.storeId || \"0\",\n              partitionKey: details.partitionKey,\n            };\n          })();\n          return handlePromiseCallback(promise, callback);\n        },\n\n        getAllCookieStores: function (callback) {\n          const promise = Promise.resolve([\n            { id: \"0\", tabIds: [1] }, // Mock store for the current context\n          ]);\n          return handlePromiseCallback(promise, callback);\n        },\n\n        getPartitionKey: function (details, callback) {\n          console.warn(\n            \"chrome.cookies.getPartitionKey is not supported in this environment.\"\n          );\n          const promise = Promise.resolve({ partitionKey: {} }); // Return empty partition key\n          return handlePromiseCallback(promise, callback);\n        },\n\n        onChanged: {\n          addListener: (callback) => {\n            if (typeof callback === \"function\") {\n              cookieChangeListeners.add(callback);\n            }\n          },\n          removeListener: (callback) => {\n            cookieChangeListeners.delete(callback);\n          },\n        },\n      };\n    })(),\n    tabs: {\n      query: async (queryInfo) => {\n        console.warn(\n          \"chrome.tabs.query polyfill only returns current tab info.\"\n        );\n        const dummyId = Math.floor(Math.random() * 1000) + 1;\n        return [\n          {\n            id: dummyId,\n            url: CURRENT_LOCATION,\n            active: true,\n            windowId: 1,\n            status: \"complete\",\n          },\n        ];\n      },\n      create: async ({ url, active = true }) => {\n        console.log(`[Polyfill tabs.create] URL: ${url}`);\n        if (typeof _openTab !== \"function\")\n          throw new Error(\"_openTab not defined\");\n        _openTab(url, active);\n        const dummyId = Math.floor(Math.random() * 1000) + 1001;\n        return Promise.resolve({\n          id: dummyId,\n          url: url,\n          active,\n          windowId: 1,\n        });\n      },\n      sendMessage: async (tabId, message) => {\n        console.warn(\n          `chrome.tabs.sendMessage polyfill (to tab ${tabId}) redirects to runtime.sendMessage (current context).`\n        );\n        return chrome.runtime.sendMessage(message);\n      },\n    },\n    notifications: {\n      create: async (notificationId, options) => {\n        try {\n          let id = notificationId;\n          let notificationOptions = options;\n\n          if (typeof notificationId === \"object\" && notificationId !== null) {\n            notificationOptions = notificationId;\n            id = \"notification_\" + Math.random().toString(36).substring(2, 15);\n          } else if (typeof notificationId === \"string\" && options) {\n            id = notificationId;\n            notificationOptions = options;\n          } else {\n            throw new Error(\"Invalid parameters for notifications.create\");\n          }\n\n          if (!notificationOptions || typeof notificationOptions !== \"object\") {\n            throw new Error(\"Notification options must be an object\");\n          }\n\n          const {\n            title,\n            message,\n            iconUrl,\n            type = \"basic\",\n          } = notificationOptions;\n\n          if (!title || !message) {\n            throw new Error(\"Notification must have title and message\");\n          }\n\n          if (\"Notification\" in window) {\n            if (Notification.permission === \"granted\") {\n              const notification = new Notification(title, {\n                body: message,\n                icon: iconUrl,\n                tag: id,\n              });\n\n              console.log(`[Notifications] Created notification: ${id}`);\n              return id;\n            } else if (Notification.permission === \"default\") {\n              const permission = await Notification.requestPermission();\n              if (permission === \"granted\") {\n                const notification = new Notification(title, {\n                  body: message,\n                  icon: iconUrl,\n                  tag: id,\n                });\n                console.log(\n                  `[Notifications] Created notification after permission: ${id}`\n                );\n                return id;\n              } else {\n                console.warn(\n                  \"[Notifications] Permission denied for notifications\"\n                );\n                return id;\n              }\n            } else {\n              console.warn(\"[Notifications] Notifications are blocked\");\n              return id;\n            }\n          } else {\n            console.warn(\n              \"[Notifications] Native notifications not supported, using console fallback\"\n            );\n            console.log(`[Notification] ${title}: ${message}`);\n            return id;\n          }\n        } catch (error) {\n          console.error(\n            \"[Notifications] Error creating notification:\",\n            error.message\n          );\n          throw error;\n        }\n      },\n      clear: async (notificationId) => {\n        console.log(`[Notifications] Clear notification: ${notificationId}`);\n        // For native notifications, there's no direct way to clear by ID\n        // This is a limitation of the Web Notifications API\n        return true;\n      },\n      getAll: async () => {\n        console.warn(\"[Notifications] getAll not fully supported in polyfill\");\n        return {};\n      },\n      getPermissionLevel: async () => {\n        if (\"Notification\" in window) {\n          const permission = Notification.permission;\n          return { level: permission === \"granted\" ? \"granted\" : \"denied\" };\n        }\n        return { level: \"denied\" };\n      },\n    },\n    contextMenus: {\n      create: (createProperties, callback) => {\n        try {\n          if (!createProperties || typeof createProperties !== \"object\") {\n            throw new Error(\"Context menu create properties must be an object\");\n          }\n\n          const { id, title, contexts = [\"page\"], onclick } = createProperties;\n          const menuId =\n            id || `menu_${Math.random().toString(36).substring(2, 15)}`;\n\n          if (!title || typeof title !== \"string\") {\n            throw new Error(\"Context menu must have a title\");\n          }\n\n          // Store menu items for potential use\n          if (!window._polyfillContextMenus) {\n            window._polyfillContextMenus = new Map();\n          }\n\n          window._polyfillContextMenus.set(menuId, {\n            id: menuId,\n            title,\n            contexts,\n            onclick,\n            enabled: createProperties.enabled !== false,\n          });\n\n          console.log(\n            `[ContextMenus] Created context menu item: ${title} (${menuId})`\n          );\n\n          // Try to register a menu command as fallback\n          if (typeof _registerMenuCommand === \"function\") {\n            try {\n              _registerMenuCommand(\n                title,\n                onclick ||\n                  (() => {\n                    console.log(`Context menu clicked: ${title}`);\n                  })\n              );\n            } catch (e) {\n              console.warn(\n                \"[ContextMenus] Failed to register as menu command:\",\n                e.message\n              );\n            }\n          }\n\n          if (callback && typeof callback === \"function\") {\n            setTimeout(() => callback(), 0);\n          }\n\n          return menuId;\n        } catch (error) {\n          console.error(\n            \"[ContextMenus] Error creating context menu:\",\n            error.message\n          );\n          if (callback && typeof callback === \"function\") {\n            setTimeout(() => callback(), 0);\n          }\n          throw error;\n        }\n      },\n      update: (id, updateProperties, callback) => {\n        try {\n          if (\n            !window._polyfillContextMenus ||\n            !window._polyfillContextMenus.has(id)\n          ) {\n            throw new Error(`Context menu item not found: ${id}`);\n          }\n\n          const menuItem = window._polyfillContextMenus.get(id);\n          Object.assign(menuItem, updateProperties);\n\n          console.log(`[ContextMenus] Updated context menu item: ${id}`);\n\n          if (callback && typeof callback === \"function\") {\n            setTimeout(() => callback(), 0);\n          }\n        } catch (error) {\n          console.error(\n            \"[ContextMenus] Error updating context menu:\",\n            error.message\n          );\n          if (callback && typeof callback === \"function\") {\n            setTimeout(() => callback(), 0);\n          }\n        }\n      },\n      remove: (menuItemId, callback) => {\n        try {\n          if (\n            window._polyfillContextMenus &&\n            window._polyfillContextMenus.has(menuItemId)\n          ) {\n            window._polyfillContextMenus.delete(menuItemId);\n            console.log(\n              `[ContextMenus] Removed context menu item: ${menuItemId}`\n            );\n          } else {\n            console.warn(\n              `[ContextMenus] Context menu item not found for removal: ${menuItemId}`\n            );\n          }\n\n          if (callback && typeof callback === \"function\") {\n            setTimeout(() => callback(), 0);\n          }\n        } catch (error) {\n          console.error(\n            \"[ContextMenus] Error removing context menu:\",\n            error.message\n          );\n          if (callback && typeof callback === \"function\") {\n            setTimeout(() => callback(), 0);\n          }\n        }\n      },\n      removeAll: (callback) => {\n        try {\n          if (window._polyfillContextMenus) {\n            const count = window._polyfillContextMenus.size;\n            window._polyfillContextMenus.clear();\n            console.log(\n              `[ContextMenus] Removed all ${count} context menu items`\n            );\n          }\n\n          if (callback && typeof callback === \"function\") {\n            setTimeout(() => callback(), 0);\n          }\n        } catch (error) {\n          console.error(\n            \"[ContextMenus] Error removing all context menus:\",\n            error.message\n          );\n          if (callback && typeof callback === \"function\") {\n            setTimeout(() => callback(), 0);\n          }\n        }\n      },\n      onClicked: {\n        addListener: (callback) => {\n          if (!window._polyfillContextMenuListeners) {\n            window._polyfillContextMenuListeners = new Set();\n          }\n          window._polyfillContextMenuListeners.add(callback);\n          console.log(\"[ContextMenus] Added click listener\");\n        },\n        removeListener: (callback) => {\n          if (window._polyfillContextMenuListeners) {\n            window._polyfillContextMenuListeners.delete(callback);\n            console.log(\"[ContextMenus] Removed click listener\");\n          }\n        },\n      },\n    },\n  };\n\n  const tc = (fn) => {\n    try {\n      fn();\n    } catch (e) {}\n  };\n  const loggingProxyHandler = (_key) => ({\n    get(target, key, receiver) {\n      tc(() =>\n        console.log(`[${contextType}] [CHROME - ${_key}] Getting ${key}`)\n      );\n      return Reflect.get(target, key, receiver);\n    },\n    set(target, key, value, receiver) {\n      tc(() =>\n        console.log(\n          `[${contextType}] [CHROME - ${_key}] Setting ${key} to ${value}`\n        )\n      );\n      return Reflect.set(target, key, value, receiver);\n    },\n    has(target, key) {\n      tc(() =>\n        console.log(\n          `[${contextType}] [CHROME - ${_key}] Checking if ${key} exists`\n        )\n      );\n      return Reflect.has(target, key);\n    },\n  });\n  chrome = Object.fromEntries(\n    Object.entries(chrome).map(([key, value]) => [\n      key,\n      new Proxy(value, loggingProxyHandler(key)),\n    ])\n  );\n\n  // Alias browser to chrome for common Firefox pattern\n  const browser = new Proxy(chrome, loggingProxyHandler);\n\n  const oldGlobalThis = globalThis;\n  const oldWindow = window;\n  const oldSelf = self;\n  const oldGlobal = globalThis;\n  const __globalsStorage = {};\n\n  const TO_MODIFY = [oldGlobalThis, oldWindow, oldSelf, oldGlobal];\n  const set = (k, v) => {\n    __globalsStorage[k] = v;\n    TO_MODIFY.forEach((target) => {\n      target[k] = v;\n    });\n  };\n  const proxyHandler = {\n    get(target, key, receiver) {\n      try {\n        return __globalsStorage[key] || Reflect.get(target, key, receiver);\n      } catch (e) {\n        console.error(\"Error getting\", key, e);\n        return undefined;\n      }\n    },\n    set(target, key, value, receiver) {\n      try {\n        tc(() => console.log(`[${contextType}] Setting ${key} to ${value}`));\n        set(key, value);\n        return Reflect.set(target, key, value, receiver);\n      } catch (e) {\n        console.error(\"Error setting\", key, value, e);\n        return false;\n      }\n    },\n    has(target, key) {\n      try {\n        return key in __globalsStorage || key in target;\n      } catch (e) {\n        console.error(\"Error has\", key, e);\n        return false;\n      }\n    },\n    getOwnPropertyDescriptor(target, key) {\n      try {\n        if (key in __globalsStorage) {\n          return {\n            configurable: true,\n            enumerable: true,\n            writable: true,\n            value: __globalsStorage[key],\n          };\n        }\n        // fall back to the real globalThis\n        const desc = Reflect.getOwnPropertyDescriptor(target, key);\n        // ensure it's configurable so the with‑scope binding logic can override it\n        if (desc && !desc.configurable) {\n          desc.configurable = true;\n        }\n        return desc;\n      } catch (e) {\n        console.error(\"Error getOwnPropertyDescriptor\", key, e);\n        return {\n          configurable: true,\n          enumerable: true,\n          writable: true,\n          value: undefined,\n        };\n      }\n    },\n\n    defineProperty(target, key, descriptor) {\n      try {\n        // Normalize descriptor to avoid mixed accessor & data attributes\n        const hasAccessor = \"get\" in descriptor || \"set\" in descriptor;\n\n        if (hasAccessor) {\n          // Build a clean descriptor without value/writable when accessors present\n          const normalized = {\n            configurable:\n              \"configurable\" in descriptor ? descriptor.configurable : true,\n            enumerable:\n              \"enumerable\" in descriptor ? descriptor.enumerable : false,\n          };\n          if (\"get\" in descriptor) normalized.get = descriptor.get;\n          if (\"set\" in descriptor) normalized.set = descriptor.set;\n\n          // Store accessor references for inspection but avoid breaking invariants\n          set(key, {\n            get: descriptor.get,\n            set: descriptor.set,\n          });\n\n          return Reflect.defineProperty(target, key, normalized);\n        }\n\n        // Data descriptor path\n        set(key, descriptor.value);\n        return Reflect.defineProperty(target, key, descriptor);\n      } catch (e) {\n        console.error(\"Error defineProperty\", key, descriptor, e);\n        return false;\n      }\n    },\n  };\n\n  // Create proxies once proxyHandler is defined\n  const proxyWindow = new Proxy(oldWindow, proxyHandler);\n  const proxyGlobalThis = new Proxy(oldGlobalThis, proxyHandler);\n  const proxyGlobal = new Proxy(oldGlobal, proxyHandler);\n  const proxySelf = new Proxy(oldSelf, proxyHandler);\n\n  // Seed storage with core globals so lookups succeed inside `with` blocks\n  Object.assign(__globalsStorage, {\n    chrome,\n    browser,\n    window: proxyWindow,\n    globalThis: proxyGlobalThis,\n    global: proxyGlobal,\n    self: proxySelf,\n  });\n\n  const __globals = {\n    chrome,\n    browser,\n    window: proxyWindow,\n    globalThis: proxyGlobalThis,\n    global: proxyGlobal,\n    self: proxySelf,\n    __globals: __globalsStorage,\n  };\n\n  __globalsStorage.contextId = contextId;\n  __globalsStorage.contextType = contextType;\n  __globalsStorage.module = undefined;\n  __globalsStorage.amd = undefined;\n  __globalsStorage.define = undefined;\n\n  return __globals;\n}\n\n\nif (typeof window !== 'undefined') {\n    window.buildPolyfill = buildPolyfill;\n}\n"
+			    const polyfillString = "\n// -- Messaging implementation\n\nfunction createEventBus(\n  scopeId,\n  type = \"page\", // \"page\" or \"iframe\"\n  { allowedOrigin = \"*\", children = [], parentWindow = null } = {}\n) {\n  if (!scopeId) throw new Error(\"createEventBus requires a scopeId\");\n\n  const handlers = {};\n\n  function handleIncoming(ev) {\n    if (allowedOrigin !== \"*\" && ev.origin !== allowedOrigin) return;\n\n    const msg = ev.data;\n    if (!msg || msg.__eventBus !== true || msg.scopeId !== scopeId) return;\n\n    const { event, payload } = msg;\n\n    // PAGE: if it's an INIT from an iframe, adopt it\n    if (type === \"page\" && event === \"__INIT__\") {\n      const win = ev.source;\n      if (win && !children.includes(win)) {\n        children.push(win);\n      }\n      return;\n    }\n\n    (handlers[event] || []).forEach((fn) =>\n      fn(payload, { origin: ev.origin, source: ev.source })\n    );\n  }\n\n  window.addEventListener(\"message\", handleIncoming);\n\n  function emitTo(win, event, payload) {\n    const envelope = {\n      __eventBus: true,\n      scopeId,\n      event,\n      payload,\n    };\n    win.postMessage(envelope, allowedOrigin);\n  }\n\n  // IFRAME: announce to page on startup\n  if (type === \"iframe\") {\n    setTimeout(() => {\n      const pw = parentWindow || window.parent;\n      if (pw && pw.postMessage) {\n        emitTo(pw, \"__INIT__\", null);\n      }\n    }, 0);\n  }\n\n  return {\n    on(event, fn) {\n      handlers[event] = handlers[event] || [];\n      handlers[event].push(fn);\n    },\n    off(event, fn) {\n      if (!handlers[event]) return;\n      handlers[event] = handlers[event].filter((h) => h !== fn);\n    },\n    /**\n     * Emits an event.\n     * @param {string} event - The event name.\n     * @param {any} payload - The event payload.\n     * @param {object} [options] - Emission options.\n     * @param {Window} [options.to] - A specific window to target. If provided, message is ONLY sent to the target.\n     */\n    emit(event, payload, { to } = {}) {\n      // If a specific target window is provided, send only to it and DO NOT dispatch locally.\n      // This prevents a port from receiving its own messages.\n      if (to) {\n        if (to && typeof to.postMessage === \"function\") {\n          emitTo(to, event, payload);\n        }\n        return; // Exit after targeted send.\n      }\n\n      // For broadcast messages (no 'to' target), dispatch locally first.\n      (handlers[event] || []).forEach((fn) =>\n        fn(payload, { origin: location.origin, source: window })\n      );\n\n      // Then propagate the broadcast to other windows.\n      if (type === \"page\") {\n        children.forEach((win) => emitTo(win, event, payload));\n      } else {\n        const pw = parentWindow || window.parent;\n        if (pw && pw.postMessage) {\n          emitTo(pw, event, payload);\n        }\n      }\n    },\n  };\n}\n\nfunction createRuntime(type = \"background\", bus) {\n  let nextId = 1;\n  const pending = {};\n  const msgListeners = [];\n\n  let nextPortId = 1;\n  const ports = {};\n  const onConnectListeners = [];\n\n  function parseArgs(args) {\n    let target, message, options, callback;\n    const arr = [...args];\n    if (arr.length === 0) {\n      throw new Error(\"sendMessage requires at least one argument\");\n    }\n    if (arr.length === 1) {\n      return { message: arr[0] };\n    }\n    // last object could be options\n    if (\n      arr.length &&\n      typeof arr[arr.length - 1] === \"object\" &&\n      !Array.isArray(arr[arr.length - 1])\n    ) {\n      options = arr.pop();\n    }\n    // last function is callback\n    if (arr.length && typeof arr[arr.length - 1] === \"function\") {\n      callback = arr.pop();\n    }\n    if (\n      arr.length === 2 &&\n      (typeof arr[0] === \"string\" || typeof arr[0] === \"number\")\n    ) {\n      [target, message] = arr;\n    } else {\n      [message] = arr;\n    }\n    return { target, message, options, callback };\n  }\n\n  if (type === \"background\") {\n    bus.on(\"__REQUEST__\", ({ id, message }, { source }) => {\n      let responded = false,\n        isAsync = false;\n      function sendResponse(resp) {\n        if (responded) return;\n        responded = true;\n        // Target the response directly back to the window that sent the request.\n        bus.emit(\"__RESPONSE__\", { id, response: resp }, { to: source });\n      }\n      const results = msgListeners\n        .map((fn) => {\n          try {\n            // msg, sender, sendResponse\n            const ret = fn(message, { id, tab: { id: source } }, sendResponse);\n            if (ret === true || (ret && typeof ret.then === \"function\")) {\n              isAsync = true;\n              return ret;\n            }\n            return ret;\n          } catch (e) {\n            _error(e);\n          }\n        })\n        .filter((r) => r !== undefined);\n\n      const promises = results.filter((r) => r && typeof r.then === \"function\");\n      if (!isAsync && promises.length === 0) {\n        const out = results.length === 1 ? results[0] : results;\n        sendResponse(out);\n      } else if (promises.length) {\n        Promise.all(promises).then((vals) => {\n          if (!responded) {\n            const out = vals.length === 1 ? vals[0] : vals;\n            sendResponse(out);\n          }\n        });\n      }\n    });\n  }\n\n  if (type !== \"background\") {\n    bus.on(\"__RESPONSE__\", ({ id, response }) => {\n      const entry = pending[id];\n      if (!entry) return;\n      entry.resolve(response);\n      if (entry.callback) entry.callback(response);\n      delete pending[id];\n    });\n  }\n\n  function sendMessage(...args) {\n    // Background should be able to send message to itself\n    // if (type === \"background\") {\n    //   throw new Error(\"Background cannot sendMessage to itself\");\n    // }\n    const { target, message, callback } = parseArgs(args);\n    const id = nextId++;\n    const promise = new Promise((resolve) => {\n      pending[id] = { resolve, callback };\n      bus.emit(\"__REQUEST__\", { id, message });\n    });\n    return promise;\n  }\n\n  bus.on(\"__PORT_CONNECT__\", ({ portId, name }, { source }) => {\n    if (type !== \"background\") return;\n    const backgroundPort = makePort(\"background\", portId, name, source);\n    ports[portId] = backgroundPort;\n\n    onConnectListeners.forEach((fn) => fn(backgroundPort));\n\n    // send back a CONNECT_ACK so the client can\n    // start listening on its end:\n    bus.emit(\"__PORT_CONNECT_ACK__\", { portId, name }, { to: source });\n  });\n\n  // Clients handle the ACK and finalize their Port object by learning the remote window.\n  bus.on(\"__PORT_CONNECT_ACK__\", ({ portId, name }, { source }) => {\n    if (type === \"background\") return; // ignore\n    const p = ports[portId];\n    if (!p) return;\n    // Call the port's internal finalize method to complete the handshake\n    if (p._finalize) {\n      p._finalize(source);\n    }\n  });\n\n  // Any port message travels via \"__PORT_MESSAGE__\"\n  bus.on(\"__PORT_MESSAGE__\", (envelope, { source }) => {\n    const { portId } = envelope;\n    const p = ports[portId];\n    if (!p) return;\n    p._receive(envelope, source);\n  });\n\n  // Any port disconnect:\n  bus.on(\"__PORT_DISCONNECT__\", ({ portId }) => {\n    const p = ports[portId];\n    if (!p) return;\n    p._disconnect();\n    delete ports[portId];\n  });\n\n  // Refactored makePort to correctly manage internal state and the connection handshake.\n  function makePort(side, portId, name, remoteWindow) {\n    let onMessageHandlers = [];\n    let onDisconnectHandlers = [];\n    let buffer = [];\n    // Unique instance ID for this port instance\n    const instanceId = Math.random().toString(36).slice(2) + Date.now();\n    // These state variables are part of the closure and are updated by _finalize\n    let _ready = side === \"background\";\n\n    function _drainBuffer() {\n      buffer.forEach((m) => _post(m));\n      buffer = [];\n    }\n\n    function _post(msg) {\n      // Always use the 'to' parameter for port messages, making them directional.\n      // Include senderInstanceId\n      bus.emit(\n        \"__PORT_MESSAGE__\",\n        { portId, msg, senderInstanceId: instanceId },\n        { to: remoteWindow }\n      );\n    }\n\n    function postMessage(msg) {\n      if (!_ready) {\n        buffer.push(msg);\n      } else {\n        _post(msg);\n      }\n    }\n\n    function _receive(envelope, source) {\n      // envelope: { msg, senderInstanceId }\n      if (envelope.senderInstanceId === instanceId) return; // Don't dispatch to self\n      onMessageHandlers.forEach((fn) =>\n        fn(envelope.msg, { id: portId, tab: { id: source } })\n      );\n    }\n\n    function disconnect() {\n      // Also use the 'to' parameter for disconnect messages\n      bus.emit(\"__PORT_DISCONNECT__\", { portId }, { to: remoteWindow });\n      _disconnect();\n      delete ports[portId];\n    }\n\n    function _disconnect() {\n      onDisconnectHandlers.forEach((fn) => fn());\n      onMessageHandlers = [];\n      onDisconnectHandlers = [];\n    }\n\n    // This function is called on the client port when the ACK is received from background.\n    // It updates the port's state, completing the connection.\n    function _finalize(win) {\n      remoteWindow = win; // <-- This is the crucial part: learn the destination\n      _ready = true;\n      _drainBuffer();\n    }\n\n    return {\n      name,\n      sender: {\n        id: portId,\n      },\n      onMessage: {\n        addListener(fn) {\n          onMessageHandlers.push(fn);\n        },\n        removeListener(fn) {\n          onMessageHandlers = onMessageHandlers.filter((x) => x !== fn);\n        },\n      },\n      onDisconnect: {\n        addListener(fn) {\n          onDisconnectHandlers.push(fn);\n        },\n        removeListener(fn) {\n          onDisconnectHandlers = onDisconnectHandlers.filter((x) => x !== fn);\n        },\n      },\n      postMessage,\n      disconnect,\n      // Internal methods used by the runtime\n      _receive,\n      _disconnect,\n      _finalize, // Expose the finalizer for the ACK handler\n    };\n  }\n\n  function connect(connectInfo = {}) {\n    if (type === \"background\") {\n      throw new Error(\"Background must use onConnect, not connect()\");\n    }\n    const name = connectInfo.name || \"\";\n    const portId = nextPortId++;\n    // create the client side port\n    // remoteWindow is initially null; it will be set by _finalize upon ACK.\n    const clientPort = makePort(\"client\", portId, name, null);\n    ports[portId] = clientPort;\n\n    // fire the connect event across the bus\n    bus.emit(\"__PORT_CONNECT__\", { portId, name });\n    return clientPort;\n  }\n\n  function onConnect(fn) {\n    if (type !== \"background\") {\n      throw new Error(\"connect event only fires in background\");\n    }\n    onConnectListeners.push(fn);\n  }\n\n  return {\n    // rpc:\n    sendMessage,\n    onMessage: {\n      addListener(fn) {\n        msgListeners.push(fn);\n      },\n      removeListener(fn) {\n        const i = msgListeners.indexOf(fn);\n        if (i >= 0) msgListeners.splice(i, 1);\n      },\n    },\n\n    // port API:\n    connect,\n    onConnect: {\n      addListener(fn) {\n        onConnect(fn);\n      },\n      removeListener(fn) {\n        const i = onConnectListeners.indexOf(fn);\n        if (i >= 0) onConnectListeners.splice(i, 1);\n      },\n    },\n  };\n}\n\n\n// --- Abstraction Layer: PostMessage Target\n\nlet nextRequestId = 1;\nconst pendingRequests = new Map(); // requestId -> { resolve, reject, timeout }\n\nfunction sendAbstractionRequest(method, args = []) {\n  return new Promise((resolve, reject) => {\n    const requestId = nextRequestId++;\n\n    const timeout = setTimeout(() => {\n      pendingRequests.delete(requestId);\n      reject(new Error(`PostMessage request timeout for method: ${method}`));\n    }, 10000);\n\n    pendingRequests.set(requestId, { resolve, reject, timeout });\n\n    window.parent.postMessage({\n      type: \"abstraction-request\",\n      requestId,\n      method,\n      args,\n    });\n  });\n}\n\nwindow.addEventListener(\"message\", (event) => {\n  const { type, requestId, success, result, error } = event.data;\n\n  if (type === \"abstraction-response\") {\n    const pending = pendingRequests.get(requestId);\n    if (pending) {\n      clearTimeout(pending.timeout);\n      pendingRequests.delete(requestId);\n\n      if (success) {\n        pending.resolve(result);\n      } else {\n        const err = new Error(error.message);\n        err.stack = error.stack;\n        pending.reject(err);\n      }\n    }\n  }\n});\n\nasync function _storageSet(items) {\n  return sendAbstractionRequest(\"_storageSet\", [items]);\n}\n\nasync function _storageGet(keys) {\n  return sendAbstractionRequest(\"_storageGet\", [keys]);\n}\n\nasync function _storageRemove(keysToRemove) {\n  return sendAbstractionRequest(\"_storageRemove\", [keysToRemove]);\n}\n\nasync function _storageClear() {\n  return sendAbstractionRequest(\"_storageClear\");\n}\n\nasync function _cookieList(details) {\n  return sendAbstractionRequest(\"_cookieList\", [details]);\n}\n\nasync function _cookieSet(details) {\n  return sendAbstractionRequest(\"_cookieSet\", [details]);\n}\n\nasync function _cookieDelete(details) {\n  return sendAbstractionRequest(\"_cookieDelete\", [details]);\n}\n\nasync function _fetch(url, options) {\n  return sendAbstractionRequest(\"_fetch\", [url, options]);\n}\n\nfunction _registerMenuCommand(name, func) {\n  _warn(\"_registerMenuCommand called from iframe context:\", name);\n  return sendAbstractionRequest(\"_registerMenuCommand\", [\n    name,\n    func.toString(),\n  ]);\n}\n\nfunction _openTab(url, active) {\n  return sendAbstractionRequest(\"_openTab\", [url, active]);\n}\n\nasync function _initStorage() {\n  return sendAbstractionRequest(\"_initStorage\");\n}\n\n\nconst EXTENSION_ASSETS_MAP = {{EXTENSION_ASSETS_MAP}};\n\n// -- Polyfill Implementation\nfunction buildPolyfill({ isBackground = false, isOtherPage = false } = {}) {\n  // Generate a unique context ID for this polyfill instance\n  const contextType = isBackground\n    ? \"background\"\n    : isOtherPage\n      ? \"options\"\n      : \"content\";\n  const contextId = `${contextType}_${Math.random()\n    .toString(36)\n    .substring(2, 15)}`;\n\n  const IS_IFRAME = \"true\" === \"true\";\n  const BUS = (function () {\n    if (globalThis.__BUS) {\n      return globalThis.__BUS;\n    }\n    globalThis.__BUS = createEventBus(\n      \"material-icons-for-github\",\n      IS_IFRAME ? \"iframe\" : \"page\"\n    );\n    return globalThis.__BUS;\n  })();\n  const RUNTIME = createRuntime(isBackground ? \"background\" : \"tab\", BUS);\n  const createNoopListeners = () => ({\n    addListener: (callback) => {\n      _log(\"addListener\", callback);\n    },\n    removeListener: (callback) => {\n      _log(\"removeListener\", callback);\n    },\n  });\n  // TODO: Stub\n  const storageChangeListeners = new Set();\n  function broadcastStorageChange(changes, areaName) {\n    storageChangeListeners.forEach((listener) => {\n      listener(changes, areaName);\n    });\n  }\n\n  let REQ_PERMS = [];\n\n  // --- Chrome polyfill\n  let chrome = {\n    extension: {\n      isAllowedIncognitoAccess: () => Promise.resolve(true),\n      sendMessage: (...args) => _messagingHandler.sendMessage(...args),\n    },\n    permissions: {\n      // TODO: Remove origin permission means exclude from origin in startup\n      request: (permissions, callback) => {\n        _log(\"permissions.request\", permissions, callback);\n        if (Array.isArray(permissions)) {\n          REQ_PERMS = [...REQ_PERMS, ...permissions];\n        }\n        if (typeof callback === \"function\") {\n          callback(permissions);\n        }\n        return Promise.resolve(permissions);\n      },\n      contains: (permissions, callback) => {\n        if (typeof callback === \"function\") {\n          callback(true);\n        }\n        return Promise.resolve(true);\n      },\n      getAll: () => {\n        return Promise.resolve({\n          permissions: EXTENSION_PERMISSIONS,\n          origins: ORIGIN_PERMISSIONS,\n        });\n      },\n      onAdded: createNoopListeners(),\n      onRemoved: createNoopListeners(),\n    },\n    i18n: {\n      getUILanguage: () => {\n        return USED_LOCALE || \"en\";\n      },\n      getMessage: (key, substitutions = []) => {\n        if (typeof substitutions === \"string\") {\n          substitutions = [substitutions];\n        }\n        if (typeof LOCALE_KEYS !== \"undefined\" && LOCALE_KEYS[key]) {\n          return LOCALE_KEYS[key].message?.replace(\n            /\\$(\\d+)/g,\n            (match, p1) => substitutions[p1 - 1] || match\n          );\n        }\n        return key;\n      },\n    },\n    alarms: {\n      onAlarm: createNoopListeners(),\n      create: () => {\n        _log(\"alarms.create\", arguments);\n      },\n      get: () => {\n        _log(\"alarms.get\", arguments);\n      },\n    },\n    runtime: {\n      ...RUNTIME,\n      onInstalled: createNoopListeners(),\n      onStartup: createNoopListeners(),\n      // TODO: Postmessage to parent to open options page or call openOptionsPage\n      openOptionsPage: () => {\n        // const url = chrome.runtime.getURL(OPTIONS_PAGE_PATH);\n        // console.log(\"openOptionsPage\", _openTab, url, EXTENSION_ASSETS_MAP);\n        // _openTab(url);\n        if (typeof openOptionsPage === \"function\") {\n          openOptionsPage();\n        } else if (window.parent) {\n          window.parent.postMessage({ type: \"openOptionsPage\" }, \"*\");\n        } else {\n          _warn(\"openOptionsPage not available.\");\n        }\n      },\n      getManifest: () => {\n        // The manifest object will be injected into the scope where buildPolyfill is called\n        if (typeof INJECTED_MANIFEST !== \"undefined\") {\n          return JSON.parse(JSON.stringify(INJECTED_MANIFEST)); // Return deep copy\n        }\n        _warn(\"INJECTED_MANIFEST not found for chrome.runtime.getManifest\");\n        return { name: \"Unknown\", version: \"0.0\", manifest_version: 2 };\n      },\n      getURL: (path) => {\n        if (!path) return \"\";\n        if (path.startsWith(\"/\")) {\n          path = path.substring(1);\n        }\n\n        if (typeof _createAssetUrl === \"function\") {\n          return _createAssetUrl(path);\n        }\n\n        _warn(\n          `chrome.runtime.getURL fallback for '${path}'. Assets may not be available.`\n        );\n        // Attempt a relative path resolution (highly context-dependent and likely wrong)\n        try {\n          if (window.location.protocol.startsWith(\"http\")) {\n            return new URL(path, window.location.href).toString();\n          }\n        } catch (e) {\n          /* ignore error, fallback */\n        }\n        return path;\n      },\n      id: \"polyfilled-extension-\" + Math.random().toString(36).substring(2, 15),\n      lastError: null,\n      getPlatformInfo: async () => {\n        const platform = {\n          os: \"unknown\",\n          arch: \"unknown\",\n          nacl_arch: \"unknown\",\n        };\n\n        if (typeof navigator !== \"undefined\") {\n          const userAgent = navigator.userAgent.toLowerCase();\n          if (userAgent.includes(\"mac\")) platform.os = \"mac\";\n          else if (userAgent.includes(\"win\")) platform.os = \"win\";\n          else if (userAgent.includes(\"linux\")) platform.os = \"linux\";\n          else if (userAgent.includes(\"android\")) platform.os = \"android\";\n          else if (userAgent.includes(\"ios\")) platform.os = \"ios\";\n\n          if (userAgent.includes(\"x86_64\") || userAgent.includes(\"amd64\")) {\n            platform.arch = \"x86-64\";\n          } else if (userAgent.includes(\"i386\") || userAgent.includes(\"i686\")) {\n            platform.arch = \"x86-32\";\n          } else if (userAgent.includes(\"arm\")) {\n            platform.arch = \"arm\";\n          }\n        }\n\n        return platform;\n      },\n      getBrowserInfo: async () => {\n        const info = {\n          name: \"unknown\",\n          version: \"unknown\",\n          buildID: \"unknown\",\n        };\n\n        if (typeof navigator !== \"undefined\") {\n          const userAgent = navigator.userAgent;\n          if (userAgent.includes(\"Chrome\")) {\n            info.name = \"Chrome\";\n            const match = userAgent.match(/Chrome\\/([0-9.]+)/);\n            if (match) info.version = match[1];\n          } else if (userAgent.includes(\"Firefox\")) {\n            info.name = \"Firefox\";\n            const match = userAgent.match(/Firefox\\/([0-9.]+)/);\n            if (match) info.version = match[1];\n          } else if (userAgent.includes(\"Safari\")) {\n            info.name = \"Safari\";\n            const match = userAgent.match(/Version\\/([0-9.]+)/);\n            if (match) info.version = match[1];\n          }\n        }\n\n        return info;\n      },\n    },\n    storage: {\n      local: {\n        get: function (keys, callback) {\n          if (typeof _storageGet !== \"function\")\n            throw new Error(\"_storageGet not defined\");\n\n          const promise = _storageGet(keys);\n\n          if (typeof callback === \"function\") {\n            promise\n              .then((result) => {\n                try {\n                  callback(result);\n                } catch (e) {\n                  _error(\"Error in storage.get callback:\", e);\n                }\n              })\n              .catch((error) => {\n                _error(\"Storage.get error:\", error);\n                callback({});\n              });\n            return;\n          }\n\n          return promise;\n        },\n        set: function (items, callback) {\n          if (typeof _storageSet !== \"function\")\n            throw new Error(\"_storageSet not defined\");\n\n          const promise = _storageSet(items).then((result) => {\n            broadcastStorageChange(items, \"local\");\n            return result;\n          });\n\n          if (typeof callback === \"function\") {\n            promise\n              .then((result) => {\n                try {\n                  callback(result);\n                } catch (e) {\n                  _error(\"Error in storage.set callback:\", e);\n                }\n              })\n              .catch((error) => {\n                _error(\"Storage.set error:\", error);\n                callback();\n              });\n            return;\n          }\n\n          return promise;\n        },\n        remove: function (keys, callback) {\n          if (typeof _storageRemove !== \"function\")\n            throw new Error(\"_storageRemove not defined\");\n\n          const promise = _storageRemove(keys).then((result) => {\n            const changes = {};\n            const keyList = Array.isArray(keys) ? keys : [keys];\n            keyList.forEach((key) => {\n              changes[key] = { oldValue: undefined, newValue: undefined };\n            });\n            broadcastStorageChange(changes, \"local\");\n            return result;\n          });\n\n          if (typeof callback === \"function\") {\n            promise\n              .then((result) => {\n                try {\n                  callback(result);\n                } catch (e) {\n                  _error(\"Error in storage.remove callback:\", e);\n                }\n              })\n              .catch((error) => {\n                _error(\"Storage.remove error:\", error);\n                callback();\n              });\n            return;\n          }\n\n          return promise;\n        },\n        clear: function (callback) {\n          if (typeof _storageClear !== \"function\")\n            throw new Error(\"_storageClear not defined\");\n\n          const promise = _storageClear().then((result) => {\n            broadcastStorageChange({}, \"local\");\n            return result;\n          });\n\n          if (typeof callback === \"function\") {\n            promise\n              .then((result) => {\n                try {\n                  callback(result);\n                } catch (e) {\n                  _error(\"Error in storage.clear callback:\", e);\n                }\n              })\n              .catch((error) => {\n                _error(\"Storage.clear error:\", error);\n                callback();\n              });\n            return;\n          }\n\n          return promise;\n        },\n        onChanged: {\n          addListener: (callback) => {\n            storageChangeListeners.add(callback);\n          },\n          removeListener: (callback) => {\n            storageChangeListeners.delete(callback);\n          },\n        },\n      },\n      sync: {\n        get: function (keys, callback) {\n          _warn(\"chrome.storage.sync polyfill maps to local\");\n          return chrome.storage.local.get(keys, callback);\n        },\n        set: function (items, callback) {\n          _warn(\"chrome.storage.sync polyfill maps to local\");\n\n          const promise = chrome.storage.local.set(items).then((result) => {\n            broadcastStorageChange(items, \"sync\");\n            return result;\n          });\n\n          if (typeof callback === \"function\") {\n            promise\n              .then((result) => {\n                try {\n                  callback(result);\n                } catch (e) {\n                  _error(\"Error in storage.sync.set callback:\", e);\n                }\n              })\n              .catch((error) => {\n                _error(\"Storage.sync.set error:\", error);\n                callback();\n              });\n            return;\n          }\n\n          return promise;\n        },\n        remove: function (keys, callback) {\n          _warn(\"chrome.storage.sync polyfill maps to local\");\n\n          const promise = chrome.storage.local.remove(keys).then((result) => {\n            const changes = {};\n            const keyList = Array.isArray(keys) ? keys : [keys];\n            keyList.forEach((key) => {\n              changes[key] = { oldValue: undefined, newValue: undefined };\n            });\n            broadcastStorageChange(changes, \"sync\");\n            return result;\n          });\n\n          if (typeof callback === \"function\") {\n            promise\n              .then((result) => {\n                try {\n                  callback(result);\n                } catch (e) {\n                  _error(\"Error in storage.sync.remove callback:\", e);\n                }\n              })\n              .catch((error) => {\n                _error(\"Storage.sync.remove error:\", error);\n                callback();\n              });\n            return;\n          }\n\n          return promise;\n        },\n        clear: function (callback) {\n          _warn(\"chrome.storage.sync polyfill maps to local\");\n\n          const promise = chrome.storage.local.clear().then((result) => {\n            broadcastStorageChange({}, \"sync\");\n            return result;\n          });\n\n          if (typeof callback === \"function\") {\n            promise\n              .then((result) => {\n                try {\n                  callback(result);\n                } catch (e) {\n                  _error(\"Error in storage.sync.clear callback:\", e);\n                }\n              })\n              .catch((error) => {\n                _error(\"Storage.sync.clear error:\", error);\n                callback();\n              });\n            return;\n          }\n\n          return promise;\n        },\n        onChanged: {\n          addListener: (callback) => {\n            storageChangeListeners.add(callback);\n          },\n          removeListener: (callback) => {\n            storageChangeListeners.delete(callback);\n          },\n        },\n      },\n      onChanged: {\n        addListener: (callback) => {\n          storageChangeListeners.add(callback);\n        },\n        removeListener: (callback) => {\n          storageChangeListeners.delete(callback);\n        },\n      },\n      managed: {\n        get: function (keys, callback) {\n          _warn(\"chrome.storage.managed polyfill is read-only empty.\");\n\n          const promise = Promise.resolve({});\n\n          if (typeof callback === \"function\") {\n            promise.then((result) => {\n              try {\n                callback(result);\n              } catch (e) {\n                _error(\"Error in storage.managed.get callback:\", e);\n              }\n            });\n            return;\n          }\n\n          return promise;\n        },\n      },\n    },\n    cookies: (function () {\n      const cookieChangeListeners = new Set();\n      function broadcastCookieChange(changeInfo) {\n        cookieChangeListeners.forEach((listener) => {\n          try {\n            listener(changeInfo);\n          } catch (e) {\n            _error(\"Error in cookies.onChanged listener:\", e);\n          }\n        });\n      }\n\n      function handlePromiseCallback(promise, callback) {\n        if (typeof callback === \"function\") {\n          promise\n            .then((result) => callback(result))\n            .catch((error) => {\n              // chrome.runtime.lastError = { message: error.message }; // TODO: Implement lastError\n              _error(error);\n              callback(); // Call with undefined on error\n            });\n          return;\n        }\n        return promise;\n      }\n\n      return {\n        get: function (details, callback) {\n          if (typeof _cookieList !== \"function\") {\n            return handlePromiseCallback(\n              Promise.reject(new Error(\"_cookieList not defined\")),\n              callback\n            );\n          }\n          const promise = _cookieList({\n            url: details.url,\n            name: details.name,\n            storeId: details.storeId,\n            partitionKey: details.partitionKey,\n          }).then((cookies) => {\n            if (!cookies || cookies.length === 0) {\n              return null;\n            }\n            // Sort by path length (longest first), then creation time (earliest first, if available)\n            cookies.sort((a, b) => {\n              const pathLenDiff = (b.path || \"\").length - (a.path || \"\").length;\n              if (pathLenDiff !== 0) return pathLenDiff;\n              return (a.creationTime || 0) - (b.creationTime || 0);\n            });\n            return cookies[0];\n          });\n          return handlePromiseCallback(promise, callback);\n        },\n\n        getAll: function (details, callback) {\n          if (typeof _cookieList !== \"function\") {\n            return handlePromiseCallback(\n              Promise.reject(new Error(\"_cookieList not defined\")),\n              callback\n            );\n          }\n          if (details.partitionKey) {\n            _warn(\n              \"cookies.getAll: partitionKey is not fully supported in this environment.\"\n            );\n          }\n          const promise = _cookieList(details);\n          return handlePromiseCallback(promise, callback);\n        },\n\n        set: function (details, callback) {\n          const promise = (async () => {\n            if (\n              typeof _cookieSet !== \"function\" ||\n              typeof _cookieList !== \"function\"\n            ) {\n              throw new Error(\"_cookieSet or _cookieList not defined\");\n            }\n            if (details.partitionKey) {\n              _warn(\n                \"cookies.set: partitionKey is not fully supported in this environment.\"\n              );\n            }\n\n            const getDetails = {\n              url: details.url,\n              name: details.name,\n              storeId: details.storeId,\n            };\n            const oldCookies = await _cookieList(getDetails);\n            const oldCookie = oldCookies && oldCookies[0];\n\n            if (oldCookie) {\n              broadcastCookieChange({\n                cause: \"overwrite\",\n                cookie: oldCookie,\n                removed: true,\n              });\n            }\n\n            await _cookieSet(details);\n            const newCookies = await _cookieList(getDetails);\n            const newCookie = newCookies && newCookies[0];\n\n            if (newCookie) {\n              broadcastCookieChange({\n                cause: \"explicit\",\n                cookie: newCookie,\n                removed: false,\n              });\n            }\n            return newCookie || null;\n          })();\n          return handlePromiseCallback(promise, callback);\n        },\n\n        remove: function (details, callback) {\n          const promise = (async () => {\n            if (\n              typeof _cookieDelete !== \"function\" ||\n              typeof _cookieList !== \"function\"\n            ) {\n              throw new Error(\"_cookieDelete or _cookieList not defined\");\n            }\n            const oldCookies = await _cookieList(details);\n            const oldCookie = oldCookies && oldCookies[0];\n\n            if (!oldCookie) return null; // Nothing to remove\n\n            await _cookieDelete(details);\n\n            broadcastCookieChange({\n              cause: \"explicit\",\n              cookie: oldCookie,\n              removed: true,\n            });\n\n            return {\n              url: details.url,\n              name: details.name,\n              storeId: details.storeId || \"0\",\n              partitionKey: details.partitionKey,\n            };\n          })();\n          return handlePromiseCallback(promise, callback);\n        },\n\n        getAllCookieStores: function (callback) {\n          const promise = Promise.resolve([\n            { id: \"0\", tabIds: [1] }, // Mock store for the current context\n          ]);\n          return handlePromiseCallback(promise, callback);\n        },\n\n        getPartitionKey: function (details, callback) {\n          _warn(\n            \"chrome.cookies.getPartitionKey is not supported in this environment.\"\n          );\n          const promise = Promise.resolve({ partitionKey: {} }); // Return empty partition key\n          return handlePromiseCallback(promise, callback);\n        },\n\n        onChanged: {\n          addListener: (callback) => {\n            if (typeof callback === \"function\") {\n              cookieChangeListeners.add(callback);\n            }\n          },\n          removeListener: (callback) => {\n            cookieChangeListeners.delete(callback);\n          },\n        },\n      };\n    })(),\n    tabs: {\n      query: async (queryInfo) => {\n        _warn(\"chrome.tabs.query polyfill only returns current tab info.\");\n        const dummyId = Math.floor(Math.random() * 1000) + 1;\n        return [\n          {\n            id: dummyId,\n            url: CURRENT_LOCATION,\n            active: true,\n            windowId: 1,\n            status: \"complete\",\n          },\n        ];\n      },\n      create: async ({ url, active = true }) => {\n        _log(`[Polyfill tabs.create] URL: ${url}`);\n        if (typeof _openTab !== \"function\")\n          throw new Error(\"_openTab not defined\");\n        _openTab(url, active);\n        const dummyId = Math.floor(Math.random() * 1000) + 1001;\n        return Promise.resolve({\n          id: dummyId,\n          url: url,\n          active,\n          windowId: 1,\n        });\n      },\n      sendMessage: async (tabId, message) => {\n        _warn(\n          `chrome.tabs.sendMessage polyfill (to tab ${tabId}) redirects to runtime.sendMessage (current context).`\n        );\n        return chrome.runtime.sendMessage(message);\n      },\n    },\n    notifications: {\n      create: async (notificationId, options) => {\n        try {\n          let id = notificationId;\n          let notificationOptions = options;\n\n          if (typeof notificationId === \"object\" && notificationId !== null) {\n            notificationOptions = notificationId;\n            id = \"notification_\" + Math.random().toString(36).substring(2, 15);\n          } else if (typeof notificationId === \"string\" && options) {\n            id = notificationId;\n            notificationOptions = options;\n          } else {\n            throw new Error(\"Invalid parameters for notifications.create\");\n          }\n\n          if (!notificationOptions || typeof notificationOptions !== \"object\") {\n            throw new Error(\"Notification options must be an object\");\n          }\n\n          const {\n            title,\n            message,\n            iconUrl,\n            type = \"basic\",\n          } = notificationOptions;\n\n          if (!title || !message) {\n            throw new Error(\"Notification must have title and message\");\n          }\n\n          if (\"Notification\" in window) {\n            if (Notification.permission === \"granted\") {\n              const notification = new Notification(title, {\n                body: message,\n                icon: iconUrl,\n                tag: id,\n              });\n\n              _log(`[Notifications] Created notification: ${id}`);\n              return id;\n            } else if (Notification.permission === \"default\") {\n              const permission = await Notification.requestPermission();\n              if (permission === \"granted\") {\n                const notification = new Notification(title, {\n                  body: message,\n                  icon: iconUrl,\n                  tag: id,\n                });\n                _log(\n                  `[Notifications] Created notification after permission: ${id}`\n                );\n                return id;\n              } else {\n                _warn(\"[Notifications] Permission denied for notifications\");\n                return id;\n              }\n            } else {\n              _warn(\"[Notifications] Notifications are blocked\");\n              return id;\n            }\n          } else {\n            _warn(\n              \"[Notifications] Native notifications not supported, using console fallback\"\n            );\n            _log(`[Notification] ${title}: ${message}`);\n            return id;\n          }\n        } catch (error) {\n          _error(\"[Notifications] Error creating notification:\", error.message);\n          throw error;\n        }\n      },\n      clear: async (notificationId) => {\n        _log(`[Notifications] Clear notification: ${notificationId}`);\n        // For native notifications, there's no direct way to clear by ID\n        // This is a limitation of the Web Notifications API\n        return true;\n      },\n      getAll: async () => {\n        _warn(\"[Notifications] getAll not fully supported in polyfill\");\n        return {};\n      },\n      getPermissionLevel: async () => {\n        if (\"Notification\" in window) {\n          const permission = Notification.permission;\n          return { level: permission === \"granted\" ? \"granted\" : \"denied\" };\n        }\n        return { level: \"denied\" };\n      },\n    },\n    contextMenus: {\n      create: (createProperties, callback) => {\n        try {\n          if (!createProperties || typeof createProperties !== \"object\") {\n            throw new Error(\"Context menu create properties must be an object\");\n          }\n\n          const { id, title, contexts = [\"page\"], onclick } = createProperties;\n          const menuId =\n            id || `menu_${Math.random().toString(36).substring(2, 15)}`;\n\n          if (!title || typeof title !== \"string\") {\n            throw new Error(\"Context menu must have a title\");\n          }\n\n          // Store menu items for potential use\n          if (!window._polyfillContextMenus) {\n            window._polyfillContextMenus = new Map();\n          }\n\n          window._polyfillContextMenus.set(menuId, {\n            id: menuId,\n            title,\n            contexts,\n            onclick,\n            enabled: createProperties.enabled !== false,\n          });\n\n          _log(\n            `[ContextMenus] Created context menu item: ${title} (${menuId})`\n          );\n\n          // Try to register a menu command as fallback\n          if (typeof _registerMenuCommand === \"function\") {\n            try {\n              _registerMenuCommand(\n                title,\n                onclick ||\n                  (() => {\n                    _log(`Context menu clicked: ${title}`);\n                  })\n              );\n            } catch (e) {\n              _warn(\n                \"[ContextMenus] Failed to register as menu command:\",\n                e.message\n              );\n            }\n          }\n\n          if (callback && typeof callback === \"function\") {\n            setTimeout(() => callback(), 0);\n          }\n\n          return menuId;\n        } catch (error) {\n          _error(\"[ContextMenus] Error creating context menu:\", error.message);\n          if (callback && typeof callback === \"function\") {\n            setTimeout(() => callback(), 0);\n          }\n          throw error;\n        }\n      },\n      update: (id, updateProperties, callback) => {\n        try {\n          if (\n            !window._polyfillContextMenus ||\n            !window._polyfillContextMenus.has(id)\n          ) {\n            throw new Error(`Context menu item not found: ${id}`);\n          }\n\n          const menuItem = window._polyfillContextMenus.get(id);\n          Object.assign(menuItem, updateProperties);\n\n          _log(`[ContextMenus] Updated context menu item: ${id}`);\n\n          if (callback && typeof callback === \"function\") {\n            setTimeout(() => callback(), 0);\n          }\n        } catch (error) {\n          _error(\"[ContextMenus] Error updating context menu:\", error.message);\n          if (callback && typeof callback === \"function\") {\n            setTimeout(() => callback(), 0);\n          }\n        }\n      },\n      remove: (menuItemId, callback) => {\n        try {\n          if (\n            window._polyfillContextMenus &&\n            window._polyfillContextMenus.has(menuItemId)\n          ) {\n            window._polyfillContextMenus.delete(menuItemId);\n            _log(`[ContextMenus] Removed context menu item: ${menuItemId}`);\n          } else {\n            _warn(\n              `[ContextMenus] Context menu item not found for removal: ${menuItemId}`\n            );\n          }\n\n          if (callback && typeof callback === \"function\") {\n            setTimeout(() => callback(), 0);\n          }\n        } catch (error) {\n          _error(\"[ContextMenus] Error removing context menu:\", error.message);\n          if (callback && typeof callback === \"function\") {\n            setTimeout(() => callback(), 0);\n          }\n        }\n      },\n      removeAll: (callback) => {\n        try {\n          if (window._polyfillContextMenus) {\n            const count = window._polyfillContextMenus.size;\n            window._polyfillContextMenus.clear();\n            _log(`[ContextMenus] Removed all ${count} context menu items`);\n          }\n\n          if (callback && typeof callback === \"function\") {\n            setTimeout(() => callback(), 0);\n          }\n        } catch (error) {\n          _error(\n            \"[ContextMenus] Error removing all context menus:\",\n            error.message\n          );\n          if (callback && typeof callback === \"function\") {\n            setTimeout(() => callback(), 0);\n          }\n        }\n      },\n      onClicked: {\n        addListener: (callback) => {\n          if (!window._polyfillContextMenuListeners) {\n            window._polyfillContextMenuListeners = new Set();\n          }\n          window._polyfillContextMenuListeners.add(callback);\n          _log(\"[ContextMenus] Added click listener\");\n        },\n        removeListener: (callback) => {\n          if (window._polyfillContextMenuListeners) {\n            window._polyfillContextMenuListeners.delete(callback);\n            _log(\"[ContextMenus] Removed click listener\");\n          }\n        },\n      },\n    },\n  };\n\n  const tc = (fn) => {\n    try {\n      fn();\n    } catch (e) {}\n  };\n  const loggingProxyHandler = (_key) => ({\n    get(target, key, receiver) {\n      tc(() => _log(`[${contextType}] [CHROME - ${_key}] Getting ${key}`));\n      return Reflect.get(target, key, receiver);\n    },\n    set(target, key, value, receiver) {\n      tc(() =>\n        _log(`[${contextType}] [CHROME - ${_key}] Setting ${key} to ${value}`)\n      );\n      return Reflect.set(target, key, value, receiver);\n    },\n    has(target, key) {\n      tc(() =>\n        _log(`[${contextType}] [CHROME - ${_key}] Checking if ${key} exists`)\n      );\n      return Reflect.has(target, key);\n    },\n  });\n  chrome = Object.fromEntries(\n    Object.entries(chrome).map(([key, value]) => [\n      key,\n      new Proxy(value, loggingProxyHandler(key)),\n    ])\n  );\n\n  // Alias browser to chrome for common Firefox pattern\n  const browser = new Proxy(chrome, loggingProxyHandler);\n\n  const oldGlobalThis = globalThis;\n  const oldWindow = window;\n  const oldSelf = self;\n  const oldGlobal = globalThis;\n  const __globalsStorage = {};\n\n  const TO_MODIFY = [oldGlobalThis, oldWindow, oldSelf, oldGlobal];\n  const set = (k, v) => {\n    __globalsStorage[k] = v;\n    TO_MODIFY.forEach((target) => {\n      target[k] = v;\n    });\n  };\n  const proxyHandler = {\n    get(target, key, receiver) {\n      try {\n        return __globalsStorage[key] || Reflect.get(target, key, receiver);\n      } catch (e) {\n        _error(\"Error getting\", key, e);\n        return undefined;\n      }\n    },\n    set(target, key, value, receiver) {\n      try {\n        tc(() => _log(`[${contextType}] Setting ${key} to ${value}`));\n        set(key, value);\n        return Reflect.set(target, key, value, receiver);\n      } catch (e) {\n        _error(\"Error setting\", key, value, e);\n        return false;\n      }\n    },\n    has(target, key) {\n      try {\n        return key in __globalsStorage || key in target;\n      } catch (e) {\n        _error(\"Error has\", key, e);\n        return false;\n      }\n    },\n    getOwnPropertyDescriptor(target, key) {\n      try {\n        if (key in __globalsStorage) {\n          return {\n            configurable: true,\n            enumerable: true,\n            writable: true,\n            value: __globalsStorage[key],\n          };\n        }\n        // fall back to the real globalThis\n        const desc = Reflect.getOwnPropertyDescriptor(target, key);\n        // ensure it's configurable so the with‑scope binding logic can override it\n        if (desc && !desc.configurable) {\n          desc.configurable = true;\n        }\n        return desc;\n      } catch (e) {\n        _error(\"Error getOwnPropertyDescriptor\", key, e);\n        return {\n          configurable: true,\n          enumerable: true,\n          writable: true,\n          value: undefined,\n        };\n      }\n    },\n\n    defineProperty(target, key, descriptor) {\n      try {\n        // Normalize descriptor to avoid mixed accessor & data attributes\n        const hasAccessor = \"get\" in descriptor || \"set\" in descriptor;\n\n        if (hasAccessor) {\n          // Build a clean descriptor without value/writable when accessors present\n          const normalized = {\n            configurable:\n              \"configurable\" in descriptor ? descriptor.configurable : true,\n            enumerable:\n              \"enumerable\" in descriptor ? descriptor.enumerable : false,\n          };\n          if (\"get\" in descriptor) normalized.get = descriptor.get;\n          if (\"set\" in descriptor) normalized.set = descriptor.set;\n\n          // Store accessor references for inspection but avoid breaking invariants\n          set(key, {\n            get: descriptor.get,\n            set: descriptor.set,\n          });\n\n          return Reflect.defineProperty(target, key, normalized);\n        }\n\n        // Data descriptor path\n        set(key, descriptor.value);\n        return Reflect.defineProperty(target, key, descriptor);\n      } catch (e) {\n        _error(\"Error defineProperty\", key, descriptor, e);\n        return false;\n      }\n    },\n  };\n\n  // Create proxies once proxyHandler is defined\n  const proxyWindow = new Proxy(oldWindow, proxyHandler);\n  const proxyGlobalThis = new Proxy(oldGlobalThis, proxyHandler);\n  const proxyGlobal = new Proxy(oldGlobal, proxyHandler);\n  const proxySelf = new Proxy(oldSelf, proxyHandler);\n\n  // Seed storage with core globals so lookups succeed inside `with` blocks\n  Object.assign(__globalsStorage, {\n    chrome,\n    browser,\n    window: proxyWindow,\n    globalThis: proxyGlobalThis,\n    global: proxyGlobal,\n    self: proxySelf,\n  });\n\n  const __globals = {\n    chrome,\n    browser,\n    window: proxyWindow,\n    globalThis: proxyGlobalThis,\n    global: proxyGlobal,\n    self: proxySelf,\n    __globals: __globalsStorage,\n  };\n\n  __globalsStorage.contextId = contextId;\n  __globalsStorage.contextType = contextType;\n  __globalsStorage.module = undefined;\n  __globalsStorage.amd = undefined;\n  __globalsStorage.define = undefined;\n\n  return __globals;\n}\n\n\nif (typeof window !== 'undefined') {\n    window.buildPolyfill = buildPolyfill;\n}\n"
 			    let newMap = JSON.parse(JSON.stringify(EXTENSION_ASSETS_MAP));
 			    delete newMap[OPTIONS_PAGE_PATH];
 			    const PASS_ON = Object.fromEntries(Object.entries({
@@ -3691,6 +3677,9 @@ const e=!0,t=e=>e,s="passthrough";let o,c={createHTML:t,createScript:t,createScr
 			        _createAssetUrl,
 			        _matchGlobPattern,
 			        _isWebAccessibleResource,
+			        _log,
+			        _warn,
+			        _error,
 			    }).map(i => {
 			      let out = [...i];
 			      if (typeof i[1] === 'function'){
@@ -3700,11 +3689,11 @@ const e=!0,t=e=>e,s="passthrough";let o,c={createHTML:t,createScript:t,createScr
 			      }
 			      return out;
 			    }))
-			    console.log(PASS_ON);
+			    _log(PASS_ON);
 			    return `
 			    ${Object.entries(PASS_ON).map(i => `const ${i[0]} = ${i[1]};\nwindow[${JSON.stringify(i[0])}] = ${i[0]}`).join('\n')}
 			
-			        console.log("Initialized polyfill", {${Object.keys(PASS_ON).join(', ')}})
+			        _log("Initialized polyfill", {${Object.keys(PASS_ON).join(', ')}})
 			        ${polyfillString.replaceAll("{{EXTENSION_ASSETS_MAP}}", `JSON.parse(atob("${btoa(JSON.stringify(EXTENSION_ASSETS_MAP))}"))`)}
 			
 			        // Initialize the polyfill context for options page
@@ -3719,22 +3708,25 @@ const e=!0,t=e=>e,s="passthrough";let o,c={createHTML:t,createScript:t,createScr
 			}
 			
 			async function main() {
-			    console.log(`[${SCRIPT_NAME}] Initializing...`);
+			    _log(`Initializing...`, performance.now());
 			
 			    if (typeof _initStorage === 'function') {
 			        try {
-			            await _initStorage();
-			            console.log(`[${SCRIPT_NAME}] Storage initialized.`);
+			            _initStorage().then(() => {
+			                _log(`Storage initialized.`);
+			            }).catch(e => {
+			                _error('Error during storage initialization:', e);
+			            });
 			        } catch (e) {
-			            console.error('Error during storage initialization:', e);
+			            _error('Error during storage initialization:', e);
 			        }
 			    }
 			
-			    console.log(`[${SCRIPT_NAME}] Starting content scripts...`);
+			    _log(`Starting content scripts...`);
 			
 			    const currentUrl = window.location.href;
 			    let shouldRunAnyScript = false;
-			    console.log(`[${SCRIPT_NAME}] Checking URL: ${currentUrl}`);
+			    _log(`Checking URL: ${currentUrl}`);
 			
 			    if (CONTENT_SCRIPT_CONFIGS_FOR_MATCHING && CONTENT_SCRIPT_CONFIGS_FOR_MATCHING.length > 0) {
 			        for (const config of CONTENT_SCRIPT_CONFIGS_FOR_MATCHING) {
@@ -3746,17 +3738,17 @@ const e=!0,t=e=>e,s="passthrough";let o,c={createHTML:t,createScript:t,createScr
 			                    }
 			                    return false;
 			                } catch (e) {
-			                    console.error(`[${SCRIPT_NAME}] Error testing match pattern "${pattern}":`, e);
+			                    _error(`Error testing match pattern "${pattern}":`, e);
 			                    return false;
 			                }
 			            })) {
 			                shouldRunAnyScript = true;
-			                console.log(`[${SCRIPT_NAME}] URL match found via config:`, config);
+			                _log(`URL match found via config:`, config);
 			                break;
 			            }
 			        }
 			    } else {
-			        console.log(`[${SCRIPT_NAME}] No content script configurations found in manifest data.`);
+			        _log(`No content script configurations found in manifest data.`);
 			    }
 			
 			
@@ -3765,25 +3757,25 @@ const e=!0,t=e=>e,s="passthrough";let o,c={createHTML:t,createScript:t,createScr
 			        try {
 			            polyfillContext = buildPolyfill({ isBackground: false });
 			        } catch (e) {
-			            console.error(`[${SCRIPT_NAME}] Failed to build polyfill:`, e);
+			            _error(`Failed to build polyfill:`, e);
 			            return;
 			        }
 			
-			        console.log(`[${SCRIPT_NAME}] Polyfill built. Executing combined script logic...`);
+			        _log(`Polyfill built. Executing combined script logic...`);
 			        // async function executeAllScripts({chrome, browser, global, window, globalThis, self, __globals}, extensionCssData) {
 			        await executeAllScripts.call(polyfillContext.globalThis, polyfillContext, extensionCssData);
 			
 			    } else {
-			        console.log(`[${SCRIPT_NAME}] No matching content script patterns for this URL. No scripts will be executed.`);
+			        _log(`No matching content script patterns for this URL. No scripts will be executed.`);
 			    }
 			
 			    if (OPTIONS_PAGE_PATH) {
 			        if (typeof _registerMenuCommand === 'function') {
 			            try {
 			                _registerMenuCommand('Open Options', openOptionsPage);
-			                console.log(`[${SCRIPT_NAME}] Options menu command registered.`);
+			                _log(`Options menu command registered.`);
 			            } catch(e) {
-			                console.error('Failed to register menu command', e);
+			                _error('Failed to register menu command', e);
 			            }
 			        }
 			    }
@@ -3792,18 +3784,18 @@ const e=!0,t=e=>e,s="passthrough";let o,c={createHTML:t,createScript:t,createScr
 			        if (typeof _registerMenuCommand === 'function') {
 			            try {
 			                _registerMenuCommand('Open Popup', openPopupPage);
-			                console.log(`[${SCRIPT_NAME}] Popup menu command registered.`);
+			                _log(`Popup menu command registered.`);
 			            } catch(e) {
-			                console.error('Failed to register popup menu command', e);
+			                _error('Failed to register popup menu command', e);
 			            }
 			        }
 			    }
 			
-			    console.log(`[${SCRIPT_NAME}] Initialization sequence complete.`);
+			    _log(`Initialization sequence complete.`);
 			
 			}
 			
-			main().catch(e => console.error(`[${SCRIPT_NAME}] Error during script initialization:`, e));
+			main().catch(e => _error(`Error during script initialization:`, e));
 			
 			try {
 			    const fnKey = 'OPEN_OPTIONS_PAGE_' + String(SCRIPT_NAME).replace(/\s+/g, '_');
