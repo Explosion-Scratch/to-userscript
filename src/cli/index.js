@@ -37,6 +37,7 @@ async function main() {
               default: false,
             })
             .option("target", {
+              alias: "t",
               describe: "Build target type",
               choices: ["userscript", "vanilla"],
               default: "userscript",
@@ -155,7 +156,7 @@ async function main() {
       .alias("version", "V")
       .example([
         [
-          '$0 convert "https://chrome.google.com/webstore/detail/..." -o dark-reader.user.js --minify',
+          '$0 convert "https://chrome.google.com/webstore/detail/..." -o material-design-fileicons.user.js --minify',
           "Convert from Chrome Web Store with minification",
         ],
         [

@@ -1,8 +1,8 @@
 {
-  "name": "extension-to-userscript",
+  "name": "to-userscript",
   "version": "0.1.0",
   "description": "Converts simple browser extensions to userscripts",
-  "main": "src/converter.js",
+  "main": "src/cli/index.js",
   "bin": {
     "to-userscript": "src/cli/index.js"
   },
