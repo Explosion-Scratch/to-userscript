@@ -23,6 +23,15 @@
           case "_storageClear":
             result = await _storageClear();
             break;
+          case "_cookieList":
+            result = await _cookieList(args[0]);
+            break;
+          case "_cookieSet":
+            result = await _cookieSet(args[0]);
+            break;
+          case "_cookieDelete":
+            result = await _cookieDelete(args[0]);
+            break;
           case "_fetch":
             result = await _fetch(args[0], args[1]);
             break;

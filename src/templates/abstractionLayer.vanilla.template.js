@@ -370,6 +370,117 @@ async function _storageClear() {
   }
 }
 
+async function _cookieList(details = {}) {
+  return new Promise((resolve) => {
+    const cookies = [];
+    if (typeof document === "undefined" || !document.cookie) {
+      return resolve([]);
+    }
+
+    const docCookies = document.cookie.split(";");
+    const currentDomain = location.hostname;
+
+    if (details.domain && !currentDomain.endsWith(details.domain)) {
+      return resolve([]);
+    }
+
+    for (let i = 0; i < docCookies.length; i++) {
+      let cookie = docCookies[i];
+      while (cookie.charAt(0) === " ") {
+        cookie = cookie.substring(1, cookie.length);
+      }
+      const eqPos = cookie.indexOf("=");
+      const name = eqPos > -1 ? cookie.substr(0, eqPos) : cookie;
+      const value = eqPos > -1 ? cookie.substr(eqPos + 1) : "";
+
+      if (!details.name || details.name === name) {
+        cookies.push({
+          name: name,
+          value: decodeURIComponent(value),
+          domain: currentDomain,
+          path: "/", // Cannot determine path from document.cookie
+          secure: location.protocol === "https:",
+          httpOnly: false, // Cannot determine httpOnly from document.cookie
+          session: true, // Cannot determine expiration from document.cookie
+        });
+      }
+    }
+    resolve(cookies);
+  });
+}
+
+async function _cookieSet(details = {}) {
+  return new Promise((resolve, reject) => {
+    if (typeof document === "undefined") {
+      return reject(new Error("document is not available to set cookie."));
+    }
+    if (!details.name) {
+      return reject(new Error("Cookie name is required."));
+    }
+
+    let cookieString = `${details.name}=${encodeURIComponent(
+      details.value || ""
+    )}`;
+
+    if (details.expirationDate) {
+      const date = new Date(details.expirationDate * 1000);
+      cookieString += `; expires=${date.toUTCString()}`;
+    }
+
+    if (details.domain) {
+      cookieString += `; domain=${details.domain}`;
+    }
+
+    if (details.path) {
+      cookieString += `; path=${details.path}`;
+    } else {
+      cookieString += `; path=/`;
+    }
+
+    if (details.secure) {
+      cookieString += `; secure`;
+    }
+
+    if (details.sameSite) {
+      cookieString += `; samesite=${details.sameSite}`;
+    }
+
+    if (details.httpOnly) {
+      console.warn("`httpOnly` flag cannot be set for cookies via JavaScript.");
+    }
+
+    document.cookie = cookieString;
+    resolve();
+  });
+}
+
+async function _cookieDelete(details = {}) {
+  return new Promise((resolve, reject) => {
+    if (typeof document === "undefined") {
+      return reject(new Error("document is not available to delete cookie."));
+    }
+    if (!details.name) {
+      return reject(new Error("Cookie name is required for deletion."));
+    }
+
+    let cookieString = `${details.name}=; expires=Thu, 01 Jan 1970 00:00:00 GMT`;
+
+    if (details.domain) {
+      cookieString += `; domain=${details.domain}`;
+    }
+    if (details.path) {
+      cookieString += `; path=${details.path}`;
+    } else {
+      cookieString += `; path=/`;
+    }
+
+    document.cookie = cookieString;
+    document.cookie = `${details.name}=; expires=Thu, 01 Jan 1970 00:00:00 GMT; path=/`;
+
+    resolve();
+  });
+}
+
 async function _fetch(url, options = {}) {
   try {
     if (!url || typeof url !== "string") {

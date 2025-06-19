@@ -105,6 +105,48 @@ async function _storageClear() {
   }
 }
 
+async function _cookieList(details) {
+  return new Promise((resolve, reject) => {
+    if (typeof GM_cookie === "undefined" || !GM_cookie.list) {
+      return reject(new Error("GM_cookie.list is not available."));
+    }
+    GM_cookie.list(details, (cookies, error) => {
+      if (error) {
+        return reject(new Error(error));
+      }
+      resolve(cookies);
+    });
+  });
+}
+
+async function _cookieSet(details) {
+  return new Promise((resolve, reject) => {
+    if (typeof GM_cookie === "undefined" || !GM_cookie.set) {
+      return reject(new Error("GM_cookie.set is not available."));
+    }
+    GM_cookie.set(details, (error) => {
+      if (error) {
+        return reject(new Error(error));
+      }
+      resolve();
+    });
+  });
+}
+
+async function _cookieDelete(details) {
+  return new Promise((resolve, reject) => {
+    if (typeof GM_cookie === "undefined" || !GM_cookie.delete) {
+      return reject(new Error("GM_cookie.delete is not available."));
+    }
+    GM_cookie.delete(details, (error) => {
+      if (error) {
+        return reject(new Error(error));
+      }
+      resolve();
+    });
+  });
+}
+
 async function _fetch(url, options = {}) {
   return new Promise((resolve, reject) => {
     try {
@@ -231,7 +273,6 @@ function _openTab(url, active) {
     try {
       window.open(url);
     } catch (e) {
-      alert("URL: " + url);
       console.error("window.open fallback failed:", e);
     }
   }

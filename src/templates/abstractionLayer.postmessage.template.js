@@ -59,6 +59,18 @@ async function _storageClear() {
   return sendAbstractionRequest("_storageClear");
 }
 
+async function _cookieList(details) {
+  return sendAbstractionRequest("_cookieList", [details]);
+}
+
+async function _cookieSet(details) {
+  return sendAbstractionRequest("_cookieSet", [details]);
+}
+
+async function _cookieDelete(details) {
+  return sendAbstractionRequest("_cookieDelete", [details]);
+}
+
 async function _fetch(url, options) {
   return sendAbstractionRequest("_fetch", [url, options]);
 }
@@ -71,8 +83,8 @@ function _registerMenuCommand(name, func) {
   ]);
 }
 
-function _openTab(url) {
-  return sendAbstractionRequest("_openTab", [url]);
+function _openTab(url, active) {
+  return sendAbstractionRequest("_openTab", [url, active]);
 }
 
 async function _initStorage() {

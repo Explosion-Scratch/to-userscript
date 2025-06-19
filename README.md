@@ -210,6 +210,13 @@ Some websites have strict CSP rules that can prevent converted userscripts from 
 - [x] `chrome.permissions`
   - [x] `request`/`contains`/`getAll` (shimmed)
 - [x] `chrome.notifications` (maps to native Web Notifications API)
+- [x] `chrome.cookies`
+  - [x] `get`
+  - [x] `getAll`
+  - [x] `set`
+  - [x] `remove`
+  - [x] `getAllCookieStores`
+  - [x] `getPartitionKey`
 
 ### Planned APIs
 

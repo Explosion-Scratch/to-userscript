@@ -451,6 +451,180 @@ function buildPolyfill({ isBackground = false, isOtherPage = false } = {}) {
         },
       },
     },
+    cookies: (function () {
+      const cookieChangeListeners = new Set();
+      function broadcastCookieChange(changeInfo) {
+        cookieChangeListeners.forEach((listener) => {
+          try {
+            listener(changeInfo);
+          } catch (e) {
+            console.error("Error in cookies.onChanged listener:", e);
+          }
+        });
+      }
+
+      function handlePromiseCallback(promise, callback) {
+        if (typeof callback === "function") {
+          promise
+            .then((result) => callback(result))
+            .catch((error) => {
+              // chrome.runtime.lastError = { message: error.message }; // TODO: Implement lastError
+              console.error(error);
+              callback(); // Call with undefined on error
+            });
+          return;
+        }
+        return promise;
+      }
+
+      return {
+        get: function (details, callback) {
+          if (typeof _cookieList !== "function") {
+            return handlePromiseCallback(
+              Promise.reject(new Error("_cookieList not defined")),
+              callback
+            );
+          }
+          const promise = _cookieList({
+            url: details.url,
+            name: details.name,
+            storeId: details.storeId,
+            partitionKey: details.partitionKey,
+          }).then((cookies) => {
+            if (!cookies || cookies.length === 0) {
+              return null;
+            }
+            // Sort by path length (longest first), then creation time (earliest first, if available)
+            cookies.sort((a, b) => {
+              const pathLenDiff = (b.path || "").length - (a.path || "").length;
+              if (pathLenDiff !== 0) return pathLenDiff;
+              return (a.creationTime || 0) - (b.creationTime || 0);
+            });
+            return cookies[0];
+          });
+          return handlePromiseCallback(promise, callback);
+        },
+
+        getAll: function (details, callback) {
+          if (typeof _cookieList !== "function") {
+            return handlePromiseCallback(
+              Promise.reject(new Error("_cookieList not defined")),
+              callback
+            );
+          }
+          if (details.partitionKey) {
+            console.warn(
+              "cookies.getAll: partitionKey is not fully supported in this environment."
+            );
+          }
+          const promise = _cookieList(details);
+          return handlePromiseCallback(promise, callback);
+        },
+
+        set: function (details, callback) {
+          const promise = (async () => {
+            if (
+              typeof _cookieSet !== "function" ||
+              typeof _cookieList !== "function"
+            ) {
+              throw new Error("_cookieSet or _cookieList not defined");
+            }
+            if (details.partitionKey) {
+              console.warn(
+                "cookies.set: partitionKey is not fully supported in this environment."
+              );
+            }
+
+            const getDetails = {
+              url: details.url,
+              name: details.name,
+              storeId: details.storeId,
+            };
+            const oldCookies = await _cookieList(getDetails);
+            const oldCookie = oldCookies && oldCookies[0];
+
+            if (oldCookie) {
+              broadcastCookieChange({
+                cause: "overwrite",
+                cookie: oldCookie,
+                removed: true,
+              });
+            }
+
+            await _cookieSet(details);
+            const newCookies = await _cookieList(getDetails);
+            const newCookie = newCookies && newCookies[0];
+
+            if (newCookie) {
+              broadcastCookieChange({
+                cause: "explicit",
+                cookie: newCookie,
+                removed: false,
+              });
+            }
+            return newCookie || null;
+          })();
+          return handlePromiseCallback(promise, callback);
+        },
+
+        remove: function (details, callback) {
+          const promise = (async () => {
+            if (
+              typeof _cookieDelete !== "function" ||
+              typeof _cookieList !== "function"
+            ) {
+              throw new Error("_cookieDelete or _cookieList not defined");
+            }
+            const oldCookies = await _cookieList(details);
+            const oldCookie = oldCookies && oldCookies[0];
+
+            if (!oldCookie) return null; // Nothing to remove
+
+            await _cookieDelete(details);
+
+            broadcastCookieChange({
+              cause: "explicit",
+              cookie: oldCookie,
+              removed: true,
+            });
+
+            return {
+              url: details.url,
+              name: details.name,
+              storeId: details.storeId || "0",
+              partitionKey: details.partitionKey,
+            };
+          })();
+          return handlePromiseCallback(promise, callback);
+        },
+
+        getAllCookieStores: function (callback) {
+          const promise = Promise.resolve([
+            { id: "0", tabIds: [1] }, // Mock store for the current context
+          ]);
+          return handlePromiseCallback(promise, callback);
+        },
+
+        getPartitionKey: function (details, callback) {
+          console.warn(
+            "chrome.cookies.getPartitionKey is not supported in this environment."
+          );
+          const promise = Promise.resolve({ partitionKey: {} }); // Return empty partition key
+          return handlePromiseCallback(promise, callback);
+        },
+
+        onChanged: {
+          addListener: (callback) => {
+            if (typeof callback === "function") {
+              cookieChangeListeners.add(callback);
+            }
+          },
+          removeListener: (callback) => {
+            cookieChangeListeners.delete(callback);
+          },
+        },
+      };
+    })(),
     tabs: {
       query: async (queryInfo) => {
         console.warn(
@@ -467,7 +641,7 @@ function buildPolyfill({ isBackground = false, isOtherPage = false } = {}) {
           },
         ];
       },
-      create: async ({ url, active }) => {
+      create: async ({ url, active = true }) => {
         console.log(`[Polyfill tabs.create] URL: ${url}`);
         if (typeof _openTab !== "function")
           throw new Error("_openTab not defined");
@@ -476,7 +650,7 @@ function buildPolyfill({ isBackground = false, isOtherPage = false } = {}) {
         return Promise.resolve({
           id: dummyId,
           url: url,
-          active: true,
+          active,
           windowId: 1,
         });
       },
