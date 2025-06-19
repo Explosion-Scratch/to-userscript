@@ -30,7 +30,7 @@
             result = _registerMenuCommand(args[0], args[1]);
             break;
           case "_openTab":
-            result = _openTab(args[0]);
+            result = _openTab(args[0], args[1]);
             break;
           case "_initStorage":
             result = await _initStorage();
@@ -60,6 +60,6 @@
   });
 
   console.log(
-    "[PostMessage Handler] Abstraction layer message handler initialized",
+    "[PostMessage Handler] Abstraction layer message handler initialized"
   );
 })();

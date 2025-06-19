@@ -185,6 +185,47 @@ Some websites have strict CSP rules that can prevent converted userscripts from 
 })();
 ```
 
+## Polyfill status:
+
+### Supported APIs
+
+- [x] `chrome.storage`
+  - [x] `local` (backed by `GM_*` storage or IndexedDB)
+  - [x] `sync` (maps to local storage)
+  - [x] `managed` (shimmed; read-only and empty)
+  - [x] `onChanged`
+- [x] `chrome.runtime`
+  - [x] `sendMessage`/`onMessage` (in-page/iframe communication only)
+  - [x] `getURL` (for bundled assets only)
+  - [x] `getManifest`
+  - [x] `openOptionsPage`: Opens options popup
+- [x] `chrome.tabs`
+  - [x] `create` (maps to `GM_openInTab` or `window.open`)
+  - [x] `query` (shimmed; returns current tab only)
+  - [x] `sendMessage` (shimmed; redirects to `runtime.sendMessage`)
+- [x] `chrome.i18n`
+  - [x] `getMessage`
+  - [x] `getUILanguage`
+- [x] `chrome.contextMenus` (emulated via `GM_registerMenuCommand`; limited functionality)
+- [x] `chrome.permissions`
+  - [x] `request`/`contains`/`getAll` (shimmed)
+- [x] `chrome.notifications` (maps to native Web Notifications API)
+
+### Planned APIs
+
+- [ ] `chrome.tabs.insertCSS`
+- [ ] `chrome.tabs.reload`
+- [ ] `chrome.scripting.insertCSS`
+- [ ] `chrome.scripting.executeScript`
+- [ ] `chrome.identity`:
+  - [ ] `getAuthToken`
+  - [ ] `getProfileUserInfo`
+  - [ ] `clearAllCachedAuthTokens`
+- [ ] `chrome.runtime.onMessageExternal`: Shim
+- [ ] `chrome.runtime.sendMessageExternal`: Shim
+- [ ] `chrome.webNavigation`
+- [ ] `chrome.permissions`: Listeners working
+
 ## Contributing
 
 I welcome contributions! Especially to implement new chrome apis, or fix bugs.

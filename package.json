@@ -1,6 +1,6 @@
 {
   "name": "to-userscript",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "description": "Converts simple browser extensions to userscripts",
   "main": "src/cli/index.js",
   "bin": {

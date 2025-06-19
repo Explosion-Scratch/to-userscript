@@ -656,7 +656,7 @@ r();
               result = _registerMenuCommand(args[0], args[1]);
               break;
             case "_openTab":
-              result = _openTab(args[0]);
+              result = _openTab(args[0], args[1]);
               break;
             case "_initStorage":
               result = await _initStorage();
@@ -899,10 +899,10 @@ r();
     }
   }
 
-  function _openTab(url) {
+  function _openTab(url, active) {
     if (typeof GM_openInTab === "function") {
       try {
-        GM_openInTab(url, { active: true });
+        GM_openInTab(url, { loadInBackground: !active });
       } catch (e) {
         console.error("GM_openInTab failed:", e);
       }
@@ -911,6 +911,7 @@ r();
       try {
         window.open(url);
       } catch (e) {
+        alert("URL: " + url);
         console.error("window.open fallback failed:", e);
       }
     }
@@ -1379,10 +1380,10 @@ r();
             },
           ];
         },
-        create: async ({ url }) => {
+        create: async ({ url, active }) => {
           console.log(`[Polyfill tabs.create] URL: ${url}`);
           if (typeof _openTab !== "function") throw new Error("_openTab not defined");
-          _openTab(url);
+          _openTab(url, active);
           const dummyId = Math.floor(Math.random() * 1000) + 1001;
           return Promise.resolve({
             id: dummyId,
@@ -1795,786 +1796,810 @@ r();
     const debug = "[Web Search Navigator]";
     console.log(debug + " Executing background scripts...");
 
-    with (backgroundPolyfill) {
-      // BG: browser-polyfill.js
-      !(function (e, r) {
-        if ("function" == typeof define && define.amd)
-          define("webextension-polyfill", ["module"], r);
-        else if ("undefined" != typeof exports) r(module);
-        else {
-          var s = { exports: {} };
-          r(s), (e.browser = s.exports);
-        }
-      })(
-        "undefined" != typeof globalThis ? globalThis : "undefined" != typeof self ? self : this,
-        function (e) {
-          "use strict";
-          if (!globalThis.chrome?.runtime?.id)
-            throw new Error("This script should only be loaded in a browser extension.");
-          if (
-            void 0 === globalThis.browser ||
-            Object.getPrototypeOf(globalThis.browser) !== Object.prototype
-          ) {
-            const r = "The message port closed before a response was received.",
-              s = (e) => {
-                const s = {
-                  alarms: {
-                    clear: { minArgs: 0, maxArgs: 1 },
-                    clearAll: { minArgs: 0, maxArgs: 0 },
-                    get: { minArgs: 0, maxArgs: 1 },
-                    getAll: { minArgs: 0, maxArgs: 0 },
-                  },
-                  bookmarks: {
-                    create: { minArgs: 1, maxArgs: 1 },
-                    get: { minArgs: 1, maxArgs: 1 },
-                    getChildren: { minArgs: 1, maxArgs: 1 },
-                    getRecent: { minArgs: 1, maxArgs: 1 },
-                    getSubTree: { minArgs: 1, maxArgs: 1 },
-                    getTree: { minArgs: 0, maxArgs: 0 },
-                    move: { minArgs: 2, maxArgs: 2 },
-                    remove: { minArgs: 1, maxArgs: 1 },
-                    removeTree: { minArgs: 1, maxArgs: 1 },
-                    search: { minArgs: 1, maxArgs: 1 },
-                    update: { minArgs: 2, maxArgs: 2 },
-                  },
-                  browserAction: {
-                    disable: { minArgs: 0, maxArgs: 1, fallbackToNoCallback: !0 },
-                    enable: { minArgs: 0, maxArgs: 1, fallbackToNoCallback: !0 },
-                    getBadgeBackgroundColor: { minArgs: 1, maxArgs: 1 },
-                    getBadgeText: { minArgs: 1, maxArgs: 1 },
-                    getPopup: { minArgs: 1, maxArgs: 1 },
-                    getTitle: { minArgs: 1, maxArgs: 1 },
-                    openPopup: { minArgs: 0, maxArgs: 0 },
-                    setBadgeBackgroundColor: { minArgs: 1, maxArgs: 1, fallbackToNoCallback: !0 },
-                    setBadgeText: { minArgs: 1, maxArgs: 1, fallbackToNoCallback: !0 },
-                    setIcon: { minArgs: 1, maxArgs: 1 },
-                    setPopup: { minArgs: 1, maxArgs: 1, fallbackToNoCallback: !0 },
-                    setTitle: { minArgs: 1, maxArgs: 1, fallbackToNoCallback: !0 },
-                  },
-                  browsingData: {
-                    remove: { minArgs: 2, maxArgs: 2 },
-                    removeCache: { minArgs: 1, maxArgs: 1 },
-                    removeCookies: { minArgs: 1, maxArgs: 1 },
-                    removeDownloads: { minArgs: 1, maxArgs: 1 },
-                    removeFormData: { minArgs: 1, maxArgs: 1 },
-                    removeHistory: { minArgs: 1, maxArgs: 1 },
-                    removeLocalStorage: { minArgs: 1, maxArgs: 1 },
-                    removePasswords: { minArgs: 1, maxArgs: 1 },
-                    removePluginData: { minArgs: 1, maxArgs: 1 },
-                    settings: { minArgs: 0, maxArgs: 0 },
-                  },
-                  commands: { getAll: { minArgs: 0, maxArgs: 0 } },
-                  contextMenus: {
-                    remove: { minArgs: 1, maxArgs: 1 },
-                    removeAll: { minArgs: 0, maxArgs: 0 },
-                    update: { minArgs: 2, maxArgs: 2 },
-                  },
-                  cookies: {
-                    get: { minArgs: 1, maxArgs: 1 },
-                    getAll: { minArgs: 1, maxArgs: 1 },
-                    getAllCookieStores: { minArgs: 0, maxArgs: 0 },
-                    remove: { minArgs: 1, maxArgs: 1 },
-                    set: { minArgs: 1, maxArgs: 1 },
-                  },
-                  devtools: {
-                    inspectedWindow: { eval: { minArgs: 1, maxArgs: 2, singleCallbackArg: !1 } },
-                    panels: {
-                      create: { minArgs: 3, maxArgs: 3, singleCallbackArg: !0 },
-                      elements: { createSidebarPane: { minArgs: 1, maxArgs: 1 } },
-                    },
-                  },
-                  downloads: {
-                    cancel: { minArgs: 1, maxArgs: 1 },
-                    download: { minArgs: 1, maxArgs: 1 },
-                    erase: { minArgs: 1, maxArgs: 1 },
-                    getFileIcon: { minArgs: 1, maxArgs: 2 },
-                    open: { minArgs: 1, maxArgs: 1, fallbackToNoCallback: !0 },
-                    pause: { minArgs: 1, maxArgs: 1 },
-                    removeFile: { minArgs: 1, maxArgs: 1 },
-                    resume: { minArgs: 1, maxArgs: 1 },
-                    search: { minArgs: 1, maxArgs: 1 },
-                    show: { minArgs: 1, maxArgs: 1, fallbackToNoCallback: !0 },
-                  },
-                  extension: {
-                    isAllowedFileSchemeAccess: { minArgs: 0, maxArgs: 0 },
-                    isAllowedIncognitoAccess: { minArgs: 0, maxArgs: 0 },
-                  },
-                  history: {
-                    addUrl: { minArgs: 1, maxArgs: 1 },
-                    deleteAll: { minArgs: 0, maxArgs: 0 },
-                    deleteRange: { minArgs: 1, maxArgs: 1 },
-                    deleteUrl: { minArgs: 1, maxArgs: 1 },
-                    getVisits: { minArgs: 1, maxArgs: 1 },
-                    search: { minArgs: 1, maxArgs: 1 },
-                  },
-                  i18n: {
-                    detectLanguage: { minArgs: 1, maxArgs: 1 },
-                    getAcceptLanguages: { minArgs: 0, maxArgs: 0 },
-                  },
-                  identity: { launchWebAuthFlow: { minArgs: 1, maxArgs: 1 } },
-                  idle: { queryState: { minArgs: 1, maxArgs: 1 } },
-                  management: {
-                    get: { minArgs: 1, maxArgs: 1 },
-                    getAll: { minArgs: 0, maxArgs: 0 },
-                    getSelf: { minArgs: 0, maxArgs: 0 },
-                    setEnabled: { minArgs: 2, maxArgs: 2 },
-                    uninstallSelf: { minArgs: 0, maxArgs: 1 },
-                  },
-                  notifications: {
-                    clear: { minArgs: 1, maxArgs: 1 },
-                    create: { minArgs: 1, maxArgs: 2 },
-                    getAll: { minArgs: 0, maxArgs: 0 },
-                    getPermissionLevel: { minArgs: 0, maxArgs: 0 },
-                    update: { minArgs: 2, maxArgs: 2 },
-                  },
-                  pageAction: {
-                    getPopup: { minArgs: 1, maxArgs: 1 },
-                    getTitle: { minArgs: 1, maxArgs: 1 },
-                    hide: { minArgs: 1, maxArgs: 1, fallbackToNoCallback: !0 },
-                    setIcon: { minArgs: 1, maxArgs: 1 },
-                    setPopup: { minArgs: 1, maxArgs: 1, fallbackToNoCallback: !0 },
-                    setTitle: { minArgs: 1, maxArgs: 1, fallbackToNoCallback: !0 },
-                    show: { minArgs: 1, maxArgs: 1, fallbackToNoCallback: !0 },
-                  },
-                  permissions: {
-                    contains: { minArgs: 1, maxArgs: 1 },
-                    getAll: { minArgs: 0, maxArgs: 0 },
-                    remove: { minArgs: 1, maxArgs: 1 },
-                    request: { minArgs: 1, maxArgs: 1 },
-                  },
-                  runtime: {
-                    getBackgroundPage: { minArgs: 0, maxArgs: 0 },
-                    getPlatformInfo: { minArgs: 0, maxArgs: 0 },
-                    openOptionsPage: { minArgs: 0, maxArgs: 0 },
-                    requestUpdateCheck: { minArgs: 0, maxArgs: 0 },
-                    sendMessage: { minArgs: 1, maxArgs: 3 },
-                    sendNativeMessage: { minArgs: 2, maxArgs: 2 },
-                    setUninstallURL: { minArgs: 1, maxArgs: 1 },
-                  },
-                  sessions: {
-                    getDevices: { minArgs: 0, maxArgs: 1 },
-                    getRecentlyClosed: { minArgs: 0, maxArgs: 1 },
-                    restore: { minArgs: 0, maxArgs: 1 },
-                  },
-                  storage: {
-                    local: {
-                      clear: { minArgs: 0, maxArgs: 0 },
+    function executeBackgroundScripts() {
+      with (backgroundPolyfill) {
+        // BG: browser-polyfill.js
+        !(function (e, r) {
+          if ("function" == typeof define && define.amd)
+            define("webextension-polyfill", ["module"], r);
+          else if ("undefined" != typeof exports) r(module);
+          else {
+            var s = { exports: {} };
+            r(s), (e.browser = s.exports);
+          }
+        })(
+          "undefined" != typeof globalThis ? globalThis : "undefined" != typeof self ? self : this,
+          function (e) {
+            "use strict";
+            if (!globalThis.chrome?.runtime?.id)
+              throw new Error("This script should only be loaded in a browser extension.");
+            if (
+              void 0 === globalThis.browser ||
+              Object.getPrototypeOf(globalThis.browser) !== Object.prototype
+            ) {
+              const r = "The message port closed before a response was received.",
+                s = (e) => {
+                  const s = {
+                    alarms: {
+                      clear: { minArgs: 0, maxArgs: 1 },
+                      clearAll: { minArgs: 0, maxArgs: 0 },
                       get: { minArgs: 0, maxArgs: 1 },
-                      getBytesInUse: { minArgs: 0, maxArgs: 1 },
+                      getAll: { minArgs: 0, maxArgs: 0 },
+                    },
+                    bookmarks: {
+                      create: { minArgs: 1, maxArgs: 1 },
+                      get: { minArgs: 1, maxArgs: 1 },
+                      getChildren: { minArgs: 1, maxArgs: 1 },
+                      getRecent: { minArgs: 1, maxArgs: 1 },
+                      getSubTree: { minArgs: 1, maxArgs: 1 },
+                      getTree: { minArgs: 0, maxArgs: 0 },
+                      move: { minArgs: 2, maxArgs: 2 },
+                      remove: { minArgs: 1, maxArgs: 1 },
+                      removeTree: { minArgs: 1, maxArgs: 1 },
+                      search: { minArgs: 1, maxArgs: 1 },
+                      update: { minArgs: 2, maxArgs: 2 },
+                    },
+                    browserAction: {
+                      disable: { minArgs: 0, maxArgs: 1, fallbackToNoCallback: !0 },
+                      enable: { minArgs: 0, maxArgs: 1, fallbackToNoCallback: !0 },
+                      getBadgeBackgroundColor: { minArgs: 1, maxArgs: 1 },
+                      getBadgeText: { minArgs: 1, maxArgs: 1 },
+                      getPopup: { minArgs: 1, maxArgs: 1 },
+                      getTitle: { minArgs: 1, maxArgs: 1 },
+                      openPopup: { minArgs: 0, maxArgs: 0 },
+                      setBadgeBackgroundColor: { minArgs: 1, maxArgs: 1, fallbackToNoCallback: !0 },
+                      setBadgeText: { minArgs: 1, maxArgs: 1, fallbackToNoCallback: !0 },
+                      setIcon: { minArgs: 1, maxArgs: 1 },
+                      setPopup: { minArgs: 1, maxArgs: 1, fallbackToNoCallback: !0 },
+                      setTitle: { minArgs: 1, maxArgs: 1, fallbackToNoCallback: !0 },
+                    },
+                    browsingData: {
+                      remove: { minArgs: 2, maxArgs: 2 },
+                      removeCache: { minArgs: 1, maxArgs: 1 },
+                      removeCookies: { minArgs: 1, maxArgs: 1 },
+                      removeDownloads: { minArgs: 1, maxArgs: 1 },
+                      removeFormData: { minArgs: 1, maxArgs: 1 },
+                      removeHistory: { minArgs: 1, maxArgs: 1 },
+                      removeLocalStorage: { minArgs: 1, maxArgs: 1 },
+                      removePasswords: { minArgs: 1, maxArgs: 1 },
+                      removePluginData: { minArgs: 1, maxArgs: 1 },
+                      settings: { minArgs: 0, maxArgs: 0 },
+                    },
+                    commands: { getAll: { minArgs: 0, maxArgs: 0 } },
+                    contextMenus: {
+                      remove: { minArgs: 1, maxArgs: 1 },
+                      removeAll: { minArgs: 0, maxArgs: 0 },
+                      update: { minArgs: 2, maxArgs: 2 },
+                    },
+                    cookies: {
+                      get: { minArgs: 1, maxArgs: 1 },
+                      getAll: { minArgs: 1, maxArgs: 1 },
+                      getAllCookieStores: { minArgs: 0, maxArgs: 0 },
                       remove: { minArgs: 1, maxArgs: 1 },
                       set: { minArgs: 1, maxArgs: 1 },
                     },
-                    managed: {
-                      get: { minArgs: 0, maxArgs: 1 },
-                      getBytesInUse: { minArgs: 0, maxArgs: 1 },
-                    },
-                    sync: {
-                      clear: { minArgs: 0, maxArgs: 0 },
-                      get: { minArgs: 0, maxArgs: 1 },
-                      getBytesInUse: { minArgs: 0, maxArgs: 1 },
-                      remove: { minArgs: 1, maxArgs: 1 },
-                      set: { minArgs: 1, maxArgs: 1 },
-                    },
-                  },
-                  tabs: {
-                    captureVisibleTab: { minArgs: 0, maxArgs: 2 },
-                    create: { minArgs: 1, maxArgs: 1 },
-                    detectLanguage: { minArgs: 0, maxArgs: 1 },
-                    discard: { minArgs: 0, maxArgs: 1 },
-                    duplicate: { minArgs: 1, maxArgs: 1 },
-                    executeScript: { minArgs: 1, maxArgs: 2 },
-                    get: { minArgs: 1, maxArgs: 1 },
-                    getCurrent: { minArgs: 0, maxArgs: 0 },
-                    getZoom: { minArgs: 0, maxArgs: 1 },
-                    getZoomSettings: { minArgs: 0, maxArgs: 1 },
-                    goBack: { minArgs: 0, maxArgs: 1 },
-                    goForward: { minArgs: 0, maxArgs: 1 },
-                    highlight: { minArgs: 1, maxArgs: 1 },
-                    insertCSS: { minArgs: 1, maxArgs: 2 },
-                    move: { minArgs: 2, maxArgs: 2 },
-                    query: { minArgs: 1, maxArgs: 1 },
-                    reload: { minArgs: 0, maxArgs: 2 },
-                    remove: { minArgs: 1, maxArgs: 1 },
-                    removeCSS: { minArgs: 1, maxArgs: 2 },
-                    sendMessage: { minArgs: 2, maxArgs: 3 },
-                    setZoom: { minArgs: 1, maxArgs: 2 },
-                    setZoomSettings: { minArgs: 1, maxArgs: 2 },
-                    update: { minArgs: 1, maxArgs: 2 },
-                  },
-                  topSites: { get: { minArgs: 0, maxArgs: 0 } },
-                  webNavigation: {
-                    getAllFrames: { minArgs: 1, maxArgs: 1 },
-                    getFrame: { minArgs: 1, maxArgs: 1 },
-                  },
-                  webRequest: { handlerBehaviorChanged: { minArgs: 0, maxArgs: 0 } },
-                  windows: {
-                    create: { minArgs: 0, maxArgs: 1 },
-                    get: { minArgs: 1, maxArgs: 2 },
-                    getAll: { minArgs: 0, maxArgs: 1 },
-                    getCurrent: { minArgs: 0, maxArgs: 1 },
-                    getLastFocused: { minArgs: 0, maxArgs: 1 },
-                    remove: { minArgs: 1, maxArgs: 1 },
-                    update: { minArgs: 2, maxArgs: 2 },
-                  },
-                };
-                if (0 === Object.keys(s).length)
-                  throw new Error("api-metadata.json has not been included in browser-polyfill");
-                class g extends WeakMap {
-                  constructor(e, r) {
-                    super(r), (this.createItem = e);
-                  }
-                  get(e) {
-                    return this.has(e) || this.set(e, this.createItem(e)), super.get(e);
-                  }
-                }
-                const a =
-                    (r, s) =>
-                    (...g) => {
-                      e.runtime.lastError
-                        ? r.reject(new Error(e.runtime.lastError.message))
-                        : s.singleCallbackArg || (g.length <= 1 && !1 !== s.singleCallbackArg)
-                          ? r.resolve(g[0])
-                          : r.resolve(g);
-                    },
-                  m = (e) => (1 == e ? "argument" : "arguments"),
-                  n = (e, r, s) => new Proxy(r, { apply: (r, g, a) => s.call(g, e, ...a) });
-                let t = Function.call.bind(Object.prototype.hasOwnProperty);
-                const A = (e, r = {}, s = {}) => {
-                    let g = Object.create(null),
-                      i = {
-                        has: (r, s) => s in e || s in g,
-                        get(i, o, l) {
-                          if (o in g) return g[o];
-                          if (!(o in e)) return;
-                          let x = e[o];
-                          if ("function" == typeof x)
-                            if ("function" == typeof r[o]) x = n(e, e[o], r[o]);
-                            else if (t(s, o)) {
-                              let r = ((e, r) =>
-                                function (s, ...g) {
-                                  if (g.length < r.minArgs)
-                                    throw new Error(
-                                      `Expected at least ${r.minArgs} ${m(r.minArgs)} for ${e}(), got ${g.length}`
-                                    );
-                                  if (g.length > r.maxArgs)
-                                    throw new Error(
-                                      `Expected at most ${r.maxArgs} ${m(r.maxArgs)} for ${e}(), got ${g.length}`
-                                    );
-                                  return new Promise((m, n) => {
-                                    if (r.fallbackToNoCallback)
-                                      try {
-                                        s[e](...g, a({ resolve: m, reject: n }, r));
-                                      } catch (a) {
-                                        console.warn(
-                                          `${e} API method doesn't seem to support the callback parameter, falling back to call it without a callback: `,
-                                          a
-                                        ),
-                                          s[e](...g),
-                                          (r.fallbackToNoCallback = !1),
-                                          (r.noCallback = !0),
-                                          m();
-                                      }
-                                    else
-                                      r.noCallback
-                                        ? (s[e](...g), m())
-                                        : s[e](...g, a({ resolve: m, reject: n }, r));
-                                  });
-                                })(o, s[o]);
-                              x = n(e, e[o], r);
-                            } else x = x.bind(e);
-                          else if ("object" == typeof x && null !== x && (t(r, o) || t(s, o)))
-                            x = A(x, r[o], s[o]);
-                          else {
-                            if (!t(s, "*"))
-                              return (
-                                Object.defineProperty(g, o, {
-                                  configurable: !0,
-                                  enumerable: !0,
-                                  get: () => e[o],
-                                  set(r) {
-                                    e[o] = r;
-                                  },
-                                }),
-                                x
-                              );
-                            x = A(x, r[o], s["*"]);
-                          }
-                          return (g[o] = x), x;
-                        },
-                        set: (r, s, a, m) => (s in g ? (g[s] = a) : (e[s] = a), !0),
-                        defineProperty: (e, r, s) => Reflect.defineProperty(g, r, s),
-                        deleteProperty: (e, r) => Reflect.deleteProperty(g, r),
+                    devtools: {
+                      inspectedWindow: { eval: { minArgs: 1, maxArgs: 2, singleCallbackArg: !1 } },
+                      panels: {
+                        create: { minArgs: 3, maxArgs: 3, singleCallbackArg: !0 },
+                        elements: { createSidebarPane: { minArgs: 1, maxArgs: 1 } },
                       },
-                      o = Object.create(e);
-                    return new Proxy(o, i);
-                  },
-                  i = (e) => ({
-                    addListener(r, s, ...g) {
-                      r.addListener(e.get(s), ...g);
                     },
-                    hasListener: (r, s) => r.hasListener(e.get(s)),
-                    removeListener(r, s) {
-                      r.removeListener(e.get(s));
+                    downloads: {
+                      cancel: { minArgs: 1, maxArgs: 1 },
+                      download: { minArgs: 1, maxArgs: 1 },
+                      erase: { minArgs: 1, maxArgs: 1 },
+                      getFileIcon: { minArgs: 1, maxArgs: 2 },
+                      open: { minArgs: 1, maxArgs: 1, fallbackToNoCallback: !0 },
+                      pause: { minArgs: 1, maxArgs: 1 },
+                      removeFile: { minArgs: 1, maxArgs: 1 },
+                      resume: { minArgs: 1, maxArgs: 1 },
+                      search: { minArgs: 1, maxArgs: 1 },
+                      show: { minArgs: 1, maxArgs: 1, fallbackToNoCallback: !0 },
                     },
-                  }),
-                  o = new g((e) =>
-                    "function" != typeof e
-                      ? e
-                      : function (r) {
-                          const s = A(r, {}, { getContent: { minArgs: 0, maxArgs: 0 } });
-                          e(s);
-                        }
-                  ),
-                  l = new g((e) =>
-                    "function" != typeof e
-                      ? e
-                      : function (r, s, g) {
-                          let a,
-                            m,
-                            n = !1,
-                            t = new Promise((e) => {
-                              a = function (r) {
-                                (n = !0), e(r);
-                              };
-                            });
-                          try {
-                            m = e(r, s, a);
-                          } catch (e) {
-                            m = Promise.reject(e);
-                          }
-                          const A =
-                            !0 !== m &&
-                            (i = m) &&
-                            "object" == typeof i &&
-                            "function" == typeof i.then;
-                          var i;
-                          if (!0 !== m && !A && !n) return !1;
-                          const o = (e) => {
-                            e.then(
-                              (e) => {
-                                g(e);
-                              },
-                              (e) => {
-                                let r;
-                                (r =
-                                  e && (e instanceof Error || "string" == typeof e.message)
-                                    ? e.message
-                                    : "An unexpected error occurred"),
-                                  g({ __mozWebExtensionPolyfillReject__: !0, message: r });
-                              }
-                            ).catch((e) => {
-                              console.error("Failed to send onMessage rejected reply", e);
-                            });
-                          };
-                          return o(A ? m : t), !0;
-                        }
-                  ),
-                  x = ({ reject: s, resolve: g }, a) => {
-                    e.runtime.lastError
-                      ? e.runtime.lastError.message === r
-                        ? g()
-                        : s(new Error(e.runtime.lastError.message))
-                      : a && a.__mozWebExtensionPolyfillReject__
-                        ? s(new Error(a.message))
-                        : g(a);
-                  },
-                  c = (e, r, s, ...g) => {
-                    if (g.length < r.minArgs)
-                      throw new Error(
-                        `Expected at least ${r.minArgs} ${m(r.minArgs)} for ${e}(), got ${g.length}`
-                      );
-                    if (g.length > r.maxArgs)
-                      throw new Error(
-                        `Expected at most ${r.maxArgs} ${m(r.maxArgs)} for ${e}(), got ${g.length}`
-                      );
-                    return new Promise((e, r) => {
-                      const a = x.bind(null, { resolve: e, reject: r });
-                      g.push(a), s.sendMessage(...g);
-                    });
-                  },
-                  d = {
-                    devtools: { network: { onRequestFinished: i(o) } },
+                    extension: {
+                      isAllowedFileSchemeAccess: { minArgs: 0, maxArgs: 0 },
+                      isAllowedIncognitoAccess: { minArgs: 0, maxArgs: 0 },
+                    },
+                    history: {
+                      addUrl: { minArgs: 1, maxArgs: 1 },
+                      deleteAll: { minArgs: 0, maxArgs: 0 },
+                      deleteRange: { minArgs: 1, maxArgs: 1 },
+                      deleteUrl: { minArgs: 1, maxArgs: 1 },
+                      getVisits: { minArgs: 1, maxArgs: 1 },
+                      search: { minArgs: 1, maxArgs: 1 },
+                    },
+                    i18n: {
+                      detectLanguage: { minArgs: 1, maxArgs: 1 },
+                      getAcceptLanguages: { minArgs: 0, maxArgs: 0 },
+                    },
+                    identity: { launchWebAuthFlow: { minArgs: 1, maxArgs: 1 } },
+                    idle: { queryState: { minArgs: 1, maxArgs: 1 } },
+                    management: {
+                      get: { minArgs: 1, maxArgs: 1 },
+                      getAll: { minArgs: 0, maxArgs: 0 },
+                      getSelf: { minArgs: 0, maxArgs: 0 },
+                      setEnabled: { minArgs: 2, maxArgs: 2 },
+                      uninstallSelf: { minArgs: 0, maxArgs: 1 },
+                    },
+                    notifications: {
+                      clear: { minArgs: 1, maxArgs: 1 },
+                      create: { minArgs: 1, maxArgs: 2 },
+                      getAll: { minArgs: 0, maxArgs: 0 },
+                      getPermissionLevel: { minArgs: 0, maxArgs: 0 },
+                      update: { minArgs: 2, maxArgs: 2 },
+                    },
+                    pageAction: {
+                      getPopup: { minArgs: 1, maxArgs: 1 },
+                      getTitle: { minArgs: 1, maxArgs: 1 },
+                      hide: { minArgs: 1, maxArgs: 1, fallbackToNoCallback: !0 },
+                      setIcon: { minArgs: 1, maxArgs: 1 },
+                      setPopup: { minArgs: 1, maxArgs: 1, fallbackToNoCallback: !0 },
+                      setTitle: { minArgs: 1, maxArgs: 1, fallbackToNoCallback: !0 },
+                      show: { minArgs: 1, maxArgs: 1, fallbackToNoCallback: !0 },
+                    },
+                    permissions: {
+                      contains: { minArgs: 1, maxArgs: 1 },
+                      getAll: { minArgs: 0, maxArgs: 0 },
+                      remove: { minArgs: 1, maxArgs: 1 },
+                      request: { minArgs: 1, maxArgs: 1 },
+                    },
                     runtime: {
-                      onMessage: i(l),
-                      onMessageExternal: i(l),
-                      sendMessage: c.bind(null, "sendMessage", { minArgs: 1, maxArgs: 3 }),
+                      getBackgroundPage: { minArgs: 0, maxArgs: 0 },
+                      getPlatformInfo: { minArgs: 0, maxArgs: 0 },
+                      openOptionsPage: { minArgs: 0, maxArgs: 0 },
+                      requestUpdateCheck: { minArgs: 0, maxArgs: 0 },
+                      sendMessage: { minArgs: 1, maxArgs: 3 },
+                      sendNativeMessage: { minArgs: 2, maxArgs: 2 },
+                      setUninstallURL: { minArgs: 1, maxArgs: 1 },
                     },
-                    tabs: { sendMessage: c.bind(null, "sendMessage", { minArgs: 2, maxArgs: 3 }) },
-                  },
-                  u = {
-                    clear: { minArgs: 1, maxArgs: 1 },
-                    get: { minArgs: 1, maxArgs: 1 },
-                    set: { minArgs: 1, maxArgs: 1 },
+                    sessions: {
+                      getDevices: { minArgs: 0, maxArgs: 1 },
+                      getRecentlyClosed: { minArgs: 0, maxArgs: 1 },
+                      restore: { minArgs: 0, maxArgs: 1 },
+                    },
+                    storage: {
+                      local: {
+                        clear: { minArgs: 0, maxArgs: 0 },
+                        get: { minArgs: 0, maxArgs: 1 },
+                        getBytesInUse: { minArgs: 0, maxArgs: 1 },
+                        remove: { minArgs: 1, maxArgs: 1 },
+                        set: { minArgs: 1, maxArgs: 1 },
+                      },
+                      managed: {
+                        get: { minArgs: 0, maxArgs: 1 },
+                        getBytesInUse: { minArgs: 0, maxArgs: 1 },
+                      },
+                      sync: {
+                        clear: { minArgs: 0, maxArgs: 0 },
+                        get: { minArgs: 0, maxArgs: 1 },
+                        getBytesInUse: { minArgs: 0, maxArgs: 1 },
+                        remove: { minArgs: 1, maxArgs: 1 },
+                        set: { minArgs: 1, maxArgs: 1 },
+                      },
+                    },
+                    tabs: {
+                      captureVisibleTab: { minArgs: 0, maxArgs: 2 },
+                      create: { minArgs: 1, maxArgs: 1 },
+                      detectLanguage: { minArgs: 0, maxArgs: 1 },
+                      discard: { minArgs: 0, maxArgs: 1 },
+                      duplicate: { minArgs: 1, maxArgs: 1 },
+                      executeScript: { minArgs: 1, maxArgs: 2 },
+                      get: { minArgs: 1, maxArgs: 1 },
+                      getCurrent: { minArgs: 0, maxArgs: 0 },
+                      getZoom: { minArgs: 0, maxArgs: 1 },
+                      getZoomSettings: { minArgs: 0, maxArgs: 1 },
+                      goBack: { minArgs: 0, maxArgs: 1 },
+                      goForward: { minArgs: 0, maxArgs: 1 },
+                      highlight: { minArgs: 1, maxArgs: 1 },
+                      insertCSS: { minArgs: 1, maxArgs: 2 },
+                      move: { minArgs: 2, maxArgs: 2 },
+                      query: { minArgs: 1, maxArgs: 1 },
+                      reload: { minArgs: 0, maxArgs: 2 },
+                      remove: { minArgs: 1, maxArgs: 1 },
+                      removeCSS: { minArgs: 1, maxArgs: 2 },
+                      sendMessage: { minArgs: 2, maxArgs: 3 },
+                      setZoom: { minArgs: 1, maxArgs: 2 },
+                      setZoomSettings: { minArgs: 1, maxArgs: 2 },
+                      update: { minArgs: 1, maxArgs: 2 },
+                    },
+                    topSites: { get: { minArgs: 0, maxArgs: 0 } },
+                    webNavigation: {
+                      getAllFrames: { minArgs: 1, maxArgs: 1 },
+                      getFrame: { minArgs: 1, maxArgs: 1 },
+                    },
+                    webRequest: { handlerBehaviorChanged: { minArgs: 0, maxArgs: 0 } },
+                    windows: {
+                      create: { minArgs: 0, maxArgs: 1 },
+                      get: { minArgs: 1, maxArgs: 2 },
+                      getAll: { minArgs: 0, maxArgs: 1 },
+                      getCurrent: { minArgs: 0, maxArgs: 1 },
+                      getLastFocused: { minArgs: 0, maxArgs: 1 },
+                      remove: { minArgs: 1, maxArgs: 1 },
+                      update: { minArgs: 2, maxArgs: 2 },
+                    },
                   };
-                return (
-                  (s.privacy = { network: { "*": u }, services: { "*": u }, websites: { "*": u } }),
-                  A(e, d, s)
-                );
-              };
-            e.exports = s(chrome);
-          } else e.exports = globalThis.browser;
-        }
-      );
+                  if (0 === Object.keys(s).length)
+                    throw new Error("api-metadata.json has not been included in browser-polyfill");
+                  class g extends WeakMap {
+                    constructor(e, r) {
+                      super(r), (this.createItem = e);
+                    }
+                    get(e) {
+                      return this.has(e) || this.set(e, this.createItem(e)), super.get(e);
+                    }
+                  }
+                  const a =
+                      (r, s) =>
+                      (...g) => {
+                        e.runtime.lastError
+                          ? r.reject(new Error(e.runtime.lastError.message))
+                          : s.singleCallbackArg || (g.length <= 1 && !1 !== s.singleCallbackArg)
+                            ? r.resolve(g[0])
+                            : r.resolve(g);
+                      },
+                    m = (e) => (1 == e ? "argument" : "arguments"),
+                    n = (e, r, s) => new Proxy(r, { apply: (r, g, a) => s.call(g, e, ...a) });
+                  let t = Function.call.bind(Object.prototype.hasOwnProperty);
+                  const A = (e, r = {}, s = {}) => {
+                      let g = Object.create(null),
+                        i = {
+                          has: (r, s) => s in e || s in g,
+                          get(i, o, l) {
+                            if (o in g) return g[o];
+                            if (!(o in e)) return;
+                            let x = e[o];
+                            if ("function" == typeof x)
+                              if ("function" == typeof r[o]) x = n(e, e[o], r[o]);
+                              else if (t(s, o)) {
+                                let r = ((e, r) =>
+                                  function (s, ...g) {
+                                    if (g.length < r.minArgs)
+                                      throw new Error(
+                                        `Expected at least ${r.minArgs} ${m(r.minArgs)} for ${e}(), got ${g.length}`
+                                      );
+                                    if (g.length > r.maxArgs)
+                                      throw new Error(
+                                        `Expected at most ${r.maxArgs} ${m(r.maxArgs)} for ${e}(), got ${g.length}`
+                                      );
+                                    return new Promise((m, n) => {
+                                      if (r.fallbackToNoCallback)
+                                        try {
+                                          s[e](...g, a({ resolve: m, reject: n }, r));
+                                        } catch (a) {
+                                          console.warn(
+                                            `${e} API method doesn't seem to support the callback parameter, falling back to call it without a callback: `,
+                                            a
+                                          ),
+                                            s[e](...g),
+                                            (r.fallbackToNoCallback = !1),
+                                            (r.noCallback = !0),
+                                            m();
+                                        }
+                                      else
+                                        r.noCallback
+                                          ? (s[e](...g), m())
+                                          : s[e](...g, a({ resolve: m, reject: n }, r));
+                                    });
+                                  })(o, s[o]);
+                                x = n(e, e[o], r);
+                              } else x = x.bind(e);
+                            else if ("object" == typeof x && null !== x && (t(r, o) || t(s, o)))
+                              x = A(x, r[o], s[o]);
+                            else {
+                              if (!t(s, "*"))
+                                return (
+                                  Object.defineProperty(g, o, {
+                                    configurable: !0,
+                                    enumerable: !0,
+                                    get: () => e[o],
+                                    set(r) {
+                                      e[o] = r;
+                                    },
+                                  }),
+                                  x
+                                );
+                              x = A(x, r[o], s["*"]);
+                            }
+                            return (g[o] = x), x;
+                          },
+                          set: (r, s, a, m) => (s in g ? (g[s] = a) : (e[s] = a), !0),
+                          defineProperty: (e, r, s) => Reflect.defineProperty(g, r, s),
+                          deleteProperty: (e, r) => Reflect.deleteProperty(g, r),
+                        },
+                        o = Object.create(e);
+                      return new Proxy(o, i);
+                    },
+                    i = (e) => ({
+                      addListener(r, s, ...g) {
+                        r.addListener(e.get(s), ...g);
+                      },
+                      hasListener: (r, s) => r.hasListener(e.get(s)),
+                      removeListener(r, s) {
+                        r.removeListener(e.get(s));
+                      },
+                    }),
+                    o = new g((e) =>
+                      "function" != typeof e
+                        ? e
+                        : function (r) {
+                            const s = A(r, {}, { getContent: { minArgs: 0, maxArgs: 0 } });
+                            e(s);
+                          }
+                    ),
+                    l = new g((e) =>
+                      "function" != typeof e
+                        ? e
+                        : function (r, s, g) {
+                            let a,
+                              m,
+                              n = !1,
+                              t = new Promise((e) => {
+                                a = function (r) {
+                                  (n = !0), e(r);
+                                };
+                              });
+                            try {
+                              m = e(r, s, a);
+                            } catch (e) {
+                              m = Promise.reject(e);
+                            }
+                            const A =
+                              !0 !== m &&
+                              (i = m) &&
+                              "object" == typeof i &&
+                              "function" == typeof i.then;
+                            var i;
+                            if (!0 !== m && !A && !n) return !1;
+                            const o = (e) => {
+                              e.then(
+                                (e) => {
+                                  g(e);
+                                },
+                                (e) => {
+                                  let r;
+                                  (r =
+                                    e && (e instanceof Error || "string" == typeof e.message)
+                                      ? e.message
+                                      : "An unexpected error occurred"),
+                                    g({ __mozWebExtensionPolyfillReject__: !0, message: r });
+                                }
+                              ).catch((e) => {
+                                console.error("Failed to send onMessage rejected reply", e);
+                              });
+                            };
+                            return o(A ? m : t), !0;
+                          }
+                    ),
+                    x = ({ reject: s, resolve: g }, a) => {
+                      e.runtime.lastError
+                        ? e.runtime.lastError.message === r
+                          ? g()
+                          : s(new Error(e.runtime.lastError.message))
+                        : a && a.__mozWebExtensionPolyfillReject__
+                          ? s(new Error(a.message))
+                          : g(a);
+                    },
+                    c = (e, r, s, ...g) => {
+                      if (g.length < r.minArgs)
+                        throw new Error(
+                          `Expected at least ${r.minArgs} ${m(r.minArgs)} for ${e}(), got ${g.length}`
+                        );
+                      if (g.length > r.maxArgs)
+                        throw new Error(
+                          `Expected at most ${r.maxArgs} ${m(r.maxArgs)} for ${e}(), got ${g.length}`
+                        );
+                      return new Promise((e, r) => {
+                        const a = x.bind(null, { resolve: e, reject: r });
+                        g.push(a), s.sendMessage(...g);
+                      });
+                    },
+                    d = {
+                      devtools: { network: { onRequestFinished: i(o) } },
+                      runtime: {
+                        onMessage: i(l),
+                        onMessageExternal: i(l),
+                        sendMessage: c.bind(null, "sendMessage", { minArgs: 1, maxArgs: 3 }),
+                      },
+                      tabs: {
+                        sendMessage: c.bind(null, "sendMessage", { minArgs: 2, maxArgs: 3 }),
+                      },
+                    },
+                    u = {
+                      clear: { minArgs: 1, maxArgs: 1 },
+                      get: { minArgs: 1, maxArgs: 1 },
+                      set: { minArgs: 1, maxArgs: 1 },
+                    };
+                  return (
+                    (s.privacy = {
+                      network: { "*": u },
+                      services: { "*": u },
+                      websites: { "*": u },
+                    }),
+                    A(e, d, s)
+                  );
+                };
+              e.exports = s(chrome);
+            } else e.exports = globalThis.browser;
+          }
+        );
 
-      // BG: webext-dynamic-content-scripts.js
-      !(function () {
-        "use strict";
-        const t =
-            globalThis.chrome &&
-            new (function t(e) {
-              return new Proxy(e, {
-                get: (e, n) =>
-                  "function" != typeof e[n]
-                    ? new t(e[n])
-                    : (...t) =>
-                        new Promise((r, o) => {
-                          e[n](...t, (t) => {
-                            chrome.runtime.lastError
-                              ? o(new Error(chrome.runtime.lastError.message))
-                              : r(t);
-                          });
-                        }),
-              });
-            })(globalThis.chrome),
-          e = "object" == typeof chrome && "scripting" in chrome;
-        function n(t) {
-          return void 0 === t ? void 0 : [t];
-        }
-        function r({ tabId: r, frameId: o, files: s, allFrames: i, matchAboutBlank: a, runAt: c }) {
-          for (let l of s)
-            "string" == typeof l && (l = { file: l }),
-              e
-                ? chrome.scripting.insertCSS({
-                    target: { tabId: r, frameIds: n(o), allFrames: i },
-                    files: "file" in l ? [l.file] : void 0,
-                    css: "code" in l ? l.code : void 0,
-                  })
-                : t.tabs.insertCSS(r, {
-                    ...l,
+        // BG: webext-dynamic-content-scripts.js
+        !(function () {
+          "use strict";
+          const t =
+              globalThis.chrome &&
+              new (function t(e) {
+                return new Proxy(e, {
+                  get: (e, n) =>
+                    "function" != typeof e[n]
+                      ? new t(e[n])
+                      : (...t) =>
+                          new Promise((r, o) => {
+                            e[n](...t, (t) => {
+                              chrome.runtime.lastError
+                                ? o(new Error(chrome.runtime.lastError.message))
+                                : r(t);
+                            });
+                          }),
+                });
+              })(globalThis.chrome),
+            e = "object" == typeof chrome && "scripting" in chrome;
+          function n(t) {
+            return void 0 === t ? void 0 : [t];
+          }
+          function r({
+            tabId: r,
+            frameId: o,
+            files: s,
+            allFrames: i,
+            matchAboutBlank: a,
+            runAt: c,
+          }) {
+            for (let l of s)
+              "string" == typeof l && (l = { file: l }),
+                e
+                  ? chrome.scripting.insertCSS({
+                      target: { tabId: r, frameIds: n(o), allFrames: i },
+                      files: "file" in l ? [l.file] : void 0,
+                      css: "code" in l ? l.code : void 0,
+                    })
+                  : t.tabs.insertCSS(r, {
+                      ...l,
+                      matchAboutBlank: a,
+                      allFrames: i,
+                      frameId: o,
+                      runAt: null != c ? c : "document_start",
+                    });
+          }
+          async function o({
+            tabId: r,
+            frameId: o,
+            files: s,
+            allFrames: i,
+            matchAboutBlank: a,
+            runAt: c,
+          }) {
+            let l;
+            for (let u of s)
+              if (("string" == typeof u && (u = { file: u }), e)) {
+                if ("code" in u)
+                  throw new Error("chrome.scripting does not support injecting strings of `code`");
+                chrome.scripting.executeScript({
+                  target: { tabId: r, frameIds: n(o), allFrames: i },
+                  files: [u.file],
+                });
+              } else
+                "code" in u && (await l),
+                  (l = t.tabs.executeScript(r, {
+                    ...u,
                     matchAboutBlank: a,
                     allFrames: i,
                     frameId: o,
-                    runAt: null != c ? c : "document_start",
-                  });
-        }
-        async function o({
-          tabId: r,
-          frameId: o,
-          files: s,
-          allFrames: i,
-          matchAboutBlank: a,
-          runAt: c,
-        }) {
-          let l;
-          for (let u of s)
-            if (("string" == typeof u && (u = { file: u }), e)) {
-              if ("code" in u)
-                throw new Error("chrome.scripting does not support injecting strings of `code`");
-              chrome.scripting.executeScript({
-                target: { tabId: r, frameIds: n(o), allFrames: i },
-                files: [u.file],
-              });
-            } else
-              "code" in u && (await l),
-                (l = t.tabs.executeScript(r, {
-                  ...u,
-                  matchAboutBlank: a,
-                  allFrames: i,
-                  frameId: o,
-                  runAt: c,
-                }));
-        }
-        async function s(t, e) {
-          var n, s, i, a, c, l;
-          const { frameId: u, tabId: m } = "object" == typeof t ? t : { tabId: t, frameId: 0 };
-          for (const t of ((f = e), Array.isArray(f) ? f : [f]))
-            r({
-              tabId: m,
-              frameId: u,
-              files: null !== (n = t.css) && void 0 !== n ? n : [],
-              matchAboutBlank:
-                null !== (s = t.matchAboutBlank) && void 0 !== s ? s : t.match_about_blank,
-              runAt: null !== (i = t.runAt) && void 0 !== i ? i : t.run_at,
-            }),
-              o({
+                    runAt: c,
+                  }));
+          }
+          async function s(t, e) {
+            var n, s, i, a, c, l;
+            const { frameId: u, tabId: m } = "object" == typeof t ? t : { tabId: t, frameId: 0 };
+            for (const t of ((f = e), Array.isArray(f) ? f : [f]))
+              r({
                 tabId: m,
                 frameId: u,
-                files: null !== (a = t.js) && void 0 !== a ? a : [],
+                files: null !== (n = t.css) && void 0 !== n ? n : [],
                 matchAboutBlank:
-                  null !== (c = t.matchAboutBlank) && void 0 !== c ? c : t.match_about_blank,
-                runAt: null !== (l = t.runAt) && void 0 !== l ? l : t.run_at,
-              });
-          var f;
-          await Promise.all([]);
-        }
-        const i =
-            globalThis.chrome &&
-            new (function t(e) {
-              return new Proxy(e, {
-                get: (e, n) =>
-                  "function" != typeof e[n]
-                    ? new t(e[n])
-                    : (...t) =>
-                        new Promise((r, o) => {
-                          e[n](...t, (t) => {
-                            chrome.runtime.lastError
-                              ? o(new Error(chrome.runtime.lastError.message))
-                              : r(t);
-                          });
-                        }),
-              });
-            })(globalThis.chrome),
-          a =
-            /^(https?|wss?|file|ftp|\*):\/\/(\*|\*\.[^*/]+|[^*/]+)\/.*$|^file:\/\/\/.*$|^resource:\/\/(\*|\*\.[^*/]+|[^*/]+)\/.*$|^about:/,
-          c = "object" == typeof navigator && navigator.userAgent.includes("Firefox/"),
-          l = c ? /^(https?|wss?):[/][/][^/]+([/].*)?$/ : /^https?:[/][/][^/]+([/].*)?$/,
-          u = /^(https?|file|ftp):[/]+/;
-        function m(...t) {
-          return 0 === t.length
-            ? /$./
-            : t.includes("<all_urls>")
-              ? u
-              : t.includes("*://*/*")
-                ? l
-                : new RegExp(
-                    t
-                      .map((t) =>
-                        (function (t) {
-                          if (!a.test(t))
-                            throw new Error(
-                              t + " is an invalid pattern, it must match " + String(a)
+                  null !== (s = t.matchAboutBlank) && void 0 !== s ? s : t.match_about_blank,
+                runAt: null !== (i = t.runAt) && void 0 !== i ? i : t.run_at,
+              }),
+                o({
+                  tabId: m,
+                  frameId: u,
+                  files: null !== (a = t.js) && void 0 !== a ? a : [],
+                  matchAboutBlank:
+                    null !== (c = t.matchAboutBlank) && void 0 !== c ? c : t.match_about_blank,
+                  runAt: null !== (l = t.runAt) && void 0 !== l ? l : t.run_at,
+                });
+            var f;
+            await Promise.all([]);
+          }
+          const i =
+              globalThis.chrome &&
+              new (function t(e) {
+                return new Proxy(e, {
+                  get: (e, n) =>
+                    "function" != typeof e[n]
+                      ? new t(e[n])
+                      : (...t) =>
+                          new Promise((r, o) => {
+                            e[n](...t, (t) => {
+                              chrome.runtime.lastError
+                                ? o(new Error(chrome.runtime.lastError.message))
+                                : r(t);
+                            });
+                          }),
+                });
+              })(globalThis.chrome),
+            a =
+              /^(https?|wss?|file|ftp|\*):\/\/(\*|\*\.[^*/]+|[^*/]+)\/.*$|^file:\/\/\/.*$|^resource:\/\/(\*|\*\.[^*/]+|[^*/]+)\/.*$|^about:/,
+            c = "object" == typeof navigator && navigator.userAgent.includes("Firefox/"),
+            l = c ? /^(https?|wss?):[/][/][^/]+([/].*)?$/ : /^https?:[/][/][^/]+([/].*)?$/,
+            u = /^(https?|file|ftp):[/]+/;
+          function m(...t) {
+            return 0 === t.length
+              ? /$./
+              : t.includes("<all_urls>")
+                ? u
+                : t.includes("*://*/*")
+                  ? l
+                  : new RegExp(
+                      t
+                        .map((t) =>
+                          (function (t) {
+                            if (!a.test(t))
+                              throw new Error(
+                                t + " is an invalid pattern, it must match " + String(a)
+                              );
+                            let [, e, n, r] = t.split(/(^[^:]+:[/][/])([^/]+)?/);
+                            return (
+                              (e = e
+                                .replace("*", c ? "(https?|wss?)" : "https?")
+                                .replace(/[/]/g, "[/]")),
+                              (n = (null != n ? n : "")
+                                .replace(/^[*][.]/, "([^/]+.)*")
+                                .replace(/^[*]$/, "[^/]+")
+                                .replace(/[.]/g, "[.]")
+                                .replace(/[*]$/g, "[^.]+")),
+                              (r = r
+                                .replace(/[/]/g, "[/]")
+                                .replace(/[.]/g, "[.]")
+                                .replace(/[*]/g, ".*")),
+                              "^" + e + n + "(" + r + ")?$"
                             );
-                          let [, e, n, r] = t.split(/(^[^:]+:[/][/])([^/]+)?/);
-                          return (
-                            (e = e
-                              .replace("*", c ? "(https?|wss?)" : "https?")
-                              .replace(/[/]/g, "[/]")),
-                            (n = (null != n ? n : "")
-                              .replace(/^[*][.]/, "([^/]+.)*")
-                              .replace(/^[*]$/, "[^/]+")
-                              .replace(/[.]/g, "[.]")
-                              .replace(/[*]$/g, "[^.]+")),
-                            (r = r
-                              .replace(/[/]/g, "[/]")
-                              .replace(/[.]/g, "[.]")
-                              .replace(/[*]/g, ".*")),
-                            "^" + e + n + "(" + r + ")?$"
-                          );
-                        })(t)
-                      )
-                      .join("|")
-                  );
-        }
-        const f = "object" == typeof chrome && "webNavigation" in chrome;
-        async function d(n, r) {
-          return (async function (n, r, ...o) {
-            const { frameId: s, tabId: i } = (function (t) {
-              return "object" == typeof t ? t : { tabId: t, frameId: 0 };
-            })(n);
-            if (e) {
-              const [t] = await chrome.scripting.executeScript({
-                target: { tabId: i, frameIds: [s] },
-                func: r,
-                args: o,
-              });
-              return null == t ? void 0 : t.result;
-            }
-            const [a] = await t.tabs.executeScript(i, {
-              code: `(${r.toString()})(...${JSON.stringify(o)})`,
-              frameId: s,
-            });
-            return a;
-          })(
-            n,
-            (t) => {
-              const e = document[t];
-              return (document[t] = !0), e;
-            },
-            JSON.stringify(r)
-          );
-        }
-        function p() {
-          return (function (t) {
-            var e, n, r;
-            const o = { origins: [], permissions: [] },
-              s = new Set([
-                ...(null !== (e = t.permissions) && void 0 !== e ? e : []),
-                ...(null !== (n = t.content_scripts) && void 0 !== n ? n : []).flatMap((t) => {
-                  var e;
-                  return null !== (e = t.matches) && void 0 !== e ? e : [];
-                }),
-              ]);
-            t.devtools_page &&
-              !(null === (r = t.optional_permissions) || void 0 === r
-                ? void 0
-                : r.includes("devtools")) &&
-              s.add("devtools");
-            for (const t of s) t.includes("://") ? o.origins.push(t) : o.permissions.push(t);
-            return o;
-          })(chrome.runtime.getManifest());
-        }
-        const h = /:[/][/][*.]*([^/]+)/;
-        function g(t) {
-          return t.split(h)[1];
-        }
-        async function b(t) {
-          return new Promise((e) => {
-            chrome.permissions.getAll((n) => {
-              const r = p();
-              e(
-                (function (t, e, { strictOrigins: n = !0 } = {}) {
-                  var r, o;
-                  const s = { origins: [], permissions: [] };
-                  for (const o of null !== (r = e.origins) && void 0 !== r ? r : [])
-                    if (!t.origins.includes(o)) {
-                      if (!n) {
-                        const e = g(o);
-                        if (t.origins.some((t) => g(t) === e)) continue;
-                      }
-                      s.origins.push(o);
-                    }
-                  for (const n of null !== (o = e.permissions) && void 0 !== o ? o : [])
-                    t.permissions.includes(n) || s.permissions.push(n);
-                  return s;
-                })(r, n, t)
-              );
-            });
-          });
-        }
-        var v, w, y;
-        const I = new Map(),
-          A =
-            null !==
-              (y =
-                null ===
-                  (w =
-                    null ===
-                      (v =
-                        null === globalThis || void 0 === globalThis
-                          ? void 0
-                          : globalThis.browser) || void 0 === v
-                      ? void 0
-                      : v.contentScripts) || void 0 === w
-                  ? void 0
-                  : w.register) && void 0 !== y
-              ? y
-              : async function (t, e) {
-                  const {
-                    js: n = [],
-                    css: s = [],
-                    matchAboutBlank: a,
-                    matches: c,
-                    excludeMatches: l,
-                    runAt: u,
-                  } = t;
-                  let { allFrames: p } = t;
-                  f
-                    ? (p = !1)
-                    : p &&
-                      console.warn(
-                        "`allFrames: true` requires the `webNavigation` permission to work correctly: https://github.com/fregante/content-scripts-register-polyfill#permissions"
-                      );
-                  const h = m(...c),
-                    g = m(...(null != l ? l : [])),
-                    b = async (t, e, c = 0) => {
-                      h.test(t) &&
-                        !g.test(t) &&
-                        (await (async function (t) {
-                          return i.permissions.contains({ origins: [new URL(t).origin + "/*"] });
-                        })(t)) &&
-                        !(await d({ tabId: e, frameId: c }, { js: n, css: s })) &&
-                        (r({ tabId: e, frameId: c, files: s, matchAboutBlank: a, runAt: u }),
-                        await o({ tabId: e, frameId: c, files: n, matchAboutBlank: a, runAt: u }));
-                    },
-                    v = async (t, { status: e }, { url: n }) => {
-                      e && n && b(n, t);
-                    },
-                    w = async ({ tabId: t, frameId: e, url: n }) => {
-                      b(n, t, e);
-                    };
-                  f
-                    ? chrome.webNavigation.onCommitted.addListener(w)
-                    : chrome.tabs.onUpdated.addListener(v);
-                  const y = {
-                    async unregister() {
-                      f
-                        ? chrome.webNavigation.onCommitted.removeListener(w)
-                        : chrome.tabs.onUpdated.removeListener(v);
-                    },
-                  };
-                  return "function" == typeof e && e(y), y;
-                };
-        function k(t) {
-          return { file: new URL(t, location.origin).pathname };
-        }
-        async function S({ origins: t }) {
-          const e = chrome.runtime.getManifest().content_scripts;
-          if (!e)
-            throw new Error(
-              "webext-dynamic-content-scripts tried to register scripts on th new host permissions, but no content scripts were found in the manifest."
-            );
-          for (const n of t || [])
-            for (const t of e) {
-              const e = A({
-                js: (t.js || []).map((t) => k(t)),
-                css: (t.css || []).map((t) => k(t)),
-                allFrames: t.all_frames,
-                matches: [n],
-                excludeMatches: t.matches,
-                runAt: t.run_at,
-              });
-              I.set(n, e);
-            }
-          var n, r;
-          (r = e),
-            0 !== (n = t || []).length &&
-              chrome.tabs.query({ url: n }, (t) => {
-                for (const e of t) e.id && s(e.id, r);
-              });
-        }
-        (async () => {
-          S(await b({ strictOrigins: !1 }));
-        })(),
-          chrome.permissions.onAdded.addListener((t) => {
-            t.origins && t.origins.length > 0 && S(t);
-          }),
-          chrome.permissions.onRemoved.addListener(async ({ origins: t }) => {
-            if (t && 0 !== t.length)
-              for (const [e, n] of I) t.includes(e) && (await n).unregister();
-          });
-      })();
-
-      // BG: background.js
-      browser.runtime.onMessage.addListener((request, sender, sendResponse) => {
-        if (request.type === "tabsCreate") {
-          browser.tabs
-            .create({
-              url: request.options.url,
-              active: request.options.active,
-              openerTabId: sender.tab.id,
-            })
-            .then((tab) => {
-              if (!browser.tabs.group) {
-                return;
+                          })(t)
+                        )
+                        .join("|")
+                    );
+          }
+          const f = "object" == typeof chrome && "webNavigation" in chrome;
+          async function d(n, r) {
+            return (async function (n, r, ...o) {
+              const { frameId: s, tabId: i } = (function (t) {
+                return "object" == typeof t ? t : { tabId: t, frameId: 0 };
+              })(n);
+              if (e) {
+                const [t] = await chrome.scripting.executeScript({
+                  target: { tabId: i, frameIds: [s] },
+                  func: r,
+                  args: o,
+                });
+                return null == t ? void 0 : t.result;
               }
-              return browser.tabs.group({
-                tabIds: tab.id,
-                groupId: sender.tab.groupId,
+              const [a] = await t.tabs.executeScript(i, {
+                code: `(${r.toString()})(...${JSON.stringify(o)})`,
+                frameId: s,
+              });
+              return a;
+            })(
+              n,
+              (t) => {
+                const e = document[t];
+                return (document[t] = !0), e;
+              },
+              JSON.stringify(r)
+            );
+          }
+          function p() {
+            return (function (t) {
+              var e, n, r;
+              const o = { origins: [], permissions: [] },
+                s = new Set([
+                  ...(null !== (e = t.permissions) && void 0 !== e ? e : []),
+                  ...(null !== (n = t.content_scripts) && void 0 !== n ? n : []).flatMap((t) => {
+                    var e;
+                    return null !== (e = t.matches) && void 0 !== e ? e : [];
+                  }),
+                ]);
+              t.devtools_page &&
+                !(null === (r = t.optional_permissions) || void 0 === r
+                  ? void 0
+                  : r.includes("devtools")) &&
+                s.add("devtools");
+              for (const t of s) t.includes("://") ? o.origins.push(t) : o.permissions.push(t);
+              return o;
+            })(chrome.runtime.getManifest());
+          }
+          const h = /:[/][/][*.]*([^/]+)/;
+          function g(t) {
+            return t.split(h)[1];
+          }
+          async function b(t) {
+            return new Promise((e) => {
+              chrome.permissions.getAll((n) => {
+                const r = p();
+                e(
+                  (function (t, e, { strictOrigins: n = !0 } = {}) {
+                    var r, o;
+                    const s = { origins: [], permissions: [] };
+                    for (const o of null !== (r = e.origins) && void 0 !== r ? r : [])
+                      if (!t.origins.includes(o)) {
+                        if (!n) {
+                          const e = g(o);
+                          if (t.origins.some((t) => g(t) === e)) continue;
+                        }
+                        s.origins.push(o);
+                      }
+                    for (const n of null !== (o = e.permissions) && void 0 !== o ? o : [])
+                      t.permissions.includes(n) || s.permissions.push(n);
+                    return s;
+                  })(r, n, t)
+                );
               });
             });
-          return true;
-        }
-        return false;
-      });
+          }
+          var v, w, y;
+          const I = new Map(),
+            A =
+              null !==
+                (y =
+                  null ===
+                    (w =
+                      null ===
+                        (v =
+                          null === globalThis || void 0 === globalThis
+                            ? void 0
+                            : globalThis.browser) || void 0 === v
+                        ? void 0
+                        : v.contentScripts) || void 0 === w
+                    ? void 0
+                    : w.register) && void 0 !== y
+                ? y
+                : async function (t, e) {
+                    const {
+                      js: n = [],
+                      css: s = [],
+                      matchAboutBlank: a,
+                      matches: c,
+                      excludeMatches: l,
+                      runAt: u,
+                    } = t;
+                    let { allFrames: p } = t;
+                    f
+                      ? (p = !1)
+                      : p &&
+                        console.warn(
+                          "`allFrames: true` requires the `webNavigation` permission to work correctly: https://github.com/fregante/content-scripts-register-polyfill#permissions"
+                        );
+                    const h = m(...c),
+                      g = m(...(null != l ? l : [])),
+                      b = async (t, e, c = 0) => {
+                        h.test(t) &&
+                          !g.test(t) &&
+                          (await (async function (t) {
+                            return i.permissions.contains({ origins: [new URL(t).origin + "/*"] });
+                          })(t)) &&
+                          !(await d({ tabId: e, frameId: c }, { js: n, css: s })) &&
+                          (r({ tabId: e, frameId: c, files: s, matchAboutBlank: a, runAt: u }),
+                          await o({
+                            tabId: e,
+                            frameId: c,
+                            files: n,
+                            matchAboutBlank: a,
+                            runAt: u,
+                          }));
+                      },
+                      v = async (t, { status: e }, { url: n }) => {
+                        e && n && b(n, t);
+                      },
+                      w = async ({ tabId: t, frameId: e, url: n }) => {
+                        b(n, t, e);
+                      };
+                    f
+                      ? chrome.webNavigation.onCommitted.addListener(w)
+                      : chrome.tabs.onUpdated.addListener(v);
+                    const y = {
+                      async unregister() {
+                        f
+                          ? chrome.webNavigation.onCommitted.removeListener(w)
+                          : chrome.tabs.onUpdated.removeListener(v);
+                      },
+                    };
+                    return "function" == typeof e && e(y), y;
+                  };
+          function k(t) {
+            return { file: new URL(t, location.origin).pathname };
+          }
+          async function S({ origins: t }) {
+            const e = chrome.runtime.getManifest().content_scripts;
+            if (!e)
+              throw new Error(
+                "webext-dynamic-content-scripts tried to register scripts on th new host permissions, but no content scripts were found in the manifest."
+              );
+            for (const n of t || [])
+              for (const t of e) {
+                const e = A({
+                  js: (t.js || []).map((t) => k(t)),
+                  css: (t.css || []).map((t) => k(t)),
+                  allFrames: t.all_frames,
+                  matches: [n],
+                  excludeMatches: t.matches,
+                  runAt: t.run_at,
+                });
+                I.set(n, e);
+              }
+            var n, r;
+            (r = e),
+              0 !== (n = t || []).length &&
+                chrome.tabs.query({ url: n }, (t) => {
+                  for (const e of t) e.id && s(e.id, r);
+                });
+          }
+          (async () => {
+            S(await b({ strictOrigins: !1 }));
+          })(),
+            chrome.permissions.onAdded.addListener((t) => {
+              t.origins && t.origins.length > 0 && S(t);
+            }),
+            chrome.permissions.onRemoved.addListener(async ({ origins: t }) => {
+              if (t && 0 !== t.length)
+                for (const [e, n] of I) t.includes(e) && (await n).unregister();
+            });
+        })();
+
+        // BG: background.js
+        browser.runtime.onMessage.addListener((request, sender, sendResponse) => {
+          if (request.type === "tabsCreate") {
+            browser.tabs
+              .create({
+                url: request.options.url,
+                active: request.options.active,
+                openerTabId: sender.tab.id,
+              })
+              .then((tab) => {
+                if (!browser.tabs.group) {
+                  return;
+                }
+                return browser.tabs.group({
+                  tabIds: tab.id,
+                  groupId: sender.tab.groupId,
+                });
+              });
+            return true;
+          }
+          return false;
+        });
+      }
     }
+
+    executeBackgroundScripts.call(backgroundPolyfill);
 
     console.log(debug + " Background scripts execution complete.");
   };
 
-  console.log("START_BACKGROUND_SCRIPT", START_BACKGROUND_SCRIPT);
   setTimeout(() => {
+    // Wait for things to be defined
     START_BACKGROUND_SCRIPT();
-  }, 100);
+  }, 10);
+  console.log("START_BACKGROUND_SCRIPT", START_BACKGROUND_SCRIPT);
   // End background script environment
 
   // #endregion
@@ -3492,7 +3517,6 @@ r();
       console.log(`[${scriptName}] Executing document-end phase...`);
 
       const scriptPaths = [
-        "browser-polyfill.js",
         "mousetrap.js",
         "mousetrap-global-bind.js",
         "options.js",
@@ -3504,445 +3528,6 @@ r();
       try {
         // Keep variables from being redeclared for global scope, but also make them apply to global scope. (Theoretically)
         with (globalThis) {
-          // START: browser-polyfill.js
-          !(function (e, r) {
-            if ("function" == typeof define && define.amd)
-              define("webextension-polyfill", ["module"], r);
-            else if ("undefined" != typeof exports) r(module);
-            else {
-              var s = { exports: {} };
-              r(s), (e.browser = s.exports);
-            }
-          })(
-            "undefined" != typeof globalThis
-              ? globalThis
-              : "undefined" != typeof self
-                ? self
-                : this,
-            function (e) {
-              "use strict";
-              if (!globalThis.chrome?.runtime?.id)
-                throw new Error("This script should only be loaded in a browser extension.");
-              if (
-                void 0 === globalThis.browser ||
-                Object.getPrototypeOf(globalThis.browser) !== Object.prototype
-              ) {
-                const r = "The message port closed before a response was received.",
-                  s = (e) => {
-                    const s = {
-                      alarms: {
-                        clear: { minArgs: 0, maxArgs: 1 },
-                        clearAll: { minArgs: 0, maxArgs: 0 },
-                        get: { minArgs: 0, maxArgs: 1 },
-                        getAll: { minArgs: 0, maxArgs: 0 },
-                      },
-                      bookmarks: {
-                        create: { minArgs: 1, maxArgs: 1 },
-                        get: { minArgs: 1, maxArgs: 1 },
-                        getChildren: { minArgs: 1, maxArgs: 1 },
-                        getRecent: { minArgs: 1, maxArgs: 1 },
-                        getSubTree: { minArgs: 1, maxArgs: 1 },
-                        getTree: { minArgs: 0, maxArgs: 0 },
-                        move: { minArgs: 2, maxArgs: 2 },
-                        remove: { minArgs: 1, maxArgs: 1 },
-                        removeTree: { minArgs: 1, maxArgs: 1 },
-                        search: { minArgs: 1, maxArgs: 1 },
-                        update: { minArgs: 2, maxArgs: 2 },
-                      },
-                      browserAction: {
-                        disable: { minArgs: 0, maxArgs: 1, fallbackToNoCallback: !0 },
-                        enable: { minArgs: 0, maxArgs: 1, fallbackToNoCallback: !0 },
-                        getBadgeBackgroundColor: { minArgs: 1, maxArgs: 1 },
-                        getBadgeText: { minArgs: 1, maxArgs: 1 },
-                        getPopup: { minArgs: 1, maxArgs: 1 },
-                        getTitle: { minArgs: 1, maxArgs: 1 },
-                        openPopup: { minArgs: 0, maxArgs: 0 },
-                        setBadgeBackgroundColor: {
-                          minArgs: 1,
-                          maxArgs: 1,
-                          fallbackToNoCallback: !0,
-                        },
-                        setBadgeText: { minArgs: 1, maxArgs: 1, fallbackToNoCallback: !0 },
-                        setIcon: { minArgs: 1, maxArgs: 1 },
-                        setPopup: { minArgs: 1, maxArgs: 1, fallbackToNoCallback: !0 },
-                        setTitle: { minArgs: 1, maxArgs: 1, fallbackToNoCallback: !0 },
-                      },
-                      browsingData: {
-                        remove: { minArgs: 2, maxArgs: 2 },
-                        removeCache: { minArgs: 1, maxArgs: 1 },
-                        removeCookies: { minArgs: 1, maxArgs: 1 },
-                        removeDownloads: { minArgs: 1, maxArgs: 1 },
-                        removeFormData: { minArgs: 1, maxArgs: 1 },
-                        removeHistory: { minArgs: 1, maxArgs: 1 },
-                        removeLocalStorage: { minArgs: 1, maxArgs: 1 },
-                        removePasswords: { minArgs: 1, maxArgs: 1 },
-                        removePluginData: { minArgs: 1, maxArgs: 1 },
-                        settings: { minArgs: 0, maxArgs: 0 },
-                      },
-                      commands: { getAll: { minArgs: 0, maxArgs: 0 } },
-                      contextMenus: {
-                        remove: { minArgs: 1, maxArgs: 1 },
-                        removeAll: { minArgs: 0, maxArgs: 0 },
-                        update: { minArgs: 2, maxArgs: 2 },
-                      },
-                      cookies: {
-                        get: { minArgs: 1, maxArgs: 1 },
-                        getAll: { minArgs: 1, maxArgs: 1 },
-                        getAllCookieStores: { minArgs: 0, maxArgs: 0 },
-                        remove: { minArgs: 1, maxArgs: 1 },
-                        set: { minArgs: 1, maxArgs: 1 },
-                      },
-                      devtools: {
-                        inspectedWindow: {
-                          eval: { minArgs: 1, maxArgs: 2, singleCallbackArg: !1 },
-                        },
-                        panels: {
-                          create: { minArgs: 3, maxArgs: 3, singleCallbackArg: !0 },
-                          elements: { createSidebarPane: { minArgs: 1, maxArgs: 1 } },
-                        },
-                      },
-                      downloads: {
-                        cancel: { minArgs: 1, maxArgs: 1 },
-                        download: { minArgs: 1, maxArgs: 1 },
-                        erase: { minArgs: 1, maxArgs: 1 },
-                        getFileIcon: { minArgs: 1, maxArgs: 2 },
-                        open: { minArgs: 1, maxArgs: 1, fallbackToNoCallback: !0 },
-                        pause: { minArgs: 1, maxArgs: 1 },
-                        removeFile: { minArgs: 1, maxArgs: 1 },
-                        resume: { minArgs: 1, maxArgs: 1 },
-                        search: { minArgs: 1, maxArgs: 1 },
-                        show: { minArgs: 1, maxArgs: 1, fallbackToNoCallback: !0 },
-                      },
-                      extension: {
-                        isAllowedFileSchemeAccess: { minArgs: 0, maxArgs: 0 },
-                        isAllowedIncognitoAccess: { minArgs: 0, maxArgs: 0 },
-                      },
-                      history: {
-                        addUrl: { minArgs: 1, maxArgs: 1 },
-                        deleteAll: { minArgs: 0, maxArgs: 0 },
-                        deleteRange: { minArgs: 1, maxArgs: 1 },
-                        deleteUrl: { minArgs: 1, maxArgs: 1 },
-                        getVisits: { minArgs: 1, maxArgs: 1 },
-                        search: { minArgs: 1, maxArgs: 1 },
-                      },
-                      i18n: {
-                        detectLanguage: { minArgs: 1, maxArgs: 1 },
-                        getAcceptLanguages: { minArgs: 0, maxArgs: 0 },
-                      },
-                      identity: { launchWebAuthFlow: { minArgs: 1, maxArgs: 1 } },
-                      idle: { queryState: { minArgs: 1, maxArgs: 1 } },
-                      management: {
-                        get: { minArgs: 1, maxArgs: 1 },
-                        getAll: { minArgs: 0, maxArgs: 0 },
-                        getSelf: { minArgs: 0, maxArgs: 0 },
-                        setEnabled: { minArgs: 2, maxArgs: 2 },
-                        uninstallSelf: { minArgs: 0, maxArgs: 1 },
-                      },
-                      notifications: {
-                        clear: { minArgs: 1, maxArgs: 1 },
-                        create: { minArgs: 1, maxArgs: 2 },
-                        getAll: { minArgs: 0, maxArgs: 0 },
-                        getPermissionLevel: { minArgs: 0, maxArgs: 0 },
-                        update: { minArgs: 2, maxArgs: 2 },
-                      },
-                      pageAction: {
-                        getPopup: { minArgs: 1, maxArgs: 1 },
-                        getTitle: { minArgs: 1, maxArgs: 1 },
-                        hide: { minArgs: 1, maxArgs: 1, fallbackToNoCallback: !0 },
-                        setIcon: { minArgs: 1, maxArgs: 1 },
-                        setPopup: { minArgs: 1, maxArgs: 1, fallbackToNoCallback: !0 },
-                        setTitle: { minArgs: 1, maxArgs: 1, fallbackToNoCallback: !0 },
-                        show: { minArgs: 1, maxArgs: 1, fallbackToNoCallback: !0 },
-                      },
-                      permissions: {
-                        contains: { minArgs: 1, maxArgs: 1 },
-                        getAll: { minArgs: 0, maxArgs: 0 },
-                        remove: { minArgs: 1, maxArgs: 1 },
-                        request: { minArgs: 1, maxArgs: 1 },
-                      },
-                      runtime: {
-                        getBackgroundPage: { minArgs: 0, maxArgs: 0 },
-                        getPlatformInfo: { minArgs: 0, maxArgs: 0 },
-                        openOptionsPage: { minArgs: 0, maxArgs: 0 },
-                        requestUpdateCheck: { minArgs: 0, maxArgs: 0 },
-                        sendMessage: { minArgs: 1, maxArgs: 3 },
-                        sendNativeMessage: { minArgs: 2, maxArgs: 2 },
-                        setUninstallURL: { minArgs: 1, maxArgs: 1 },
-                      },
-                      sessions: {
-                        getDevices: { minArgs: 0, maxArgs: 1 },
-                        getRecentlyClosed: { minArgs: 0, maxArgs: 1 },
-                        restore: { minArgs: 0, maxArgs: 1 },
-                      },
-                      storage: {
-                        local: {
-                          clear: { minArgs: 0, maxArgs: 0 },
-                          get: { minArgs: 0, maxArgs: 1 },
-                          getBytesInUse: { minArgs: 0, maxArgs: 1 },
-                          remove: { minArgs: 1, maxArgs: 1 },
-                          set: { minArgs: 1, maxArgs: 1 },
-                        },
-                        managed: {
-                          get: { minArgs: 0, maxArgs: 1 },
-                          getBytesInUse: { minArgs: 0, maxArgs: 1 },
-                        },
-                        sync: {
-                          clear: { minArgs: 0, maxArgs: 0 },
-                          get: { minArgs: 0, maxArgs: 1 },
-                          getBytesInUse: { minArgs: 0, maxArgs: 1 },
-                          remove: { minArgs: 1, maxArgs: 1 },
-                          set: { minArgs: 1, maxArgs: 1 },
-                        },
-                      },
-                      tabs: {
-                        captureVisibleTab: { minArgs: 0, maxArgs: 2 },
-                        create: { minArgs: 1, maxArgs: 1 },
-                        detectLanguage: { minArgs: 0, maxArgs: 1 },
-                        discard: { minArgs: 0, maxArgs: 1 },
-                        duplicate: { minArgs: 1, maxArgs: 1 },
-                        executeScript: { minArgs: 1, maxArgs: 2 },
-                        get: { minArgs: 1, maxArgs: 1 },
-                        getCurrent: { minArgs: 0, maxArgs: 0 },
-                        getZoom: { minArgs: 0, maxArgs: 1 },
-                        getZoomSettings: { minArgs: 0, maxArgs: 1 },
-                        goBack: { minArgs: 0, maxArgs: 1 },
-                        goForward: { minArgs: 0, maxArgs: 1 },
-                        highlight: { minArgs: 1, maxArgs: 1 },
-                        insertCSS: { minArgs: 1, maxArgs: 2 },
-                        move: { minArgs: 2, maxArgs: 2 },
-                        query: { minArgs: 1, maxArgs: 1 },
-                        reload: { minArgs: 0, maxArgs: 2 },
-                        remove: { minArgs: 1, maxArgs: 1 },
-                        removeCSS: { minArgs: 1, maxArgs: 2 },
-                        sendMessage: { minArgs: 2, maxArgs: 3 },
-                        setZoom: { minArgs: 1, maxArgs: 2 },
-                        setZoomSettings: { minArgs: 1, maxArgs: 2 },
-                        update: { minArgs: 1, maxArgs: 2 },
-                      },
-                      topSites: { get: { minArgs: 0, maxArgs: 0 } },
-                      webNavigation: {
-                        getAllFrames: { minArgs: 1, maxArgs: 1 },
-                        getFrame: { minArgs: 1, maxArgs: 1 },
-                      },
-                      webRequest: { handlerBehaviorChanged: { minArgs: 0, maxArgs: 0 } },
-                      windows: {
-                        create: { minArgs: 0, maxArgs: 1 },
-                        get: { minArgs: 1, maxArgs: 2 },
-                        getAll: { minArgs: 0, maxArgs: 1 },
-                        getCurrent: { minArgs: 0, maxArgs: 1 },
-                        getLastFocused: { minArgs: 0, maxArgs: 1 },
-                        remove: { minArgs: 1, maxArgs: 1 },
-                        update: { minArgs: 2, maxArgs: 2 },
-                      },
-                    };
-                    if (0 === Object.keys(s).length)
-                      throw new Error(
-                        "api-metadata.json has not been included in browser-polyfill"
-                      );
-                    class g extends WeakMap {
-                      constructor(e, r) {
-                        super(r), (this.createItem = e);
-                      }
-                      get(e) {
-                        return this.has(e) || this.set(e, this.createItem(e)), super.get(e);
-                      }
-                    }
-                    const a =
-                        (r, s) =>
-                        (...g) => {
-                          e.runtime.lastError
-                            ? r.reject(new Error(e.runtime.lastError.message))
-                            : s.singleCallbackArg || (g.length <= 1 && !1 !== s.singleCallbackArg)
-                              ? r.resolve(g[0])
-                              : r.resolve(g);
-                        },
-                      m = (e) => (1 == e ? "argument" : "arguments"),
-                      n = (e, r, s) => new Proxy(r, { apply: (r, g, a) => s.call(g, e, ...a) });
-                    let t = Function.call.bind(Object.prototype.hasOwnProperty);
-                    const A = (e, r = {}, s = {}) => {
-                        let g = Object.create(null),
-                          i = {
-                            has: (r, s) => s in e || s in g,
-                            get(i, o, l) {
-                              if (o in g) return g[o];
-                              if (!(o in e)) return;
-                              let x = e[o];
-                              if ("function" == typeof x)
-                                if ("function" == typeof r[o]) x = n(e, e[o], r[o]);
-                                else if (t(s, o)) {
-                                  let r = ((e, r) =>
-                                    function (s, ...g) {
-                                      if (g.length < r.minArgs)
-                                        throw new Error(
-                                          `Expected at least ${r.minArgs} ${m(r.minArgs)} for ${e}(), got ${g.length}`
-                                        );
-                                      if (g.length > r.maxArgs)
-                                        throw new Error(
-                                          `Expected at most ${r.maxArgs} ${m(r.maxArgs)} for ${e}(), got ${g.length}`
-                                        );
-                                      return new Promise((m, n) => {
-                                        if (r.fallbackToNoCallback)
-                                          try {
-                                            s[e](...g, a({ resolve: m, reject: n }, r));
-                                          } catch (a) {
-                                            console.warn(
-                                              `${e} API method doesn't seem to support the callback parameter, falling back to call it without a callback: `,
-                                              a
-                                            ),
-                                              s[e](...g),
-                                              (r.fallbackToNoCallback = !1),
-                                              (r.noCallback = !0),
-                                              m();
-                                          }
-                                        else
-                                          r.noCallback
-                                            ? (s[e](...g), m())
-                                            : s[e](...g, a({ resolve: m, reject: n }, r));
-                                      });
-                                    })(o, s[o]);
-                                  x = n(e, e[o], r);
-                                } else x = x.bind(e);
-                              else if ("object" == typeof x && null !== x && (t(r, o) || t(s, o)))
-                                x = A(x, r[o], s[o]);
-                              else {
-                                if (!t(s, "*"))
-                                  return (
-                                    Object.defineProperty(g, o, {
-                                      configurable: !0,
-                                      enumerable: !0,
-                                      get: () => e[o],
-                                      set(r) {
-                                        e[o] = r;
-                                      },
-                                    }),
-                                    x
-                                  );
-                                x = A(x, r[o], s["*"]);
-                              }
-                              return (g[o] = x), x;
-                            },
-                            set: (r, s, a, m) => (s in g ? (g[s] = a) : (e[s] = a), !0),
-                            defineProperty: (e, r, s) => Reflect.defineProperty(g, r, s),
-                            deleteProperty: (e, r) => Reflect.deleteProperty(g, r),
-                          },
-                          o = Object.create(e);
-                        return new Proxy(o, i);
-                      },
-                      i = (e) => ({
-                        addListener(r, s, ...g) {
-                          r.addListener(e.get(s), ...g);
-                        },
-                        hasListener: (r, s) => r.hasListener(e.get(s)),
-                        removeListener(r, s) {
-                          r.removeListener(e.get(s));
-                        },
-                      }),
-                      o = new g((e) =>
-                        "function" != typeof e
-                          ? e
-                          : function (r) {
-                              const s = A(r, {}, { getContent: { minArgs: 0, maxArgs: 0 } });
-                              e(s);
-                            }
-                      ),
-                      l = new g((e) =>
-                        "function" != typeof e
-                          ? e
-                          : function (r, s, g) {
-                              let a,
-                                m,
-                                n = !1,
-                                t = new Promise((e) => {
-                                  a = function (r) {
-                                    (n = !0), e(r);
-                                  };
-                                });
-                              try {
-                                m = e(r, s, a);
-                              } catch (e) {
-                                m = Promise.reject(e);
-                              }
-                              const A =
-                                !0 !== m &&
-                                (i = m) &&
-                                "object" == typeof i &&
-                                "function" == typeof i.then;
-                              var i;
-                              if (!0 !== m && !A && !n) return !1;
-                              const o = (e) => {
-                                e.then(
-                                  (e) => {
-                                    g(e);
-                                  },
-                                  (e) => {
-                                    let r;
-                                    (r =
-                                      e && (e instanceof Error || "string" == typeof e.message)
-                                        ? e.message
-                                        : "An unexpected error occurred"),
-                                      g({ __mozWebExtensionPolyfillReject__: !0, message: r });
-                                  }
-                                ).catch((e) => {
-                                  console.error("Failed to send onMessage rejected reply", e);
-                                });
-                              };
-                              return o(A ? m : t), !0;
-                            }
-                      ),
-                      x = ({ reject: s, resolve: g }, a) => {
-                        e.runtime.lastError
-                          ? e.runtime.lastError.message === r
-                            ? g()
-                            : s(new Error(e.runtime.lastError.message))
-                          : a && a.__mozWebExtensionPolyfillReject__
-                            ? s(new Error(a.message))
-                            : g(a);
-                      },
-                      c = (e, r, s, ...g) => {
-                        if (g.length < r.minArgs)
-                          throw new Error(
-                            `Expected at least ${r.minArgs} ${m(r.minArgs)} for ${e}(), got ${g.length}`
-                          );
-                        if (g.length > r.maxArgs)
-                          throw new Error(
-                            `Expected at most ${r.maxArgs} ${m(r.maxArgs)} for ${e}(), got ${g.length}`
-                          );
-                        return new Promise((e, r) => {
-                          const a = x.bind(null, { resolve: e, reject: r });
-                          g.push(a), s.sendMessage(...g);
-                        });
-                      },
-                      d = {
-                        devtools: { network: { onRequestFinished: i(o) } },
-                        runtime: {
-                          onMessage: i(l),
-                          onMessageExternal: i(l),
-                          sendMessage: c.bind(null, "sendMessage", { minArgs: 1, maxArgs: 3 }),
-                        },
-                        tabs: {
-                          sendMessage: c.bind(null, "sendMessage", { minArgs: 2, maxArgs: 3 }),
-                        },
-                      },
-                      u = {
-                        clear: { minArgs: 1, maxArgs: 1 },
-                        get: { minArgs: 1, maxArgs: 1 },
-                        set: { minArgs: 1, maxArgs: 1 },
-                      };
-                    return (
-                      (s.privacy = {
-                        network: { "*": u },
-                        services: { "*": u },
-                        websites: { "*": u },
-                      }),
-                      A(e, d, s)
-                    );
-                  };
-                e.exports = s(chrome);
-              } else e.exports = globalThis.browser;
-            }
-          );
-          // END: browser-polyfill.js
-
           // START: mousetrap.js
           !(function (e, t, n) {
             if (e) {
@@ -6948,7 +6533,7 @@ r();
 
   function generateCompletePolyfillForIframe() {
     const polyfillString =
-      '\n// -- Messaging implementation\n\nfunction createEventBus(\n  scopeId,\n  type = "page", // "page" or "iframe"\n  { allowedOrigin = "*", children = [], parentWindow = null } = {},\n) {\n  if (!scopeId) throw new Error("createEventBus requires a scopeId");\n\n  const handlers = {};\n\n  function handleIncoming(ev) {\n    if (allowedOrigin !== "*" && ev.origin !== allowedOrigin) return;\n\n    const msg = ev.data;\n    if (!msg || msg.__eventBus !== true || msg.scopeId !== scopeId) return;\n\n    const { event, payload } = msg;\n\n    // PAGE: if it\'s an INIT from an iframe, adopt it\n    if (type === "page" && event === "__INIT__") {\n      const win = ev.source;\n      if (win && !children.includes(win)) {\n        children.push(win);\n      }\n      return;\n    }\n\n    (handlers[event] || []).forEach((fn) =>\n      fn(payload, { origin: ev.origin, source: ev.source }),\n    );\n  }\n\n  window.addEventListener("message", handleIncoming);\n\n  function emitTo(win, event, payload) {\n    const envelope = {\n      __eventBus: true,\n      scopeId,\n      event,\n      payload,\n    };\n    win.postMessage(envelope, allowedOrigin);\n  }\n\n  // IFRAME: announce to page on startup\n  if (type === "iframe") {\n    setTimeout(() => {\n      const pw = parentWindow || window.parent;\n      if (pw && pw.postMessage) {\n        emitTo(pw, "__INIT__", null);\n      }\n    }, 0);\n  }\n\n  return {\n    on(event, fn) {\n      handlers[event] = handlers[event] || [];\n      handlers[event].push(fn);\n    },\n    off(event, fn) {\n      if (!handlers[event]) return;\n      handlers[event] = handlers[event].filter((h) => h !== fn);\n    },\n    /**\n     * Emits an event.\n     * @param {string} event - The event name.\n     * @param {any} payload - The event payload.\n     * @param {object} [options] - Emission options.\n     * @param {Window} [options.to] - A specific window to target. If provided, message is ONLY sent to the target.\n     */\n    emit(event, payload, { to } = {}) {\n      // If a specific target window is provided, send only to it and DO NOT dispatch locally.\n      // This prevents a port from receiving its own messages.\n      if (to) {\n        if (to && typeof to.postMessage === "function") {\n          emitTo(to, event, payload);\n        }\n        return; // Exit after targeted send.\n      }\n\n      // For broadcast messages (no \'to\' target), dispatch locally first.\n      (handlers[event] || []).forEach((fn) =>\n        fn(payload, { origin: location.origin, source: window }),\n      );\n\n      // Then propagate the broadcast to other windows.\n      if (type === "page") {\n        children.forEach((win) => emitTo(win, event, payload));\n      } else {\n        const pw = parentWindow || window.parent;\n        if (pw && pw.postMessage) {\n          emitTo(pw, event, payload);\n        }\n      }\n    },\n  };\n}\n\nfunction createRuntime(type = "background", bus) {\n  let nextId = 1;\n  const pending = {};\n  const msgListeners = [];\n\n  let nextPortId = 1;\n  const ports = {};\n  const onConnectListeners = [];\n\n  function parseArgs(args) {\n    let target, message, options, callback;\n    const arr = [...args];\n    if (arr.length === 0) {\n      throw new Error("sendMessage requires at least one argument");\n    }\n    if (arr.length === 1) {\n      return { message: arr[0] };\n    }\n    // last object could be options\n    if (\n      arr.length &&\n      typeof arr[arr.length - 1] === "object" &&\n      !Array.isArray(arr[arr.length - 1])\n    ) {\n      options = arr.pop();\n    }\n    // last function is callback\n    if (arr.length && typeof arr[arr.length - 1] === "function") {\n      callback = arr.pop();\n    }\n    if (\n      arr.length === 2 &&\n      (typeof arr[0] === "string" || typeof arr[0] === "number")\n    ) {\n      [target, message] = arr;\n    } else {\n      [message] = arr;\n    }\n    return { target, message, options, callback };\n  }\n\n  if (type === "background") {\n    bus.on("__REQUEST__", ({ id, message }, { source }) => {\n      let responded = false,\n        isAsync = false;\n      function sendResponse(resp) {\n        if (responded) return;\n        responded = true;\n        // Target the response directly back to the window that sent the request.\n        bus.emit("__RESPONSE__", { id, response: resp }, { to: source });\n      }\n      const results = msgListeners\n        .map((fn) => {\n          try {\n            // msg, sender, sendResponse\n            const ret = fn(message, { id, tab: { id: source } }, sendResponse);\n            if (ret === true || (ret && typeof ret.then === "function")) {\n              isAsync = true;\n              return ret;\n            }\n            return ret;\n          } catch (e) {\n            console.error(e);\n          }\n        })\n        .filter((r) => r !== undefined);\n\n      const promises = results.filter((r) => r && typeof r.then === "function");\n      if (!isAsync && promises.length === 0) {\n        const out = results.length === 1 ? results[0] : results;\n        sendResponse(out);\n      } else if (promises.length) {\n        Promise.all(promises).then((vals) => {\n          if (!responded) {\n            const out = vals.length === 1 ? vals[0] : vals;\n            sendResponse(out);\n          }\n        });\n      }\n    });\n  }\n\n  if (type !== "background") {\n    bus.on("__RESPONSE__", ({ id, response }) => {\n      const entry = pending[id];\n      if (!entry) return;\n      entry.resolve(response);\n      if (entry.callback) entry.callback(response);\n      delete pending[id];\n    });\n  }\n\n  function sendMessage(...args) {\n    // Background should be able to send message to itself\n    // if (type === "background") {\n    //   throw new Error("Background cannot sendMessage to itself");\n    // }\n    const { target, message, callback } = parseArgs(args);\n    const id = nextId++;\n    const promise = new Promise((resolve) => {\n      pending[id] = { resolve, callback };\n      bus.emit("__REQUEST__", { id, message });\n    });\n    return promise;\n  }\n\n  bus.on("__PORT_CONNECT__", ({ portId, name }, { source }) => {\n    if (type !== "background") return;\n    const backgroundPort = makePort("background", portId, name, source);\n    ports[portId] = backgroundPort;\n\n    onConnectListeners.forEach((fn) => fn(backgroundPort));\n\n    // send back a CONNECT_ACK so the client can\n    // start listening on its end:\n    bus.emit("__PORT_CONNECT_ACK__", { portId, name }, { to: source });\n  });\n\n  // Clients handle the ACK and finalize their Port object by learning the remote window.\n  bus.on("__PORT_CONNECT_ACK__", ({ portId, name }, { source }) => {\n    if (type === "background") return; // ignore\n    const p = ports[portId];\n    if (!p) return;\n    // Call the port\'s internal finalize method to complete the handshake\n    if (p._finalize) {\n      p._finalize(source);\n    }\n  });\n\n  // Any port message travels via "__PORT_MESSAGE__"\n  bus.on("__PORT_MESSAGE__", (envelope, { source }) => {\n    const { portId } = envelope;\n    const p = ports[portId];\n    if (!p) return;\n    p._receive(envelope, source);\n  });\n\n  // Any port disconnect:\n  bus.on("__PORT_DISCONNECT__", ({ portId }) => {\n    const p = ports[portId];\n    if (!p) return;\n    p._disconnect();\n    delete ports[portId];\n  });\n\n  // Refactored makePort to correctly manage internal state and the connection handshake.\n  function makePort(side, portId, name, remoteWindow) {\n    let onMessageHandlers = [];\n    let onDisconnectHandlers = [];\n    let buffer = [];\n    // Unique instance ID for this port instance\n    const instanceId = Math.random().toString(36).slice(2) + Date.now();\n    // These state variables are part of the closure and are updated by _finalize\n    let _ready = side === "background";\n\n    function _drainBuffer() {\n      buffer.forEach((m) => _post(m));\n      buffer = [];\n    }\n\n    function _post(msg) {\n      // Always use the \'to\' parameter for port messages, making them directional.\n      // Include senderInstanceId\n      bus.emit(\n        "__PORT_MESSAGE__",\n        { portId, msg, senderInstanceId: instanceId },\n        { to: remoteWindow },\n      );\n    }\n\n    function postMessage(msg) {\n      if (!_ready) {\n        buffer.push(msg);\n      } else {\n        _post(msg);\n      }\n    }\n\n    function _receive(envelope, source) {\n      // envelope: { msg, senderInstanceId }\n      if (envelope.senderInstanceId === instanceId) return; // Don\'t dispatch to self\n      onMessageHandlers.forEach((fn) =>\n        fn(envelope.msg, { id: portId, tab: { id: source } }),\n      );\n    }\n\n    function disconnect() {\n      // Also use the \'to\' parameter for disconnect messages\n      bus.emit("__PORT_DISCONNECT__", { portId }, { to: remoteWindow });\n      _disconnect();\n      delete ports[portId];\n    }\n\n    function _disconnect() {\n      onDisconnectHandlers.forEach((fn) => fn());\n      onMessageHandlers = [];\n      onDisconnectHandlers = [];\n    }\n\n    // This function is called on the client port when the ACK is received from background.\n    // It updates the port\'s state, completing the connection.\n    function _finalize(win) {\n      remoteWindow = win; // <-- This is the crucial part: learn the destination\n      _ready = true;\n      _drainBuffer();\n    }\n\n    return {\n      name,\n      sender: {\n        id: portId,\n      },\n      onMessage: {\n        addListener(fn) {\n          onMessageHandlers.push(fn);\n        },\n        removeListener(fn) {\n          onMessageHandlers = onMessageHandlers.filter((x) => x !== fn);\n        },\n      },\n      onDisconnect: {\n        addListener(fn) {\n          onDisconnectHandlers.push(fn);\n        },\n        removeListener(fn) {\n          onDisconnectHandlers = onDisconnectHandlers.filter((x) => x !== fn);\n        },\n      },\n      postMessage,\n      disconnect,\n      // Internal methods used by the runtime\n      _receive,\n      _disconnect,\n      _finalize, // Expose the finalizer for the ACK handler\n    };\n  }\n\n  function connect(connectInfo = {}) {\n    if (type === "background") {\n      throw new Error("Background must use onConnect, not connect()");\n    }\n    const name = connectInfo.name || "";\n    const portId = nextPortId++;\n    // create the client side port\n    // remoteWindow is initially null; it will be set by _finalize upon ACK.\n    const clientPort = makePort("client", portId, name, null);\n    ports[portId] = clientPort;\n\n    // fire the connect event across the bus\n    bus.emit("__PORT_CONNECT__", { portId, name });\n    return clientPort;\n  }\n\n  function onConnect(fn) {\n    if (type !== "background") {\n      throw new Error("connect event only fires in background");\n    }\n    onConnectListeners.push(fn);\n  }\n\n  return {\n    // rpc:\n    sendMessage,\n    onMessage: {\n      addListener(fn) {\n        msgListeners.push(fn);\n      },\n      removeListener(fn) {\n        const i = msgListeners.indexOf(fn);\n        if (i >= 0) msgListeners.splice(i, 1);\n      },\n    },\n\n    // port API:\n    connect,\n    onConnect: {\n      addListener(fn) {\n        onConnect(fn);\n      },\n      removeListener(fn) {\n        const i = onConnectListeners.indexOf(fn);\n        if (i >= 0) onConnectListeners.splice(i, 1);\n      },\n    },\n  };\n}\n\n\n// --- Abstraction Layer: PostMessage Target\n\nlet nextRequestId = 1;\nconst pendingRequests = new Map(); // requestId -> { resolve, reject, timeout }\n\nfunction sendAbstractionRequest(method, args = []) {\n  return new Promise((resolve, reject) => {\n    const requestId = nextRequestId++;\n\n    const timeout = setTimeout(() => {\n      pendingRequests.delete(requestId);\n      reject(new Error(`PostMessage request timeout for method: ${method}`));\n    }, 10000);\n\n    pendingRequests.set(requestId, { resolve, reject, timeout });\n\n    window.parent.postMessage({\n      type: "abstraction-request",\n      requestId,\n      method,\n      args,\n    });\n  });\n}\n\nwindow.addEventListener("message", (event) => {\n  const { type, requestId, success, result, error } = event.data;\n\n  if (type === "abstraction-response") {\n    const pending = pendingRequests.get(requestId);\n    if (pending) {\n      clearTimeout(pending.timeout);\n      pendingRequests.delete(requestId);\n\n      if (success) {\n        pending.resolve(result);\n      } else {\n        const err = new Error(error.message);\n        err.stack = error.stack;\n        pending.reject(err);\n      }\n    }\n  }\n});\n\nasync function _storageSet(items) {\n  return sendAbstractionRequest("_storageSet", [items]);\n}\n\nasync function _storageGet(keys) {\n  return sendAbstractionRequest("_storageGet", [keys]);\n}\n\nasync function _storageRemove(keysToRemove) {\n  return sendAbstractionRequest("_storageRemove", [keysToRemove]);\n}\n\nasync function _storageClear() {\n  return sendAbstractionRequest("_storageClear");\n}\n\nasync function _fetch(url, options) {\n  return sendAbstractionRequest("_fetch", [url, options]);\n}\n\nfunction _registerMenuCommand(name, func) {\n  console.warn("_registerMenuCommand called from iframe context:", name);\n  return sendAbstractionRequest("_registerMenuCommand", [\n    name,\n    func.toString(),\n  ]);\n}\n\nfunction _openTab(url) {\n  return sendAbstractionRequest("_openTab", [url]);\n}\n\nasync function _initStorage() {\n  return sendAbstractionRequest("_initStorage");\n}\n\n\nconst EXTENSION_ASSETS_MAP = {{EXTENSION_ASSETS_MAP}};\n\n// -- Polyfill Implementation\nfunction buildPolyfill({ isBackground = false, isOtherPage = false } = {}) {\n  // Generate a unique context ID for this polyfill instance\n  const contextType = isBackground\n    ? "background"\n    : isOtherPage\n      ? "options"\n      : "content";\n  const contextId = `${contextType}_${Math.random()\n    .toString(36)\n    .substring(2, 15)}`;\n\n  const IS_IFRAME = "true" === "true";\n  const BUS = (function () {\n    if (globalThis.__BUS) {\n      return globalThis.__BUS;\n    }\n    globalThis.__BUS = createEventBus(\n      "web-search-navigator",\n      IS_IFRAME ? "iframe" : "page"\n    );\n    return globalThis.__BUS;\n  })();\n  const RUNTIME = createRuntime(isBackground ? "background" : "tab", BUS);\n  const createNoopListeners = () => ({\n    addListener: (callback) => {\n      console.log("addListener", callback);\n    },\n    removeListener: (callback) => {\n      console.log("removeListener", callback);\n    },\n  });\n  // TODO: Stub\n  const storageChangeListeners = new Set();\n  function broadcastStorageChange(changes, areaName) {\n    storageChangeListeners.forEach((listener) => {\n      listener(changes, areaName);\n    });\n  }\n\n  let REQ_PERMS = [];\n\n  // --- Chrome polyfill\n  let chrome = {\n    extension: {\n      isAllowedIncognitoAccess: () => Promise.resolve(true),\n      sendMessage: (...args) => _messagingHandler.sendMessage(...args),\n    },\n    permissions: {\n      // TODO: Remove origin permission means exclude from origin in startup\n      request: (permissions, callback) => {\n        console.log("permissions.request", permissions, callback);\n        if (Array.isArray(permissions)) {\n          REQ_PERMS = [...REQ_PERMS, ...permissions];\n        }\n        if (typeof callback === "function") {\n          callback(permissions);\n        }\n        return Promise.resolve(permissions);\n      },\n      contains: (permissions, callback) => {\n        if (typeof callback === "function") {\n          callback(true);\n        }\n        return Promise.resolve(true);\n      },\n      getAll: () => {\n        return Promise.resolve({\n          permissions: EXTENSION_PERMISSIONS,\n          origins: ORIGIN_PERMISSIONS,\n        });\n      },\n      onAdded: createNoopListeners(),\n      onRemoved: createNoopListeners(),\n    },\n    i18n: {\n      getUILanguage: () => {\n        return USED_LOCALE || "en";\n      },\n      getMessage: (key, substitutions = []) => {\n        if (typeof substitutions === "string") {\n          substitutions = [substitutions];\n        }\n        if (typeof LOCALE_KEYS !== "undefined" && LOCALE_KEYS[key]) {\n          return LOCALE_KEYS[key].message?.replace(\n            /\\$(\\d+)/g,\n            (match, p1) => substitutions[p1 - 1] || match\n          );\n        }\n        return key;\n      },\n    },\n    alarms: {\n      onAlarm: createNoopListeners(),\n      create: () => {\n        console.log("alarms.create", arguments);\n      },\n      get: () => {\n        console.log("alarms.get", arguments);\n      },\n    },\n    runtime: {\n      ...RUNTIME,\n      onInstalled: createNoopListeners(),\n      onStartup: createNoopListeners(),\n      // TODO: Postmessage to parent to open options page or call openOptionsPage\n      openOptionsPage: () => {\n        // const url = chrome.runtime.getURL(OPTIONS_PAGE_PATH);\n        // console.log("openOptionsPage", _openTab, url, EXTENSION_ASSETS_MAP);\n        // _openTab(url);\n        if (typeof openOptionsPage === "function") {\n          openOptionsPage();\n        } else if (window.parent) {\n          window.parent.postMessage({ type: "openOptionsPage" }, "*");\n        } else {\n          console.warn("openOptionsPage not available.");\n        }\n      },\n      getManifest: () => {\n        // The manifest object will be injected into the scope where buildPolyfill is called\n        if (typeof INJECTED_MANIFEST !== "undefined") {\n          return JSON.parse(JSON.stringify(INJECTED_MANIFEST)); // Return deep copy\n        }\n        console.warn(\n          "INJECTED_MANIFEST not found for chrome.runtime.getManifest"\n        );\n        return { name: "Unknown", version: "0.0", manifest_version: 2 };\n      },\n      getURL: (path) => {\n        if (!path) return "";\n        if (path.startsWith("/")) {\n          path = path.substring(1);\n        }\n\n        if (typeof _createAssetUrl === "function") {\n          return _createAssetUrl(path);\n        }\n\n        console.warn(\n          `chrome.runtime.getURL fallback for \'${path}\'. Assets may not be available.`\n        );\n        // Attempt a relative path resolution (highly context-dependent and likely wrong)\n        try {\n          if (window.location.protocol.startsWith("http")) {\n            return new URL(path, window.location.href).toString();\n          }\n        } catch (e) {\n          /* ignore error, fallback */\n        }\n        return path;\n      },\n      id: "polyfilled-extension-" + Math.random().toString(36).substring(2, 15),\n      lastError: null,\n      getPlatformInfo: async () => {\n        const platform = {\n          os: "unknown",\n          arch: "unknown",\n          nacl_arch: "unknown",\n        };\n\n        if (typeof navigator !== "undefined") {\n          const userAgent = navigator.userAgent.toLowerCase();\n          if (userAgent.includes("mac")) platform.os = "mac";\n          else if (userAgent.includes("win")) platform.os = "win";\n          else if (userAgent.includes("linux")) platform.os = "linux";\n          else if (userAgent.includes("android")) platform.os = "android";\n          else if (userAgent.includes("ios")) platform.os = "ios";\n\n          if (userAgent.includes("x86_64") || userAgent.includes("amd64")) {\n            platform.arch = "x86-64";\n          } else if (userAgent.includes("i386") || userAgent.includes("i686")) {\n            platform.arch = "x86-32";\n          } else if (userAgent.includes("arm")) {\n            platform.arch = "arm";\n          }\n        }\n\n        return platform;\n      },\n      getBrowserInfo: async () => {\n        const info = {\n          name: "unknown",\n          version: "unknown",\n          buildID: "unknown",\n        };\n\n        if (typeof navigator !== "undefined") {\n          const userAgent = navigator.userAgent;\n          if (userAgent.includes("Chrome")) {\n            info.name = "Chrome";\n            const match = userAgent.match(/Chrome\\/([0-9.]+)/);\n            if (match) info.version = match[1];\n          } else if (userAgent.includes("Firefox")) {\n            info.name = "Firefox";\n            const match = userAgent.match(/Firefox\\/([0-9.]+)/);\n            if (match) info.version = match[1];\n          } else if (userAgent.includes("Safari")) {\n            info.name = "Safari";\n            const match = userAgent.match(/Version\\/([0-9.]+)/);\n            if (match) info.version = match[1];\n          }\n        }\n\n        return info;\n      },\n    },\n    storage: {\n      local: {\n        get: function (keys, callback) {\n          if (typeof _storageGet !== "function")\n            throw new Error("_storageGet not defined");\n\n          const promise = _storageGet(keys);\n\n          if (typeof callback === "function") {\n            promise\n              .then((result) => {\n                try {\n                  callback(result);\n                } catch (e) {\n                  console.error("Error in storage.get callback:", e);\n                }\n              })\n              .catch((error) => {\n                console.error("Storage.get error:", error);\n                callback({});\n              });\n            return;\n          }\n\n          return promise;\n        },\n        set: function (items, callback) {\n          if (typeof _storageSet !== "function")\n            throw new Error("_storageSet not defined");\n\n          const promise = _storageSet(items).then((result) => {\n            broadcastStorageChange(items, "local");\n            return result;\n          });\n\n          if (typeof callback === "function") {\n            promise\n              .then((result) => {\n                try {\n                  callback(result);\n                } catch (e) {\n                  console.error("Error in storage.set callback:", e);\n                }\n              })\n              .catch((error) => {\n                console.error("Storage.set error:", error);\n                callback();\n              });\n            return;\n          }\n\n          return promise;\n        },\n        remove: function (keys, callback) {\n          if (typeof _storageRemove !== "function")\n            throw new Error("_storageRemove not defined");\n\n          const promise = _storageRemove(keys).then((result) => {\n            const changes = {};\n            const keyList = Array.isArray(keys) ? keys : [keys];\n            keyList.forEach((key) => {\n              changes[key] = { oldValue: undefined, newValue: undefined };\n            });\n            broadcastStorageChange(changes, "local");\n            return result;\n          });\n\n          if (typeof callback === "function") {\n            promise\n              .then((result) => {\n                try {\n                  callback(result);\n                } catch (e) {\n                  console.error("Error in storage.remove callback:", e);\n                }\n              })\n              .catch((error) => {\n                console.error("Storage.remove error:", error);\n                callback();\n              });\n            return;\n          }\n\n          return promise;\n        },\n        clear: function (callback) {\n          if (typeof _storageClear !== "function")\n            throw new Error("_storageClear not defined");\n\n          const promise = _storageClear().then((result) => {\n            broadcastStorageChange({}, "local");\n            return result;\n          });\n\n          if (typeof callback === "function") {\n            promise\n              .then((result) => {\n                try {\n                  callback(result);\n                } catch (e) {\n                  console.error("Error in storage.clear callback:", e);\n                }\n              })\n              .catch((error) => {\n                console.error("Storage.clear error:", error);\n                callback();\n              });\n            return;\n          }\n\n          return promise;\n        },\n        onChanged: {\n          addListener: (callback) => {\n            storageChangeListeners.add(callback);\n          },\n          removeListener: (callback) => {\n            storageChangeListeners.delete(callback);\n          },\n        },\n      },\n      sync: {\n        get: function (keys, callback) {\n          console.warn("chrome.storage.sync polyfill maps to local");\n          return chrome.storage.local.get(keys, callback);\n        },\n        set: function (items, callback) {\n          console.warn("chrome.storage.sync polyfill maps to local");\n\n          const promise = chrome.storage.local.set(items).then((result) => {\n            broadcastStorageChange(items, "sync");\n            return result;\n          });\n\n          if (typeof callback === "function") {\n            promise\n              .then((result) => {\n                try {\n                  callback(result);\n                } catch (e) {\n                  console.error("Error in storage.sync.set callback:", e);\n                }\n              })\n              .catch((error) => {\n                console.error("Storage.sync.set error:", error);\n                callback();\n              });\n            return;\n          }\n\n          return promise;\n        },\n        remove: function (keys, callback) {\n          console.warn("chrome.storage.sync polyfill maps to local");\n\n          const promise = chrome.storage.local.remove(keys).then((result) => {\n            const changes = {};\n            const keyList = Array.isArray(keys) ? keys : [keys];\n            keyList.forEach((key) => {\n              changes[key] = { oldValue: undefined, newValue: undefined };\n            });\n            broadcastStorageChange(changes, "sync");\n            return result;\n          });\n\n          if (typeof callback === "function") {\n            promise\n              .then((result) => {\n                try {\n                  callback(result);\n                } catch (e) {\n                  console.error("Error in storage.sync.remove callback:", e);\n                }\n              })\n              .catch((error) => {\n                console.error("Storage.sync.remove error:", error);\n                callback();\n              });\n            return;\n          }\n\n          return promise;\n        },\n        clear: function (callback) {\n          console.warn("chrome.storage.sync polyfill maps to local");\n\n          const promise = chrome.storage.local.clear().then((result) => {\n            broadcastStorageChange({}, "sync");\n            return result;\n          });\n\n          if (typeof callback === "function") {\n            promise\n              .then((result) => {\n                try {\n                  callback(result);\n                } catch (e) {\n                  console.error("Error in storage.sync.clear callback:", e);\n                }\n              })\n              .catch((error) => {\n                console.error("Storage.sync.clear error:", error);\n                callback();\n              });\n            return;\n          }\n\n          return promise;\n        },\n        onChanged: {\n          addListener: (callback) => {\n            storageChangeListeners.add(callback);\n          },\n          removeListener: (callback) => {\n            storageChangeListeners.delete(callback);\n          },\n        },\n      },\n      onChanged: {\n        addListener: (callback) => {\n          storageChangeListeners.add(callback);\n        },\n        removeListener: (callback) => {\n          storageChangeListeners.delete(callback);\n        },\n      },\n      managed: {\n        get: function (keys, callback) {\n          console.warn("chrome.storage.managed polyfill is read-only empty.");\n\n          const promise = Promise.resolve({});\n\n          if (typeof callback === "function") {\n            promise.then((result) => {\n              try {\n                callback(result);\n              } catch (e) {\n                console.error("Error in storage.managed.get callback:", e);\n              }\n            });\n            return;\n          }\n\n          return promise;\n        },\n      },\n    },\n    tabs: {\n      query: async (queryInfo) => {\n        console.warn(\n          "chrome.tabs.query polyfill only returns current tab info."\n        );\n        const dummyId = Math.floor(Math.random() * 1000) + 1;\n        return [\n          {\n            id: dummyId,\n            url: CURRENT_LOCATION,\n            active: true,\n            windowId: 1,\n            status: "complete",\n          },\n        ];\n      },\n      create: async ({ url }) => {\n        console.log(`[Polyfill tabs.create] URL: ${url}`);\n        if (typeof _openTab !== "function")\n          throw new Error("_openTab not defined");\n        _openTab(url);\n        const dummyId = Math.floor(Math.random() * 1000) + 1001;\n        return Promise.resolve({\n          id: dummyId,\n          url: url,\n          active: true,\n          windowId: 1,\n        });\n      },\n      sendMessage: async (tabId, message) => {\n        console.warn(\n          `chrome.tabs.sendMessage polyfill (to tab ${tabId}) redirects to runtime.sendMessage (current context).`\n        );\n        return chrome.runtime.sendMessage(message);\n      },\n    },\n    notifications: {\n      create: async (notificationId, options) => {\n        try {\n          let id = notificationId;\n          let notificationOptions = options;\n\n          if (typeof notificationId === "object" && notificationId !== null) {\n            notificationOptions = notificationId;\n            id = "notification_" + Math.random().toString(36).substring(2, 15);\n          } else if (typeof notificationId === "string" && options) {\n            id = notificationId;\n            notificationOptions = options;\n          } else {\n            throw new Error("Invalid parameters for notifications.create");\n          }\n\n          if (!notificationOptions || typeof notificationOptions !== "object") {\n            throw new Error("Notification options must be an object");\n          }\n\n          const {\n            title,\n            message,\n            iconUrl,\n            type = "basic",\n          } = notificationOptions;\n\n          if (!title || !message) {\n            throw new Error("Notification must have title and message");\n          }\n\n          if ("Notification" in window) {\n            if (Notification.permission === "granted") {\n              const notification = new Notification(title, {\n                body: message,\n                icon: iconUrl,\n                tag: id,\n              });\n\n              console.log(`[Notifications] Created notification: ${id}`);\n              return id;\n            } else if (Notification.permission === "default") {\n              const permission = await Notification.requestPermission();\n              if (permission === "granted") {\n                const notification = new Notification(title, {\n                  body: message,\n                  icon: iconUrl,\n                  tag: id,\n                });\n                console.log(\n                  `[Notifications] Created notification after permission: ${id}`\n                );\n                return id;\n              } else {\n                console.warn(\n                  "[Notifications] Permission denied for notifications"\n                );\n                return id;\n              }\n            } else {\n              console.warn("[Notifications] Notifications are blocked");\n              return id;\n            }\n          } else {\n            console.warn(\n              "[Notifications] Native notifications not supported, using console fallback"\n            );\n            console.log(`[Notification] ${title}: ${message}`);\n            return id;\n          }\n        } catch (error) {\n          console.error(\n            "[Notifications] Error creating notification:",\n            error.message\n          );\n          throw error;\n        }\n      },\n      clear: async (notificationId) => {\n        console.log(`[Notifications] Clear notification: ${notificationId}`);\n        // For native notifications, there\'s no direct way to clear by ID\n        // This is a limitation of the Web Notifications API\n        return true;\n      },\n      getAll: async () => {\n        console.warn("[Notifications] getAll not fully supported in polyfill");\n        return {};\n      },\n      getPermissionLevel: async () => {\n        if ("Notification" in window) {\n          const permission = Notification.permission;\n          return { level: permission === "granted" ? "granted" : "denied" };\n        }\n        return { level: "denied" };\n      },\n    },\n    contextMenus: {\n      create: (createProperties, callback) => {\n        try {\n          if (!createProperties || typeof createProperties !== "object") {\n            throw new Error("Context menu create properties must be an object");\n          }\n\n          const { id, title, contexts = ["page"], onclick } = createProperties;\n          const menuId =\n            id || `menu_${Math.random().toString(36).substring(2, 15)}`;\n\n          if (!title || typeof title !== "string") {\n            throw new Error("Context menu must have a title");\n          }\n\n          // Store menu items for potential use\n          if (!window._polyfillContextMenus) {\n            window._polyfillContextMenus = new Map();\n          }\n\n          window._polyfillContextMenus.set(menuId, {\n            id: menuId,\n            title,\n            contexts,\n            onclick,\n            enabled: createProperties.enabled !== false,\n          });\n\n          console.log(\n            `[ContextMenus] Created context menu item: ${title} (${menuId})`\n          );\n\n          // Try to register a menu command as fallback\n          if (typeof _registerMenuCommand === "function") {\n            try {\n              _registerMenuCommand(\n                title,\n                onclick ||\n                  (() => {\n                    console.log(`Context menu clicked: ${title}`);\n                  })\n              );\n            } catch (e) {\n              console.warn(\n                "[ContextMenus] Failed to register as menu command:",\n                e.message\n              );\n            }\n          }\n\n          if (callback && typeof callback === "function") {\n            setTimeout(() => callback(), 0);\n          }\n\n          return menuId;\n        } catch (error) {\n          console.error(\n            "[ContextMenus] Error creating context menu:",\n            error.message\n          );\n          if (callback && typeof callback === "function") {\n            setTimeout(() => callback(), 0);\n          }\n          throw error;\n        }\n      },\n      update: (id, updateProperties, callback) => {\n        try {\n          if (\n            !window._polyfillContextMenus ||\n            !window._polyfillContextMenus.has(id)\n          ) {\n            throw new Error(`Context menu item not found: ${id}`);\n          }\n\n          const menuItem = window._polyfillContextMenus.get(id);\n          Object.assign(menuItem, updateProperties);\n\n          console.log(`[ContextMenus] Updated context menu item: ${id}`);\n\n          if (callback && typeof callback === "function") {\n            setTimeout(() => callback(), 0);\n          }\n        } catch (error) {\n          console.error(\n            "[ContextMenus] Error updating context menu:",\n            error.message\n          );\n          if (callback && typeof callback === "function") {\n            setTimeout(() => callback(), 0);\n          }\n        }\n      },\n      remove: (menuItemId, callback) => {\n        try {\n          if (\n            window._polyfillContextMenus &&\n            window._polyfillContextMenus.has(menuItemId)\n          ) {\n            window._polyfillContextMenus.delete(menuItemId);\n            console.log(\n              `[ContextMenus] Removed context menu item: ${menuItemId}`\n            );\n          } else {\n            console.warn(\n              `[ContextMenus] Context menu item not found for removal: ${menuItemId}`\n            );\n          }\n\n          if (callback && typeof callback === "function") {\n            setTimeout(() => callback(), 0);\n          }\n        } catch (error) {\n          console.error(\n            "[ContextMenus] Error removing context menu:",\n            error.message\n          );\n          if (callback && typeof callback === "function") {\n            setTimeout(() => callback(), 0);\n          }\n        }\n      },\n      removeAll: (callback) => {\n        try {\n          if (window._polyfillContextMenus) {\n            const count = window._polyfillContextMenus.size;\n            window._polyfillContextMenus.clear();\n            console.log(\n              `[ContextMenus] Removed all ${count} context menu items`\n            );\n          }\n\n          if (callback && typeof callback === "function") {\n            setTimeout(() => callback(), 0);\n          }\n        } catch (error) {\n          console.error(\n            "[ContextMenus] Error removing all context menus:",\n            error.message\n          );\n          if (callback && typeof callback === "function") {\n            setTimeout(() => callback(), 0);\n          }\n        }\n      },\n      onClicked: {\n        addListener: (callback) => {\n          if (!window._polyfillContextMenuListeners) {\n            window._polyfillContextMenuListeners = new Set();\n          }\n          window._polyfillContextMenuListeners.add(callback);\n          console.log("[ContextMenus] Added click listener");\n        },\n        removeListener: (callback) => {\n          if (window._polyfillContextMenuListeners) {\n            window._polyfillContextMenuListeners.delete(callback);\n            console.log("[ContextMenus] Removed click listener");\n          }\n        },\n      },\n    },\n  };\n\n  const tc = (fn) => {\n    try {\n      fn();\n    } catch (e) {}\n  };\n  const loggingProxyHandler = (_key) => ({\n    get(target, key, receiver) {\n      tc(() =>\n        console.log(`[${contextType}] [CHROME - ${_key}] Getting ${key}`)\n      );\n      return Reflect.get(target, key, receiver);\n    },\n    set(target, key, value, receiver) {\n      tc(() =>\n        console.log(\n          `[${contextType}] [CHROME - ${_key}] Setting ${key} to ${value}`\n        )\n      );\n      return Reflect.set(target, key, value, receiver);\n    },\n    has(target, key) {\n      tc(() =>\n        console.log(\n          `[${contextType}] [CHROME - ${_key}] Checking if ${key} exists`\n        )\n      );\n      return Reflect.has(target, key);\n    },\n  });\n  chrome = Object.fromEntries(\n    Object.entries(chrome).map(([key, value]) => [\n      key,\n      new Proxy(value, loggingProxyHandler(key)),\n    ])\n  );\n\n  // Alias browser to chrome for common Firefox pattern\n  const browser = new Proxy(chrome, loggingProxyHandler);\n\n  const oldGlobalThis = globalThis;\n  const oldWindow = window;\n  const oldSelf = self;\n  const oldGlobal = globalThis;\n  const __globalsStorage = {};\n\n  const TO_MODIFY = [oldGlobalThis, oldWindow, oldSelf, oldGlobal];\n  const set = (k, v) => {\n    __globalsStorage[k] = v;\n    TO_MODIFY.forEach((target) => {\n      target[k] = v;\n    });\n  };\n  const proxyHandler = {\n    get(target, key, receiver) {\n      try {\n        return __globalsStorage[key] || Reflect.get(target, key, receiver);\n      } catch (e) {\n        console.error("Error getting", key, e);\n        return undefined;\n      }\n    },\n    set(target, key, value, receiver) {\n      try {\n        tc(() => console.log(`[${contextType}] Setting ${key} to ${value}`));\n        set(key, value);\n        return Reflect.set(target, key, value, receiver);\n      } catch (e) {\n        console.error("Error setting", key, value, e);\n        return false;\n      }\n    },\n    has(target, key) {\n      try {\n        return key in __globalsStorage || key in target;\n      } catch (e) {\n        console.error("Error has", key, e);\n        return false;\n      }\n    },\n    getOwnPropertyDescriptor(target, key) {\n      try {\n        if (key in __globalsStorage) {\n          return {\n            configurable: true,\n            enumerable: true,\n            writable: true,\n            value: __globalsStorage[key],\n          };\n        }\n        // fall back to the real globalThis\n        const desc = Reflect.getOwnPropertyDescriptor(target, key);\n        // ensure it\'s configurable so the with‑scope binding logic can override it\n        if (desc && !desc.configurable) {\n          desc.configurable = true;\n        }\n        return desc;\n      } catch (e) {\n        console.error("Error getOwnPropertyDescriptor", key, e);\n        return {\n          configurable: true,\n          enumerable: true,\n          writable: true,\n          value: undefined,\n        };\n      }\n    },\n\n    defineProperty(target, key, descriptor) {\n      try {\n        // Normalize descriptor to avoid mixed accessor & data attributes\n        const hasAccessor = "get" in descriptor || "set" in descriptor;\n\n        if (hasAccessor) {\n          // Build a clean descriptor without value/writable when accessors present\n          const normalized = {\n            configurable:\n              "configurable" in descriptor ? descriptor.configurable : true,\n            enumerable:\n              "enumerable" in descriptor ? descriptor.enumerable : false,\n          };\n          if ("get" in descriptor) normalized.get = descriptor.get;\n          if ("set" in descriptor) normalized.set = descriptor.set;\n\n          // Store accessor references for inspection but avoid breaking invariants\n          set(key, {\n            get: descriptor.get,\n            set: descriptor.set,\n          });\n\n          return Reflect.defineProperty(target, key, normalized);\n        }\n\n        // Data descriptor path\n        set(key, descriptor.value);\n        return Reflect.defineProperty(target, key, descriptor);\n      } catch (e) {\n        console.error("Error defineProperty", key, descriptor, e);\n        return false;\n      }\n    },\n  };\n\n  // Create proxies once proxyHandler is defined\n  const proxyWindow = new Proxy(oldWindow, proxyHandler);\n  const proxyGlobalThis = new Proxy(oldGlobalThis, proxyHandler);\n  const proxyGlobal = new Proxy(oldGlobal, proxyHandler);\n  const proxySelf = new Proxy(oldSelf, proxyHandler);\n\n  // Seed storage with core globals so lookups succeed inside `with` blocks\n  Object.assign(__globalsStorage, {\n    chrome,\n    browser,\n    window: proxyWindow,\n    globalThis: proxyGlobalThis,\n    global: proxyGlobal,\n    self: proxySelf,\n  });\n\n  const __globals = {\n    chrome,\n    browser,\n    window: proxyWindow,\n    globalThis: proxyGlobalThis,\n    global: proxyGlobal,\n    self: proxySelf,\n    __globals: __globalsStorage,\n  };\n\n  __globalsStorage.contextId = contextId;\n  __globalsStorage.contextType = contextType;\n  __globalsStorage.module = undefined;\n  __globalsStorage.amd = undefined;\n  __globalsStorage.define = undefined;\n\n  return __globals;\n}\n\n\nif (typeof window !== \'undefined\') {\n    window.buildPolyfill = buildPolyfill;\n}\n';
+      '\n// -- Messaging implementation\n\nfunction createEventBus(\n  scopeId,\n  type = "page", // "page" or "iframe"\n  { allowedOrigin = "*", children = [], parentWindow = null } = {},\n) {\n  if (!scopeId) throw new Error("createEventBus requires a scopeId");\n\n  const handlers = {};\n\n  function handleIncoming(ev) {\n    if (allowedOrigin !== "*" && ev.origin !== allowedOrigin) return;\n\n    const msg = ev.data;\n    if (!msg || msg.__eventBus !== true || msg.scopeId !== scopeId) return;\n\n    const { event, payload } = msg;\n\n    // PAGE: if it\'s an INIT from an iframe, adopt it\n    if (type === "page" && event === "__INIT__") {\n      const win = ev.source;\n      if (win && !children.includes(win)) {\n        children.push(win);\n      }\n      return;\n    }\n\n    (handlers[event] || []).forEach((fn) =>\n      fn(payload, { origin: ev.origin, source: ev.source }),\n    );\n  }\n\n  window.addEventListener("message", handleIncoming);\n\n  function emitTo(win, event, payload) {\n    const envelope = {\n      __eventBus: true,\n      scopeId,\n      event,\n      payload,\n    };\n    win.postMessage(envelope, allowedOrigin);\n  }\n\n  // IFRAME: announce to page on startup\n  if (type === "iframe") {\n    setTimeout(() => {\n      const pw = parentWindow || window.parent;\n      if (pw && pw.postMessage) {\n        emitTo(pw, "__INIT__", null);\n      }\n    }, 0);\n  }\n\n  return {\n    on(event, fn) {\n      handlers[event] = handlers[event] || [];\n      handlers[event].push(fn);\n    },\n    off(event, fn) {\n      if (!handlers[event]) return;\n      handlers[event] = handlers[event].filter((h) => h !== fn);\n    },\n    /**\n     * Emits an event.\n     * @param {string} event - The event name.\n     * @param {any} payload - The event payload.\n     * @param {object} [options] - Emission options.\n     * @param {Window} [options.to] - A specific window to target. If provided, message is ONLY sent to the target.\n     */\n    emit(event, payload, { to } = {}) {\n      // If a specific target window is provided, send only to it and DO NOT dispatch locally.\n      // This prevents a port from receiving its own messages.\n      if (to) {\n        if (to && typeof to.postMessage === "function") {\n          emitTo(to, event, payload);\n        }\n        return; // Exit after targeted send.\n      }\n\n      // For broadcast messages (no \'to\' target), dispatch locally first.\n      (handlers[event] || []).forEach((fn) =>\n        fn(payload, { origin: location.origin, source: window }),\n      );\n\n      // Then propagate the broadcast to other windows.\n      if (type === "page") {\n        children.forEach((win) => emitTo(win, event, payload));\n      } else {\n        const pw = parentWindow || window.parent;\n        if (pw && pw.postMessage) {\n          emitTo(pw, event, payload);\n        }\n      }\n    },\n  };\n}\n\nfunction createRuntime(type = "background", bus) {\n  let nextId = 1;\n  const pending = {};\n  const msgListeners = [];\n\n  let nextPortId = 1;\n  const ports = {};\n  const onConnectListeners = [];\n\n  function parseArgs(args) {\n    let target, message, options, callback;\n    const arr = [...args];\n    if (arr.length === 0) {\n      throw new Error("sendMessage requires at least one argument");\n    }\n    if (arr.length === 1) {\n      return { message: arr[0] };\n    }\n    // last object could be options\n    if (\n      arr.length &&\n      typeof arr[arr.length - 1] === "object" &&\n      !Array.isArray(arr[arr.length - 1])\n    ) {\n      options = arr.pop();\n    }\n    // last function is callback\n    if (arr.length && typeof arr[arr.length - 1] === "function") {\n      callback = arr.pop();\n    }\n    if (\n      arr.length === 2 &&\n      (typeof arr[0] === "string" || typeof arr[0] === "number")\n    ) {\n      [target, message] = arr;\n    } else {\n      [message] = arr;\n    }\n    return { target, message, options, callback };\n  }\n\n  if (type === "background") {\n    bus.on("__REQUEST__", ({ id, message }, { source }) => {\n      let responded = false,\n        isAsync = false;\n      function sendResponse(resp) {\n        if (responded) return;\n        responded = true;\n        // Target the response directly back to the window that sent the request.\n        bus.emit("__RESPONSE__", { id, response: resp }, { to: source });\n      }\n      const results = msgListeners\n        .map((fn) => {\n          try {\n            // msg, sender, sendResponse\n            const ret = fn(message, { id, tab: { id: source } }, sendResponse);\n            if (ret === true || (ret && typeof ret.then === "function")) {\n              isAsync = true;\n              return ret;\n            }\n            return ret;\n          } catch (e) {\n            console.error(e);\n          }\n        })\n        .filter((r) => r !== undefined);\n\n      const promises = results.filter((r) => r && typeof r.then === "function");\n      if (!isAsync && promises.length === 0) {\n        const out = results.length === 1 ? results[0] : results;\n        sendResponse(out);\n      } else if (promises.length) {\n        Promise.all(promises).then((vals) => {\n          if (!responded) {\n            const out = vals.length === 1 ? vals[0] : vals;\n            sendResponse(out);\n          }\n        });\n      }\n    });\n  }\n\n  if (type !== "background") {\n    bus.on("__RESPONSE__", ({ id, response }) => {\n      const entry = pending[id];\n      if (!entry) return;\n      entry.resolve(response);\n      if (entry.callback) entry.callback(response);\n      delete pending[id];\n    });\n  }\n\n  function sendMessage(...args) {\n    // Background should be able to send message to itself\n    // if (type === "background") {\n    //   throw new Error("Background cannot sendMessage to itself");\n    // }\n    const { target, message, callback } = parseArgs(args);\n    const id = nextId++;\n    const promise = new Promise((resolve) => {\n      pending[id] = { resolve, callback };\n      bus.emit("__REQUEST__", { id, message });\n    });\n    return promise;\n  }\n\n  bus.on("__PORT_CONNECT__", ({ portId, name }, { source }) => {\n    if (type !== "background") return;\n    const backgroundPort = makePort("background", portId, name, source);\n    ports[portId] = backgroundPort;\n\n    onConnectListeners.forEach((fn) => fn(backgroundPort));\n\n    // send back a CONNECT_ACK so the client can\n    // start listening on its end:\n    bus.emit("__PORT_CONNECT_ACK__", { portId, name }, { to: source });\n  });\n\n  // Clients handle the ACK and finalize their Port object by learning the remote window.\n  bus.on("__PORT_CONNECT_ACK__", ({ portId, name }, { source }) => {\n    if (type === "background") return; // ignore\n    const p = ports[portId];\n    if (!p) return;\n    // Call the port\'s internal finalize method to complete the handshake\n    if (p._finalize) {\n      p._finalize(source);\n    }\n  });\n\n  // Any port message travels via "__PORT_MESSAGE__"\n  bus.on("__PORT_MESSAGE__", (envelope, { source }) => {\n    const { portId } = envelope;\n    const p = ports[portId];\n    if (!p) return;\n    p._receive(envelope, source);\n  });\n\n  // Any port disconnect:\n  bus.on("__PORT_DISCONNECT__", ({ portId }) => {\n    const p = ports[portId];\n    if (!p) return;\n    p._disconnect();\n    delete ports[portId];\n  });\n\n  // Refactored makePort to correctly manage internal state and the connection handshake.\n  function makePort(side, portId, name, remoteWindow) {\n    let onMessageHandlers = [];\n    let onDisconnectHandlers = [];\n    let buffer = [];\n    // Unique instance ID for this port instance\n    const instanceId = Math.random().toString(36).slice(2) + Date.now();\n    // These state variables are part of the closure and are updated by _finalize\n    let _ready = side === "background";\n\n    function _drainBuffer() {\n      buffer.forEach((m) => _post(m));\n      buffer = [];\n    }\n\n    function _post(msg) {\n      // Always use the \'to\' parameter for port messages, making them directional.\n      // Include senderInstanceId\n      bus.emit(\n        "__PORT_MESSAGE__",\n        { portId, msg, senderInstanceId: instanceId },\n        { to: remoteWindow },\n      );\n    }\n\n    function postMessage(msg) {\n      if (!_ready) {\n        buffer.push(msg);\n      } else {\n        _post(msg);\n      }\n    }\n\n    function _receive(envelope, source) {\n      // envelope: { msg, senderInstanceId }\n      if (envelope.senderInstanceId === instanceId) return; // Don\'t dispatch to self\n      onMessageHandlers.forEach((fn) =>\n        fn(envelope.msg, { id: portId, tab: { id: source } }),\n      );\n    }\n\n    function disconnect() {\n      // Also use the \'to\' parameter for disconnect messages\n      bus.emit("__PORT_DISCONNECT__", { portId }, { to: remoteWindow });\n      _disconnect();\n      delete ports[portId];\n    }\n\n    function _disconnect() {\n      onDisconnectHandlers.forEach((fn) => fn());\n      onMessageHandlers = [];\n      onDisconnectHandlers = [];\n    }\n\n    // This function is called on the client port when the ACK is received from background.\n    // It updates the port\'s state, completing the connection.\n    function _finalize(win) {\n      remoteWindow = win; // <-- This is the crucial part: learn the destination\n      _ready = true;\n      _drainBuffer();\n    }\n\n    return {\n      name,\n      sender: {\n        id: portId,\n      },\n      onMessage: {\n        addListener(fn) {\n          onMessageHandlers.push(fn);\n        },\n        removeListener(fn) {\n          onMessageHandlers = onMessageHandlers.filter((x) => x !== fn);\n        },\n      },\n      onDisconnect: {\n        addListener(fn) {\n          onDisconnectHandlers.push(fn);\n        },\n        removeListener(fn) {\n          onDisconnectHandlers = onDisconnectHandlers.filter((x) => x !== fn);\n        },\n      },\n      postMessage,\n      disconnect,\n      // Internal methods used by the runtime\n      _receive,\n      _disconnect,\n      _finalize, // Expose the finalizer for the ACK handler\n    };\n  }\n\n  function connect(connectInfo = {}) {\n    if (type === "background") {\n      throw new Error("Background must use onConnect, not connect()");\n    }\n    const name = connectInfo.name || "";\n    const portId = nextPortId++;\n    // create the client side port\n    // remoteWindow is initially null; it will be set by _finalize upon ACK.\n    const clientPort = makePort("client", portId, name, null);\n    ports[portId] = clientPort;\n\n    // fire the connect event across the bus\n    bus.emit("__PORT_CONNECT__", { portId, name });\n    return clientPort;\n  }\n\n  function onConnect(fn) {\n    if (type !== "background") {\n      throw new Error("connect event only fires in background");\n    }\n    onConnectListeners.push(fn);\n  }\n\n  return {\n    // rpc:\n    sendMessage,\n    onMessage: {\n      addListener(fn) {\n        msgListeners.push(fn);\n      },\n      removeListener(fn) {\n        const i = msgListeners.indexOf(fn);\n        if (i >= 0) msgListeners.splice(i, 1);\n      },\n    },\n\n    // port API:\n    connect,\n    onConnect: {\n      addListener(fn) {\n        onConnect(fn);\n      },\n      removeListener(fn) {\n        const i = onConnectListeners.indexOf(fn);\n        if (i >= 0) onConnectListeners.splice(i, 1);\n      },\n    },\n  };\n}\n\n\n// --- Abstraction Layer: PostMessage Target\n\nlet nextRequestId = 1;\nconst pendingRequests = new Map(); // requestId -> { resolve, reject, timeout }\n\nfunction sendAbstractionRequest(method, args = []) {\n  return new Promise((resolve, reject) => {\n    const requestId = nextRequestId++;\n\n    const timeout = setTimeout(() => {\n      pendingRequests.delete(requestId);\n      reject(new Error(`PostMessage request timeout for method: ${method}`));\n    }, 10000);\n\n    pendingRequests.set(requestId, { resolve, reject, timeout });\n\n    window.parent.postMessage({\n      type: "abstraction-request",\n      requestId,\n      method,\n      args,\n    });\n  });\n}\n\nwindow.addEventListener("message", (event) => {\n  const { type, requestId, success, result, error } = event.data;\n\n  if (type === "abstraction-response") {\n    const pending = pendingRequests.get(requestId);\n    if (pending) {\n      clearTimeout(pending.timeout);\n      pendingRequests.delete(requestId);\n\n      if (success) {\n        pending.resolve(result);\n      } else {\n        const err = new Error(error.message);\n        err.stack = error.stack;\n        pending.reject(err);\n      }\n    }\n  }\n});\n\nasync function _storageSet(items) {\n  return sendAbstractionRequest("_storageSet", [items]);\n}\n\nasync function _storageGet(keys) {\n  return sendAbstractionRequest("_storageGet", [keys]);\n}\n\nasync function _storageRemove(keysToRemove) {\n  return sendAbstractionRequest("_storageRemove", [keysToRemove]);\n}\n\nasync function _storageClear() {\n  return sendAbstractionRequest("_storageClear");\n}\n\nasync function _fetch(url, options) {\n  return sendAbstractionRequest("_fetch", [url, options]);\n}\n\nfunction _registerMenuCommand(name, func) {\n  console.warn("_registerMenuCommand called from iframe context:", name);\n  return sendAbstractionRequest("_registerMenuCommand", [\n    name,\n    func.toString(),\n  ]);\n}\n\nfunction _openTab(url) {\n  return sendAbstractionRequest("_openTab", [url]);\n}\n\nasync function _initStorage() {\n  return sendAbstractionRequest("_initStorage");\n}\n\n\nconst EXTENSION_ASSETS_MAP = {{EXTENSION_ASSETS_MAP}};\n\n// -- Polyfill Implementation\nfunction buildPolyfill({ isBackground = false, isOtherPage = false } = {}) {\n  // Generate a unique context ID for this polyfill instance\n  const contextType = isBackground\n    ? "background"\n    : isOtherPage\n      ? "options"\n      : "content";\n  const contextId = `${contextType}_${Math.random()\n    .toString(36)\n    .substring(2, 15)}`;\n\n  const IS_IFRAME = "true" === "true";\n  const BUS = (function () {\n    if (globalThis.__BUS) {\n      return globalThis.__BUS;\n    }\n    globalThis.__BUS = createEventBus(\n      "web-search-navigator",\n      IS_IFRAME ? "iframe" : "page"\n    );\n    return globalThis.__BUS;\n  })();\n  const RUNTIME = createRuntime(isBackground ? "background" : "tab", BUS);\n  const createNoopListeners = () => ({\n    addListener: (callback) => {\n      console.log("addListener", callback);\n    },\n    removeListener: (callback) => {\n      console.log("removeListener", callback);\n    },\n  });\n  // TODO: Stub\n  const storageChangeListeners = new Set();\n  function broadcastStorageChange(changes, areaName) {\n    storageChangeListeners.forEach((listener) => {\n      listener(changes, areaName);\n    });\n  }\n\n  let REQ_PERMS = [];\n\n  // --- Chrome polyfill\n  let chrome = {\n    extension: {\n      isAllowedIncognitoAccess: () => Promise.resolve(true),\n      sendMessage: (...args) => _messagingHandler.sendMessage(...args),\n    },\n    permissions: {\n      // TODO: Remove origin permission means exclude from origin in startup\n      request: (permissions, callback) => {\n        console.log("permissions.request", permissions, callback);\n        if (Array.isArray(permissions)) {\n          REQ_PERMS = [...REQ_PERMS, ...permissions];\n        }\n        if (typeof callback === "function") {\n          callback(permissions);\n        }\n        return Promise.resolve(permissions);\n      },\n      contains: (permissions, callback) => {\n        if (typeof callback === "function") {\n          callback(true);\n        }\n        return Promise.resolve(true);\n      },\n      getAll: () => {\n        return Promise.resolve({\n          permissions: EXTENSION_PERMISSIONS,\n          origins: ORIGIN_PERMISSIONS,\n        });\n      },\n      onAdded: createNoopListeners(),\n      onRemoved: createNoopListeners(),\n    },\n    i18n: {\n      getUILanguage: () => {\n        return USED_LOCALE || "en";\n      },\n      getMessage: (key, substitutions = []) => {\n        if (typeof substitutions === "string") {\n          substitutions = [substitutions];\n        }\n        if (typeof LOCALE_KEYS !== "undefined" && LOCALE_KEYS[key]) {\n          return LOCALE_KEYS[key].message?.replace(\n            /\\$(\\d+)/g,\n            (match, p1) => substitutions[p1 - 1] || match\n          );\n        }\n        return key;\n      },\n    },\n    alarms: {\n      onAlarm: createNoopListeners(),\n      create: () => {\n        console.log("alarms.create", arguments);\n      },\n      get: () => {\n        console.log("alarms.get", arguments);\n      },\n    },\n    runtime: {\n      ...RUNTIME,\n      onInstalled: createNoopListeners(),\n      onStartup: createNoopListeners(),\n      // TODO: Postmessage to parent to open options page or call openOptionsPage\n      openOptionsPage: () => {\n        // const url = chrome.runtime.getURL(OPTIONS_PAGE_PATH);\n        // console.log("openOptionsPage", _openTab, url, EXTENSION_ASSETS_MAP);\n        // _openTab(url);\n        if (typeof openOptionsPage === "function") {\n          openOptionsPage();\n        } else if (window.parent) {\n          window.parent.postMessage({ type: "openOptionsPage" }, "*");\n        } else {\n          console.warn("openOptionsPage not available.");\n        }\n      },\n      getManifest: () => {\n        // The manifest object will be injected into the scope where buildPolyfill is called\n        if (typeof INJECTED_MANIFEST !== "undefined") {\n          return JSON.parse(JSON.stringify(INJECTED_MANIFEST)); // Return deep copy\n        }\n        console.warn(\n          "INJECTED_MANIFEST not found for chrome.runtime.getManifest"\n        );\n        return { name: "Unknown", version: "0.0", manifest_version: 2 };\n      },\n      getURL: (path) => {\n        if (!path) return "";\n        if (path.startsWith("/")) {\n          path = path.substring(1);\n        }\n\n        if (typeof _createAssetUrl === "function") {\n          return _createAssetUrl(path);\n        }\n\n        console.warn(\n          `chrome.runtime.getURL fallback for \'${path}\'. Assets may not be available.`\n        );\n        // Attempt a relative path resolution (highly context-dependent and likely wrong)\n        try {\n          if (window.location.protocol.startsWith("http")) {\n            return new URL(path, window.location.href).toString();\n          }\n        } catch (e) {\n          /* ignore error, fallback */\n        }\n        return path;\n      },\n      id: "polyfilled-extension-" + Math.random().toString(36).substring(2, 15),\n      lastError: null,\n      getPlatformInfo: async () => {\n        const platform = {\n          os: "unknown",\n          arch: "unknown",\n          nacl_arch: "unknown",\n        };\n\n        if (typeof navigator !== "undefined") {\n          const userAgent = navigator.userAgent.toLowerCase();\n          if (userAgent.includes("mac")) platform.os = "mac";\n          else if (userAgent.includes("win")) platform.os = "win";\n          else if (userAgent.includes("linux")) platform.os = "linux";\n          else if (userAgent.includes("android")) platform.os = "android";\n          else if (userAgent.includes("ios")) platform.os = "ios";\n\n          if (userAgent.includes("x86_64") || userAgent.includes("amd64")) {\n            platform.arch = "x86-64";\n          } else if (userAgent.includes("i386") || userAgent.includes("i686")) {\n            platform.arch = "x86-32";\n          } else if (userAgent.includes("arm")) {\n            platform.arch = "arm";\n          }\n        }\n\n        return platform;\n      },\n      getBrowserInfo: async () => {\n        const info = {\n          name: "unknown",\n          version: "unknown",\n          buildID: "unknown",\n        };\n\n        if (typeof navigator !== "undefined") {\n          const userAgent = navigator.userAgent;\n          if (userAgent.includes("Chrome")) {\n            info.name = "Chrome";\n            const match = userAgent.match(/Chrome\\/([0-9.]+)/);\n            if (match) info.version = match[1];\n          } else if (userAgent.includes("Firefox")) {\n            info.name = "Firefox";\n            const match = userAgent.match(/Firefox\\/([0-9.]+)/);\n            if (match) info.version = match[1];\n          } else if (userAgent.includes("Safari")) {\n            info.name = "Safari";\n            const match = userAgent.match(/Version\\/([0-9.]+)/);\n            if (match) info.version = match[1];\n          }\n        }\n\n        return info;\n      },\n    },\n    storage: {\n      local: {\n        get: function (keys, callback) {\n          if (typeof _storageGet !== "function")\n            throw new Error("_storageGet not defined");\n\n          const promise = _storageGet(keys);\n\n          if (typeof callback === "function") {\n            promise\n              .then((result) => {\n                try {\n                  callback(result);\n                } catch (e) {\n                  console.error("Error in storage.get callback:", e);\n                }\n              })\n              .catch((error) => {\n                console.error("Storage.get error:", error);\n                callback({});\n              });\n            return;\n          }\n\n          return promise;\n        },\n        set: function (items, callback) {\n          if (typeof _storageSet !== "function")\n            throw new Error("_storageSet not defined");\n\n          const promise = _storageSet(items).then((result) => {\n            broadcastStorageChange(items, "local");\n            return result;\n          });\n\n          if (typeof callback === "function") {\n            promise\n              .then((result) => {\n                try {\n                  callback(result);\n                } catch (e) {\n                  console.error("Error in storage.set callback:", e);\n                }\n              })\n              .catch((error) => {\n                console.error("Storage.set error:", error);\n                callback();\n              });\n            return;\n          }\n\n          return promise;\n        },\n        remove: function (keys, callback) {\n          if (typeof _storageRemove !== "function")\n            throw new Error("_storageRemove not defined");\n\n          const promise = _storageRemove(keys).then((result) => {\n            const changes = {};\n            const keyList = Array.isArray(keys) ? keys : [keys];\n            keyList.forEach((key) => {\n              changes[key] = { oldValue: undefined, newValue: undefined };\n            });\n            broadcastStorageChange(changes, "local");\n            return result;\n          });\n\n          if (typeof callback === "function") {\n            promise\n              .then((result) => {\n                try {\n                  callback(result);\n                } catch (e) {\n                  console.error("Error in storage.remove callback:", e);\n                }\n              })\n              .catch((error) => {\n                console.error("Storage.remove error:", error);\n                callback();\n              });\n            return;\n          }\n\n          return promise;\n        },\n        clear: function (callback) {\n          if (typeof _storageClear !== "function")\n            throw new Error("_storageClear not defined");\n\n          const promise = _storageClear().then((result) => {\n            broadcastStorageChange({}, "local");\n            return result;\n          });\n\n          if (typeof callback === "function") {\n            promise\n              .then((result) => {\n                try {\n                  callback(result);\n                } catch (e) {\n                  console.error("Error in storage.clear callback:", e);\n                }\n              })\n              .catch((error) => {\n                console.error("Storage.clear error:", error);\n                callback();\n              });\n            return;\n          }\n\n          return promise;\n        },\n        onChanged: {\n          addListener: (callback) => {\n            storageChangeListeners.add(callback);\n          },\n          removeListener: (callback) => {\n            storageChangeListeners.delete(callback);\n          },\n        },\n      },\n      sync: {\n        get: function (keys, callback) {\n          console.warn("chrome.storage.sync polyfill maps to local");\n          return chrome.storage.local.get(keys, callback);\n        },\n        set: function (items, callback) {\n          console.warn("chrome.storage.sync polyfill maps to local");\n\n          const promise = chrome.storage.local.set(items).then((result) => {\n            broadcastStorageChange(items, "sync");\n            return result;\n          });\n\n          if (typeof callback === "function") {\n            promise\n              .then((result) => {\n                try {\n                  callback(result);\n                } catch (e) {\n                  console.error("Error in storage.sync.set callback:", e);\n                }\n              })\n              .catch((error) => {\n                console.error("Storage.sync.set error:", error);\n                callback();\n              });\n            return;\n          }\n\n          return promise;\n        },\n        remove: function (keys, callback) {\n          console.warn("chrome.storage.sync polyfill maps to local");\n\n          const promise = chrome.storage.local.remove(keys).then((result) => {\n            const changes = {};\n            const keyList = Array.isArray(keys) ? keys : [keys];\n            keyList.forEach((key) => {\n              changes[key] = { oldValue: undefined, newValue: undefined };\n            });\n            broadcastStorageChange(changes, "sync");\n            return result;\n          });\n\n          if (typeof callback === "function") {\n            promise\n              .then((result) => {\n                try {\n                  callback(result);\n                } catch (e) {\n                  console.error("Error in storage.sync.remove callback:", e);\n                }\n              })\n              .catch((error) => {\n                console.error("Storage.sync.remove error:", error);\n                callback();\n              });\n            return;\n          }\n\n          return promise;\n        },\n        clear: function (callback) {\n          console.warn("chrome.storage.sync polyfill maps to local");\n\n          const promise = chrome.storage.local.clear().then((result) => {\n            broadcastStorageChange({}, "sync");\n            return result;\n          });\n\n          if (typeof callback === "function") {\n            promise\n              .then((result) => {\n                try {\n                  callback(result);\n                } catch (e) {\n                  console.error("Error in storage.sync.clear callback:", e);\n                }\n              })\n              .catch((error) => {\n                console.error("Storage.sync.clear error:", error);\n                callback();\n              });\n            return;\n          }\n\n          return promise;\n        },\n        onChanged: {\n          addListener: (callback) => {\n            storageChangeListeners.add(callback);\n          },\n          removeListener: (callback) => {\n            storageChangeListeners.delete(callback);\n          },\n        },\n      },\n      onChanged: {\n        addListener: (callback) => {\n          storageChangeListeners.add(callback);\n        },\n        removeListener: (callback) => {\n          storageChangeListeners.delete(callback);\n        },\n      },\n      managed: {\n        get: function (keys, callback) {\n          console.warn("chrome.storage.managed polyfill is read-only empty.");\n\n          const promise = Promise.resolve({});\n\n          if (typeof callback === "function") {\n            promise.then((result) => {\n              try {\n                callback(result);\n              } catch (e) {\n                console.error("Error in storage.managed.get callback:", e);\n              }\n            });\n            return;\n          }\n\n          return promise;\n        },\n      },\n    },\n    tabs: {\n      query: async (queryInfo) => {\n        console.warn(\n          "chrome.tabs.query polyfill only returns current tab info."\n        );\n        const dummyId = Math.floor(Math.random() * 1000) + 1;\n        return [\n          {\n            id: dummyId,\n            url: CURRENT_LOCATION,\n            active: true,\n            windowId: 1,\n            status: "complete",\n          },\n        ];\n      },\n      create: async ({ url, active }) => {\n        console.log(`[Polyfill tabs.create] URL: ${url}`);\n        if (typeof _openTab !== "function")\n          throw new Error("_openTab not defined");\n        _openTab(url, active);\n        const dummyId = Math.floor(Math.random() * 1000) + 1001;\n        return Promise.resolve({\n          id: dummyId,\n          url: url,\n          active: true,\n          windowId: 1,\n        });\n      },\n      sendMessage: async (tabId, message) => {\n        console.warn(\n          `chrome.tabs.sendMessage polyfill (to tab ${tabId}) redirects to runtime.sendMessage (current context).`\n        );\n        return chrome.runtime.sendMessage(message);\n      },\n    },\n    notifications: {\n      create: async (notificationId, options) => {\n        try {\n          let id = notificationId;\n          let notificationOptions = options;\n\n          if (typeof notificationId === "object" && notificationId !== null) {\n            notificationOptions = notificationId;\n            id = "notification_" + Math.random().toString(36).substring(2, 15);\n          } else if (typeof notificationId === "string" && options) {\n            id = notificationId;\n            notificationOptions = options;\n          } else {\n            throw new Error("Invalid parameters for notifications.create");\n          }\n\n          if (!notificationOptions || typeof notificationOptions !== "object") {\n            throw new Error("Notification options must be an object");\n          }\n\n          const {\n            title,\n            message,\n            iconUrl,\n            type = "basic",\n          } = notificationOptions;\n\n          if (!title || !message) {\n            throw new Error("Notification must have title and message");\n          }\n\n          if ("Notification" in window) {\n            if (Notification.permission === "granted") {\n              const notification = new Notification(title, {\n                body: message,\n                icon: iconUrl,\n                tag: id,\n              });\n\n              console.log(`[Notifications] Created notification: ${id}`);\n              return id;\n            } else if (Notification.permission === "default") {\n              const permission = await Notification.requestPermission();\n              if (permission === "granted") {\n                const notification = new Notification(title, {\n                  body: message,\n                  icon: iconUrl,\n                  tag: id,\n                });\n                console.log(\n                  `[Notifications] Created notification after permission: ${id}`\n                );\n                return id;\n              } else {\n                console.warn(\n                  "[Notifications] Permission denied for notifications"\n                );\n                return id;\n              }\n            } else {\n              console.warn("[Notifications] Notifications are blocked");\n              return id;\n            }\n          } else {\n            console.warn(\n              "[Notifications] Native notifications not supported, using console fallback"\n            );\n            console.log(`[Notification] ${title}: ${message}`);\n            return id;\n          }\n        } catch (error) {\n          console.error(\n            "[Notifications] Error creating notification:",\n            error.message\n          );\n          throw error;\n        }\n      },\n      clear: async (notificationId) => {\n        console.log(`[Notifications] Clear notification: ${notificationId}`);\n        // For native notifications, there\'s no direct way to clear by ID\n        // This is a limitation of the Web Notifications API\n        return true;\n      },\n      getAll: async () => {\n        console.warn("[Notifications] getAll not fully supported in polyfill");\n        return {};\n      },\n      getPermissionLevel: async () => {\n        if ("Notification" in window) {\n          const permission = Notification.permission;\n          return { level: permission === "granted" ? "granted" : "denied" };\n        }\n        return { level: "denied" };\n      },\n    },\n    contextMenus: {\n      create: (createProperties, callback) => {\n        try {\n          if (!createProperties || typeof createProperties !== "object") {\n            throw new Error("Context menu create properties must be an object");\n          }\n\n          const { id, title, contexts = ["page"], onclick } = createProperties;\n          const menuId =\n            id || `menu_${Math.random().toString(36).substring(2, 15)}`;\n\n          if (!title || typeof title !== "string") {\n            throw new Error("Context menu must have a title");\n          }\n\n          // Store menu items for potential use\n          if (!window._polyfillContextMenus) {\n            window._polyfillContextMenus = new Map();\n          }\n\n          window._polyfillContextMenus.set(menuId, {\n            id: menuId,\n            title,\n            contexts,\n            onclick,\n            enabled: createProperties.enabled !== false,\n          });\n\n          console.log(\n            `[ContextMenus] Created context menu item: ${title} (${menuId})`\n          );\n\n          // Try to register a menu command as fallback\n          if (typeof _registerMenuCommand === "function") {\n            try {\n              _registerMenuCommand(\n                title,\n                onclick ||\n                  (() => {\n                    console.log(`Context menu clicked: ${title}`);\n                  })\n              );\n            } catch (e) {\n              console.warn(\n                "[ContextMenus] Failed to register as menu command:",\n                e.message\n              );\n            }\n          }\n\n          if (callback && typeof callback === "function") {\n            setTimeout(() => callback(), 0);\n          }\n\n          return menuId;\n        } catch (error) {\n          console.error(\n            "[ContextMenus] Error creating context menu:",\n            error.message\n          );\n          if (callback && typeof callback === "function") {\n            setTimeout(() => callback(), 0);\n          }\n          throw error;\n        }\n      },\n      update: (id, updateProperties, callback) => {\n        try {\n          if (\n            !window._polyfillContextMenus ||\n            !window._polyfillContextMenus.has(id)\n          ) {\n            throw new Error(`Context menu item not found: ${id}`);\n          }\n\n          const menuItem = window._polyfillContextMenus.get(id);\n          Object.assign(menuItem, updateProperties);\n\n          console.log(`[ContextMenus] Updated context menu item: ${id}`);\n\n          if (callback && typeof callback === "function") {\n            setTimeout(() => callback(), 0);\n          }\n        } catch (error) {\n          console.error(\n            "[ContextMenus] Error updating context menu:",\n            error.message\n          );\n          if (callback && typeof callback === "function") {\n            setTimeout(() => callback(), 0);\n          }\n        }\n      },\n      remove: (menuItemId, callback) => {\n        try {\n          if (\n            window._polyfillContextMenus &&\n            window._polyfillContextMenus.has(menuItemId)\n          ) {\n            window._polyfillContextMenus.delete(menuItemId);\n            console.log(\n              `[ContextMenus] Removed context menu item: ${menuItemId}`\n            );\n          } else {\n            console.warn(\n              `[ContextMenus] Context menu item not found for removal: ${menuItemId}`\n            );\n          }\n\n          if (callback && typeof callback === "function") {\n            setTimeout(() => callback(), 0);\n          }\n        } catch (error) {\n          console.error(\n            "[ContextMenus] Error removing context menu:",\n            error.message\n          );\n          if (callback && typeof callback === "function") {\n            setTimeout(() => callback(), 0);\n          }\n        }\n      },\n      removeAll: (callback) => {\n        try {\n          if (window._polyfillContextMenus) {\n            const count = window._polyfillContextMenus.size;\n            window._polyfillContextMenus.clear();\n            console.log(\n              `[ContextMenus] Removed all ${count} context menu items`\n            );\n          }\n\n          if (callback && typeof callback === "function") {\n            setTimeout(() => callback(), 0);\n          }\n        } catch (error) {\n          console.error(\n            "[ContextMenus] Error removing all context menus:",\n            error.message\n          );\n          if (callback && typeof callback === "function") {\n            setTimeout(() => callback(), 0);\n          }\n        }\n      },\n      onClicked: {\n        addListener: (callback) => {\n          if (!window._polyfillContextMenuListeners) {\n            window._polyfillContextMenuListeners = new Set();\n          }\n          window._polyfillContextMenuListeners.add(callback);\n          console.log("[ContextMenus] Added click listener");\n        },\n        removeListener: (callback) => {\n          if (window._polyfillContextMenuListeners) {\n            window._polyfillContextMenuListeners.delete(callback);\n            console.log("[ContextMenus] Removed click listener");\n          }\n        },\n      },\n    },\n  };\n\n  const tc = (fn) => {\n    try {\n      fn();\n    } catch (e) {}\n  };\n  const loggingProxyHandler = (_key) => ({\n    get(target, key, receiver) {\n      tc(() =>\n        console.log(`[${contextType}] [CHROME - ${_key}] Getting ${key}`)\n      );\n      return Reflect.get(target, key, receiver);\n    },\n    set(target, key, value, receiver) {\n      tc(() =>\n        console.log(\n          `[${contextType}] [CHROME - ${_key}] Setting ${key} to ${value}`\n        )\n      );\n      return Reflect.set(target, key, value, receiver);\n    },\n    has(target, key) {\n      tc(() =>\n        console.log(\n          `[${contextType}] [CHROME - ${_key}] Checking if ${key} exists`\n        )\n      );\n      return Reflect.has(target, key);\n    },\n  });\n  chrome = Object.fromEntries(\n    Object.entries(chrome).map(([key, value]) => [\n      key,\n      new Proxy(value, loggingProxyHandler(key)),\n    ])\n  );\n\n  // Alias browser to chrome for common Firefox pattern\n  const browser = new Proxy(chrome, loggingProxyHandler);\n\n  const oldGlobalThis = globalThis;\n  const oldWindow = window;\n  const oldSelf = self;\n  const oldGlobal = globalThis;\n  const __globalsStorage = {};\n\n  const TO_MODIFY = [oldGlobalThis, oldWindow, oldSelf, oldGlobal];\n  const set = (k, v) => {\n    __globalsStorage[k] = v;\n    TO_MODIFY.forEach((target) => {\n      target[k] = v;\n    });\n  };\n  const proxyHandler = {\n    get(target, key, receiver) {\n      try {\n        return __globalsStorage[key] || Reflect.get(target, key, receiver);\n      } catch (e) {\n        console.error("Error getting", key, e);\n        return undefined;\n      }\n    },\n    set(target, key, value, receiver) {\n      try {\n        tc(() => console.log(`[${contextType}] Setting ${key} to ${value}`));\n        set(key, value);\n        return Reflect.set(target, key, value, receiver);\n      } catch (e) {\n        console.error("Error setting", key, value, e);\n        return false;\n      }\n    },\n    has(target, key) {\n      try {\n        return key in __globalsStorage || key in target;\n      } catch (e) {\n        console.error("Error has", key, e);\n        return false;\n      }\n    },\n    getOwnPropertyDescriptor(target, key) {\n      try {\n        if (key in __globalsStorage) {\n          return {\n            configurable: true,\n            enumerable: true,\n            writable: true,\n            value: __globalsStorage[key],\n          };\n        }\n        // fall back to the real globalThis\n        const desc = Reflect.getOwnPropertyDescriptor(target, key);\n        // ensure it\'s configurable so the with‑scope binding logic can override it\n        if (desc && !desc.configurable) {\n          desc.configurable = true;\n        }\n        return desc;\n      } catch (e) {\n        console.error("Error getOwnPropertyDescriptor", key, e);\n        return {\n          configurable: true,\n          enumerable: true,\n          writable: true,\n          value: undefined,\n        };\n      }\n    },\n\n    defineProperty(target, key, descriptor) {\n      try {\n        // Normalize descriptor to avoid mixed accessor & data attributes\n        const hasAccessor = "get" in descriptor || "set" in descriptor;\n\n        if (hasAccessor) {\n          // Build a clean descriptor without value/writable when accessors present\n          const normalized = {\n            configurable:\n              "configurable" in descriptor ? descriptor.configurable : true,\n            enumerable:\n              "enumerable" in descriptor ? descriptor.enumerable : false,\n          };\n          if ("get" in descriptor) normalized.get = descriptor.get;\n          if ("set" in descriptor) normalized.set = descriptor.set;\n\n          // Store accessor references for inspection but avoid breaking invariants\n          set(key, {\n            get: descriptor.get,\n            set: descriptor.set,\n          });\n\n          return Reflect.defineProperty(target, key, normalized);\n        }\n\n        // Data descriptor path\n        set(key, descriptor.value);\n        return Reflect.defineProperty(target, key, descriptor);\n      } catch (e) {\n        console.error("Error defineProperty", key, descriptor, e);\n        return false;\n      }\n    },\n  };\n\n  // Create proxies once proxyHandler is defined\n  const proxyWindow = new Proxy(oldWindow, proxyHandler);\n  const proxyGlobalThis = new Proxy(oldGlobalThis, proxyHandler);\n  const proxyGlobal = new Proxy(oldGlobal, proxyHandler);\n  const proxySelf = new Proxy(oldSelf, proxyHandler);\n\n  // Seed storage with core globals so lookups succeed inside `with` blocks\n  Object.assign(__globalsStorage, {\n    chrome,\n    browser,\n    window: proxyWindow,\n    globalThis: proxyGlobalThis,\n    global: proxyGlobal,\n    self: proxySelf,\n  });\n\n  const __globals = {\n    chrome,\n    browser,\n    window: proxyWindow,\n    globalThis: proxyGlobalThis,\n    global: proxyGlobal,\n    self: proxySelf,\n    __globals: __globalsStorage,\n  };\n\n  __globalsStorage.contextId = contextId;\n  __globalsStorage.contextType = contextType;\n  __globalsStorage.module = undefined;\n  __globalsStorage.amd = undefined;\n  __globalsStorage.define = undefined;\n\n  return __globals;\n}\n\n\nif (typeof window !== \'undefined\') {\n    window.buildPolyfill = buildPolyfill;\n}\n';
     let newMap = JSON.parse(JSON.stringify(EXTENSION_ASSETS_MAP));
     delete newMap[OPTIONS_PAGE_PATH];
     const PASS_ON = Object.fromEntries(

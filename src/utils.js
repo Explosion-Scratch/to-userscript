@@ -104,6 +104,9 @@ function normalizePath(filePath) {
 }
 
 const scriptBlacklist = {
+  "browser-polyfill.js": "",
+  "web-ext-polyfill.js": "",
+  "webextension-polyfill.js": "",
   "ExtPay.js": `const ExtPay = (extensionId)  => ({
     startBackground() {
     },

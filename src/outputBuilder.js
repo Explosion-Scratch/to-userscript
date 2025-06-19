@@ -111,20 +111,24 @@ const START_BACKGROUND_SCRIPT = (function(){
   const debug = ${JSON.stringify(`[${scriptName}]`)};
   console.log(debug + ' Executing background scripts...');
 
-
-  with(backgroundPolyfill){
-${sanitizedScripts
-  .map((s) => `    // BG: ${s.path}\n${getContent(s.content)}`)
-  .join("\n\n")}
+  function executeBackgroundScripts(){
+    with(backgroundPolyfill){
+  ${sanitizedScripts
+    .map((s) => `    // BG: ${s.path}\n${getContent(s.content)}`)
+    .join("\n\n")}
+    }
   }
+
+  executeBackgroundScripts.call(backgroundPolyfill);
 
   console.log(debug + ' Background scripts execution complete.');
 });
 
-console.log("START_BACKGROUND_SCRIPT", START_BACKGROUND_SCRIPT);
 setTimeout(() => {
+  // Wait for things to be defined
   START_BACKGROUND_SCRIPT();
-}, 100);
+}, 10);
+console.log("START_BACKGROUND_SCRIPT", START_BACKGROUND_SCRIPT);
 // End background script environment
 `;
 }

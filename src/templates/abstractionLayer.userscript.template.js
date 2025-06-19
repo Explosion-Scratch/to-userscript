@@ -153,7 +153,7 @@ async function _fetch(url, options = {}) {
                 return Promise.resolve(response.response);
               }
               return Promise.reject(
-                new Error("Requires responseType:'blob' in GM_xmlhttpRequest"),
+                new Error("Requires responseType:'blob' in GM_xmlhttpRequest")
               );
             },
             arrayBuffer: () => {
@@ -162,8 +162,8 @@ async function _fetch(url, options = {}) {
               }
               return Promise.reject(
                 new Error(
-                  "Requires responseType:'arraybuffer' in GM_xmlhttpRequest",
-                ),
+                  "Requires responseType:'arraybuffer' in GM_xmlhttpRequest"
+                )
               );
             },
             clone: function () {
@@ -189,8 +189,8 @@ async function _fetch(url, options = {}) {
             new Error(
               `GM_xmlhttpRequest network error: ${
                 response.statusText || "Unknown Error"
-              }`,
-            ),
+              }`
+            )
           );
         },
         onabort: function () {
@@ -219,10 +219,10 @@ function _registerMenuCommand(name, func) {
   }
 }
 
-function _openTab(url) {
+function _openTab(url, active) {
   if (typeof GM_openInTab === "function") {
     try {
-      GM_openInTab(url, { active: true });
+      GM_openInTab(url, { loadInBackground: !active });
     } catch (e) {
       console.error("GM_openInTab failed:", e);
     }
@@ -231,6 +231,7 @@ function _openTab(url) {
     try {
       window.open(url);
     } catch (e) {
+      alert("URL: " + url);
       console.error("window.open fallback failed:", e);
     }
   }

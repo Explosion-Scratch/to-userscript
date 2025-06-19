@@ -467,11 +467,11 @@ function buildPolyfill({ isBackground = false, isOtherPage = false } = {}) {
           },
         ];
       },
-      create: async ({ url }) => {
+      create: async ({ url, active }) => {
         console.log(`[Polyfill tabs.create] URL: ${url}`);
         if (typeof _openTab !== "function")
           throw new Error("_openTab not defined");
-        _openTab(url);
+        _openTab(url, active);
         const dummyId = Math.floor(Math.random() * 1000) + 1001;
         return Promise.resolve({
           id: dummyId,
