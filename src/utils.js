@@ -1,3 +1,4 @@
+const { readdirSync, readFileSync } = require("fs");
 const path = require("path");
 const debug = require("debug")("to-userscript:utils");
 
@@ -106,92 +107,12 @@ function normalizePath(filePath) {
 const scriptBlacklist = {
   "browser-polyfill.js": "",
   "web-ext-polyfill.js": "",
-  "webextension-polyfill.js": "",
-  "ExtPay.js": `const ExtPay = (extensionId)  => ({
-    startBackground() {
-    },
-
-    getUser() {
-      return new Promise((resolve) => {
-        const dummyUser = {
-          paid: true,
-          paidAt: new Date(),
-          email: "dummyuser@example.com",
-          installedAt: new Date(),
-          trialStartedAt: null,
-          plan: {
-            unitAmountCents: 1000,
-            currency: "usd",
-            nickname: "dummy_plan",
-            intervalCount: 1,
-            interval: "month",
-          },
-          subscriptionStatus: "active",
-          subscriptionCancelAt: null,
-        };
-        resolve(dummyUser);
-      });
-    },
-    openPaymentPage(planNickname) {
-    },
-    getPlans() {
-      return new Promise((resolve) => {
-        const dummyPlans = [
-          {
-            unitAmountCents: 1000,
-            currency: "usd",
-            nickname: "monthly_plan",
-            interval: "month",
-            intervalCount: 1,
-          },
-          {
-            unitAmountCents: 9900,
-            currency: "usd",
-            nickname: "yearly_plan",
-            interval: "year",
-            intervalCount: 1,
-          },
-        ];
-        resolve(dummyPlans);
-      });
-    },
-
-    onPaid: {
-      addListener: (callback) => {
-        console.log("Dummy onPaid listener added");
-        // Simulate a user paying after 2 seconds
-        setTimeout(() => {
-          const dummyUser = {
-            paid: true,
-            paidAt: new Date(),
-            email: "dummyuser@example.com",
-            installedAt: new Date(),
-            trialStartedAt: null,
-            plan: {
-              unitAmountCents: 1000,
-              currency: "usd",
-              nickname: "dummy_plan",
-              intervalCount: 1,
-              interval: "month",
-            },
-            subscriptionStatus: "active",
-            subscriptionCancelAt: null,
-          };
-          callback(dummyUser);
-        }, 2000);
-      },
-      removeListener: () => {},
-    },
-
-    openTrialPage(displayText) {
-    },
-
-    openLoginPage() {
-      console.log("Dummy login page opened");
-      }
-    });
-
-    window.ExtPay = ExtPay;`,
+  ...Object.fromEntries(
+    readdirSync(path.join(__dirname, "patches")).map((file) => [
+      file,
+      readFileSync(path.join(__dirname, "patches", file), "utf8"),
+    ])
+  ),
 };
 
 /**

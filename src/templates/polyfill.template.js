@@ -1060,11 +1060,14 @@ function buildPolyfill({ isBackground = false, isOtherPage = false } = {}) {
     __globals: __globalsStorage,
   };
 
-  __globalsStorage.contextId = contextId;
-  __globalsStorage.contextType = contextType;
-  __globalsStorage.module = undefined;
-  __globalsStorage.amd = undefined;
-  __globalsStorage.define = undefined;
+  __globals.contextId = contextId;
+  __globals.contextType = contextType;
+  __globals.module = undefined;
+  __globals.amd = undefined;
+  __globals.define = undefined;
+  __globals.importScripts = (...args) => {
+    _log("importScripts", args);
+  };
 
   return __globals;
 }
