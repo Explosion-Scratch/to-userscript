@@ -1,4 +1,3 @@
-chrome.storage.local.clear();
 const ExtPay = (extensionId) => ({
   startBackground() {},
 
