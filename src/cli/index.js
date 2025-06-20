@@ -97,9 +97,22 @@ async function main() {
                 "Output path for the downloaded file. If a directory is provided, a filename will be generated.",
               type: "string",
             })
+            .option("extract", {
+              describe:
+                "Extract the downloaded archive into a folder named after the extension",
+              type: "boolean",
+              default: false,
+            })
+            .option("locale", {
+              alias: "l",
+              describe:
+                "Preferred locale for the extracted folder name (e.g., 'en', 'fr')",
+              type: "string",
+            })
             .option("force", {
               alias: "f",
-              describe: "Overwrite output file if it exists",
+              describe:
+                "Overwrite output file or extracted directory if it exists",
               type: "boolean",
               default: false,
             });
@@ -174,6 +187,10 @@ async function main() {
         [
           '$0 download "https://addons.mozilla.org/..." -o my-addon.xpi',
           "Download an extension from the Firefox store",
+        ],
+        [
+          '$0 download "https://chrome.google.com/webstore/detail/..." --extract --locale en',
+          "Download and extract an extension, using English for the folder name",
         ],
         [
           "$0 require ./path/to/my-script.user.js",

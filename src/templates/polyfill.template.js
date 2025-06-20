@@ -979,6 +979,12 @@ function buildPolyfill({ isBackground = false, isOtherPage = false } = {}) {
         return Reflect.set(target, key, value, receiver);
       } catch (e) {
         _error("Error setting", key, value, e);
+        try {
+          target[key] = value;
+          return true;
+        } catch (e) {
+          _error("Error setting", key, value, e);
+        }
         return false;
       }
     },
@@ -987,6 +993,11 @@ function buildPolyfill({ isBackground = false, isOtherPage = false } = {}) {
         return key in __globalsStorage || key in target;
       } catch (e) {
         _error("Error has", key, e);
+        try {
+          return key in __globalsStorage || key in target;
+        } catch (e) {
+          _error("Error has", key, e);
+        }
         return false;
       }
     },
