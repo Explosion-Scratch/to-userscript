@@ -149,6 +149,8 @@ function buildPolyfill({ isBackground = false, isOtherPage = false } = {}) {
       },
       id: "polyfilled-extension-" + Math.random().toString(36).substring(2, 15),
       lastError: null,
+      setUninstallURL: () => {},
+      setUpdateURL: () => {},
       getPlatformInfo: async () => {
         const platform = {
           os: "unknown",
