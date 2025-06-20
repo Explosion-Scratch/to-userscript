@@ -1,6 +1,26 @@
+
+
+
 # to-userscript
 
-A powerful command-line tool for converting browser extensions into standalone userscripts.
+<details>
+  <summary>
+    Demo
+  </summary>
+
+##### 2x Speed (conversion takes 4s total normal speed, incl. downloading)
+  
+https://github.com/user-attachments/assets/e0adebcb-843d-4b04-830b-0b6ef5344652
+
+
+##### Demo but normal speed
+
+  https://github.com/user-attachments/assets/874dc6fd-ad6c-4e07-9d27-da1184f3036d
+
+  
+</details>
+
+A powerful CLI for converting browser extensions into standalone userscripts.
 
 ## Examples:
 
