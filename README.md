@@ -37,7 +37,7 @@ A powerful CLI for converting browser extensions into standalone userscripts.
 
 ## What is this?
 
-`to-userscript` bridges the gap between complex, packaged browser extensions and simple, portable userscripts. It takes an extension from the Chrome or Firefox store, a local directory, or an archive file, and transforms it into a single `.user.js` file that can be run in any userscript manager like Tampermonkey or Greasemonkey. This allows you to use, modify, or analyze your favorite extensions on browsers or platforms that might not natively support them.
+`to-userscript` bridges the gap between complex, packaged browser extensions and simple, portable userscripts. It takes an extension from the Chrome or Firefox store, a local directory, or a zip/xpi, and creates a single `.user.js` file that can be run in any userscript manager. This allows you to use, or modify extensions on browsers or platforms that might not natively support them.
 
 ## Key Features
 
@@ -252,10 +252,10 @@ Some websites have strict CSP rules that can prevent converted userscripts from 
 - [ ] `chrome.runtime.onMessageExternal`: Shim
 - [ ] `chrome.runtime.sendMessageExternal`: Shim
 - [ ] `chrome.webNavigation`
-- [-] `chrome.permissions`:
+- [ ] (partial) `chrome.permissions`:
   - Get listeners working
   - Removing permission for an origin should persist this change and not match the script on it
-- [-] `chrome.storage`: Proper listeners
+- [ ] (mostly implemented) `chrome.storage`: Proper listeners
 - [ ] `chrome.action`
   - `onClicked.addListener`: Add menu item for click
 
