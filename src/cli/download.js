@@ -1,6 +1,6 @@
 const fs = require("fs").promises;
 const path = require("path");
-const fetch = require("node-fetch");
+require("isomorphic-fetch");
 const chalk = require("chalk");
 const debug = require("debug")("to-userscript:downloader");
 const { getCrxUrl } = require("./downloadExt");
@@ -20,7 +20,7 @@ async function getDownloadableUrl(sourceInfo) {
 
     default:
       throw new Error(
-        `Unsupported source type for download: ${sourceInfo.type}`
+        `Unsupported source type for download: ${sourceInfo.type}`,
       );
   }
 }
@@ -51,7 +51,7 @@ async function getFirefoxAddonUrl(webstoreUrl) {
     const response = await fetch(apiUrl);
     if (!response.ok) {
       throw new Error(
-        `AMO API request failed: ${response.status} ${response.statusText}`
+        `AMO API request failed: ${response.status} ${response.statusText}`,
       );
     }
 
@@ -59,7 +59,7 @@ async function getFirefoxAddonUrl(webstoreUrl) {
     debug(
       "Addon data received: %s v%s",
       addonData.name?.en || addonData.name,
-      addonData.current_version?.version
+      addonData.current_version?.version,
     );
 
     if (!addonData.current_version?.file?.url) {
@@ -97,13 +97,13 @@ async function downloadFile(url, destinationPath) {
 
   if (!response.ok) {
     throw new Error(
-      `Download failed: ${response.status} ${response.statusText} for ${url}`
+      `Download failed: ${response.status} ${response.statusText} for ${url}`,
     );
   }
 
   const contentLength = parseInt(
     response.headers.get("content-length") || "0",
-    10
+    10,
   );
   const contentType =
     response.headers.get("content-type") || "application/octet-stream";
@@ -146,7 +146,7 @@ async function downloadFile(url, destinationPath) {
     debug(
       "Download completed: %d bytes written to %s",
       downloadedBytes,
-      destinationPath
+      destinationPath,
     );
   } finally {
     await fileStream.close();
@@ -208,7 +208,7 @@ async function downloadExtension(sourceInfo, downloadDir) {
       debug(
         "HEAD request failed, proceeding with GET: %s %s",
         headResponse.status,
-        headResponse.statusText
+        headResponse.statusText,
       );
     }
 

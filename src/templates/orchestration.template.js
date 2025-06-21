@@ -645,7 +645,7 @@ async function main() {
   _log(`Initialization sequence complete.`);
 }
 
-main().catch((e) => _error(`Error during script initialization:`, e));
+main()//.catch((e) => _error(`Error during script initialization:`, e));
 
 try {
   const fnKey = "OPEN_OPTIONS_PAGE_" + String(SCRIPT_NAME).replace(/\s+/g, "_");

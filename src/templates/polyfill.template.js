@@ -17,7 +17,7 @@ function buildPolyfill({ isBackground = false, isOtherPage = false } = {}) {
     }
     globalThis.__BUS = createEventBus(
       "{{SCRIPT_ID}}",
-      IS_IFRAME ? "iframe" : "page"
+      IS_IFRAME ? "iframe" : "page",
     );
     return globalThis.__BUS;
   })();
@@ -84,7 +84,7 @@ function buildPolyfill({ isBackground = false, isOtherPage = false } = {}) {
         if (typeof LOCALE_KEYS !== "undefined" && LOCALE_KEYS[key]) {
           return LOCALE_KEYS[key].message?.replace(
             /\$(\d+)/g,
-            (match, p1) => substitutions[p1 - 1] || match
+            (match, p1) => substitutions[p1 - 1] || match,
           );
         }
         return key;
@@ -135,7 +135,7 @@ function buildPolyfill({ isBackground = false, isOtherPage = false } = {}) {
         }
 
         _warn(
-          `chrome.runtime.getURL fallback for '${path}'. Assets may not be available.`
+          `chrome.runtime.getURL fallback for '${path}'. Assets may not be available.`,
         );
         // Attempt a relative path resolution (highly context-dependent and likely wrong)
         try {
@@ -482,7 +482,7 @@ function buildPolyfill({ isBackground = false, isOtherPage = false } = {}) {
           if (typeof _cookieList !== "function") {
             return handlePromiseCallback(
               Promise.reject(new Error("_cookieList not defined")),
-              callback
+              callback,
             );
           }
           const promise = _cookieList({
@@ -509,12 +509,12 @@ function buildPolyfill({ isBackground = false, isOtherPage = false } = {}) {
           if (typeof _cookieList !== "function") {
             return handlePromiseCallback(
               Promise.reject(new Error("_cookieList not defined")),
-              callback
+              callback,
             );
           }
           if (details.partitionKey) {
             _warn(
-              "cookies.getAll: partitionKey is not fully supported in this environment."
+              "cookies.getAll: partitionKey is not fully supported in this environment.",
             );
           }
           const promise = _cookieList(details);
@@ -531,7 +531,7 @@ function buildPolyfill({ isBackground = false, isOtherPage = false } = {}) {
             }
             if (details.partitionKey) {
               _warn(
-                "cookies.set: partitionKey is not fully supported in this environment."
+                "cookies.set: partitionKey is not fully supported in this environment.",
               );
             }
 
@@ -607,7 +607,7 @@ function buildPolyfill({ isBackground = false, isOtherPage = false } = {}) {
 
         getPartitionKey: function (details, callback) {
           _warn(
-            "chrome.cookies.getPartitionKey is not supported in this environment."
+            "chrome.cookies.getPartitionKey is not supported in this environment.",
           );
           const promise = Promise.resolve({ partitionKey: {} }); // Return empty partition key
           return handlePromiseCallback(promise, callback);
@@ -654,7 +654,7 @@ function buildPolyfill({ isBackground = false, isOtherPage = false } = {}) {
       },
       sendMessage: async (tabId, message) => {
         _warn(
-          `chrome.tabs.sendMessage polyfill (to tab ${tabId}) redirects to runtime.sendMessage (current context).`
+          `chrome.tabs.sendMessage polyfill (to tab ${tabId}) redirects to runtime.sendMessage (current context).`,
         );
         return chrome.runtime.sendMessage(message);
       },
@@ -726,7 +726,7 @@ function buildPolyfill({ isBackground = false, isOtherPage = false } = {}) {
                   tag: id,
                 });
                 _log(
-                  `[Notifications] Created notification after permission: ${id}`
+                  `[Notifications] Created notification after permission: ${id}`,
                 );
                 return id;
               } else {
@@ -739,7 +739,7 @@ function buildPolyfill({ isBackground = false, isOtherPage = false } = {}) {
             }
           } else {
             _warn(
-              "[Notifications] Native notifications not supported, using console fallback"
+              "[Notifications] Native notifications not supported, using console fallback",
             );
             _log(`[Notification] ${title}: ${message}`);
             return id;
@@ -796,7 +796,7 @@ function buildPolyfill({ isBackground = false, isOtherPage = false } = {}) {
           });
 
           _log(
-            `[ContextMenus] Created context menu item: ${title} (${menuId})`
+            `[ContextMenus] Created context menu item: ${title} (${menuId})`,
           );
 
           // Try to register a menu command as fallback
@@ -807,12 +807,12 @@ function buildPolyfill({ isBackground = false, isOtherPage = false } = {}) {
                 onclick ||
                   (() => {
                     _log(`Context menu clicked: ${title}`);
-                  })
+                  }),
               );
             } catch (e) {
               _warn(
                 "[ContextMenus] Failed to register as menu command:",
-                e.message
+                e.message,
               );
             }
           }
@@ -864,7 +864,7 @@ function buildPolyfill({ isBackground = false, isOtherPage = false } = {}) {
             _log(`[ContextMenus] Removed context menu item: ${menuItemId}`);
           } else {
             _warn(
-              `[ContextMenus] Context menu item not found for removal: ${menuItemId}`
+              `[ContextMenus] Context menu item not found for removal: ${menuItemId}`,
             );
           }
 
@@ -892,7 +892,7 @@ function buildPolyfill({ isBackground = false, isOtherPage = false } = {}) {
         } catch (error) {
           _error(
             "[ContextMenus] Error removing all context menus:",
-            error.message
+            error.message,
           );
           if (callback && typeof callback === "function") {
             setTimeout(() => callback(), 0);
@@ -929,13 +929,13 @@ function buildPolyfill({ isBackground = false, isOtherPage = false } = {}) {
     },
     set(target, key, value, receiver) {
       tc(() =>
-        _log(`[${contextType}] [CHROME - ${_key}] Setting ${key} to ${value}`)
+        _log(`[${contextType}] [CHROME - ${_key}] Setting ${key} to ${value}`),
       );
       return Reflect.set(target, key, value, receiver);
     },
     has(target, key) {
       tc(() =>
-        _log(`[${contextType}] [CHROME - ${_key}] Checking if ${key} exists`)
+        _log(`[${contextType}] [CHROME - ${_key}] Checking if ${key} exists`),
       );
       return Reflect.has(target, key);
     },
@@ -944,7 +944,7 @@ function buildPolyfill({ isBackground = false, isOtherPage = false } = {}) {
     Object.entries(chrome).map(([key, value]) => [
       key,
       new Proxy(value, loggingProxyHandler(key)),
-    ])
+    ]),
   );
 
   // Alias browser to chrome for common Firefox pattern
@@ -965,12 +965,25 @@ function buildPolyfill({ isBackground = false, isOtherPage = false } = {}) {
   };
   const proxyHandler = {
     get(target, key, receiver) {
-      try {
-        return __globalsStorage[key] || Reflect.get(target, key, receiver);
-      } catch (e) {
-        _error("Error getting", key, e);
-        return undefined;
+      const fns = [
+        () => __globalsStorage[key],
+        () => Reflect.get(target, key, target),
+        () => target[key],
+      ];
+      const out = fns
+        .map((f) => {
+          try {
+            let out = f();
+            return out;
+          } catch (e) {
+            return undefined;
+          }
+        })
+        .find((f) => f !== undefined);
+      if (typeof out === "function") {
+        return out.bind(target);
       }
+      return out;
     },
     set(target, key, value, receiver) {
       try {
@@ -1078,6 +1091,7 @@ function buildPolyfill({ isBackground = false, isOtherPage = false } = {}) {
     globalThis: proxyGlobalThis,
     global: proxyGlobal,
     self: proxySelf,
+    document: oldWindow.document,
   });
 
   const __globals = {

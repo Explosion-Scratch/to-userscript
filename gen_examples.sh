@@ -1,6 +1,7 @@
 #!/usr/bin/env bash
 
 rm -rf examples/*
+bun src/cli/index.js convert extensions/simple -o examples/simple.user.js --force
 bun src/cli/index.js convert extensions/particle-iridium -o examples/iridium.user.js --force
 bun src/cli/index.js convert extensions/modernhn -o examples/modern-hackernews.user.js --force
 bun src/cli/index.js convert extensions/modern-wikipedia -o examples/modern-wikipedia.user.js --force

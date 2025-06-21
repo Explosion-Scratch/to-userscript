@@ -42,7 +42,7 @@ function prepareCssDataString(cssContents) {
 function structureScriptsAndCssByRunAt(
   parsedManifest,
   jsContents,
-  cssContents
+  cssContents,
 ) {
   const scriptsToRun = {
     "document-start": [],
@@ -151,7 +151,7 @@ async function buildUserScript({
   const assetGenerator = new AssetGenerator(
     extensionRoot,
     locale,
-    ignoredAssets
+    ignoredAssets,
   );
   const { assetsMap, optionsPagePath, popupPagePath } =
     await assetGenerator.generateAssetsMap(parsedManifest);
@@ -167,7 +167,7 @@ async function buildUserScript({
   const contentScriptConfigsForMatchingString = JSON.stringify(
     contentScriptConfigsForMatching,
     null,
-    2
+    2,
   );
 
   const injectedManifestString = JSON.stringify(parsedManifest);
@@ -175,31 +175,31 @@ async function buildUserScript({
   const { scriptsToRun, cssToInject } = structureScriptsAndCssByRunAt(
     parsedManifest,
     jsContents,
-    cssContents
+    cssContents,
   );
 
   const scriptName = parsedManifest.name || "Converted Script";
   const backgroundExecutionString = buildBackgroundExecutionString(
     backgroundJsContents,
-    scriptName
+    scriptName,
   );
 
   const combinedExecutionLogicString =
     scriptAssembler.generateCombinedExecutionLogic(
       scriptsToRun,
       cssToInject,
-      scriptName
+      scriptName,
     );
 
   const polyfillString = await generateBuildPolyfillString(
     target,
     assetsMap,
-    parsedManifest
+    parsedManifest,
   );
   const optionsPolyfillString = await generateBuildPolyfillString(
     "postmessage",
     assetsMap,
-    parsedManifest
+    parsedManifest,
   );
 
   const extensionIcon = extensionRoot
@@ -214,13 +214,12 @@ async function buildUserScript({
     ? `
   const SCRIPT_NAME = ${JSON.stringify(scriptName)};
   let lastTime = performance.now();
-  const __timeWrap = (func) => (...args) => { 
-    const now = performance.now(); 
+  const __timeWrap = (func) => (...args) => {
+    const now = performance.now();
     if (now - lastTime > 100){
-      // debugger; 
       lastTime = performance.now();
     }
-    func(...args); 
+    func(...args);
     console.log(\`\${now - lastTime}ms\`);
     lastTime = performance.now();
     return func(...args);
@@ -233,7 +232,10 @@ async function buildUserScript({
   const SCRIPT_NAME = ${JSON.stringify(scriptName)};
   const _log = (...args) => {};
   const _warn = (...args) => console.warn(\`[\${typeof SCRIPT_NAME === 'string' ? SCRIPT_NAME : '[USERSCRIPT_CONVERTED]'}]\`, ...args);
-  const _error = (...args) => console.error(\`[\${typeof SCRIPT_NAME === 'string' ? SCRIPT_NAME : '[USERSCRIPT_CONVERTED]'}]\`, ...args);
+  const _error = (...args) => {
+    let e = args[0];
+    console.error(\`[\${typeof SCRIPT_NAME === 'string' ? SCRIPT_NAME : '[USERSCRIPT_CONVERTED]'}]\`, ...args);
+  }
   `;
   const replacements = {
     "{{SCRIPT_NAME}}": JSON.stringify(scriptName),
@@ -265,7 +267,7 @@ async function buildUserScript({
     // Use a robust regex for replacement
     const regex = new RegExp(
       placeholder.replace(/[-\/\\^$*+?.()|[\]{}]/g, "\\$&"),
-      "g"
+      "g",
     );
     // Ensure $ signs in the replacement value are properly escaped
     const safeValue =
