@@ -39,7 +39,7 @@ A powerful CLI for converting browser extensions into standalone userscripts.
 
 `to-userscript` converts browser extensions into portable userscripts. It takes an extension from the Chrome or Firefox store, a local directory, or a zip/xpi, and creates a single `.user.js` file that can be run in any userscript manager. This allows you to use, or modify extensions on browsers or platforms that might not natively support them.
 
-## Key Features
+## Features
 
 - Convert from Chrome Web Store, Firefox Add-ons site, direct URLs, local directories, or archive files (`.crx`, `.xpi`, `.zip`).
 - Replaces WebExtension APIs (`chrome.storage`, `chrome.runtime`, `chrome.tabs`, etc.) with userscript-compatible equivalents (`GM_*` functions, IndexedDB, and custom event buses).
