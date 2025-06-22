@@ -23,7 +23,7 @@ async function validateFileAccess(filePath) {
       throw new Error(`File is not readable: ${filePath}`);
     } else {
       throw new Error(
-        `File access validation failed: ${filePath} - ${error.message}`
+        `File access validation failed: ${filePath} - ${error.message}`,
       );
     }
   }
@@ -103,7 +103,7 @@ async function readScriptsAndStyles(baseDir, contentScriptConfigs) {
 
   if (!Array.isArray(contentScriptConfigs)) {
     throw new Error(
-      `Content script configs must be an array, got: ${typeof contentScriptConfigs}`
+      `Content script configs must be an array, got: ${typeof contentScriptConfigs}`,
     );
   }
 
@@ -123,7 +123,7 @@ async function readScriptsAndStyles(baseDir, contentScriptConfigs) {
       }
     } catch (dirError) {
       throw new Error(
-        `Base directory is not accessible: ${baseDir} - ${dirError.message}`
+        `Base directory is not accessible: ${baseDir} - ${dirError.message}`,
       );
     }
   }
@@ -133,7 +133,7 @@ async function readScriptsAndStyles(baseDir, contentScriptConfigs) {
       debug(
         "Skipping invalid content script config at index %d: %o",
         configIndex,
-        config
+        config,
       );
       continue;
     }
@@ -144,7 +144,7 @@ async function readScriptsAndStyles(baseDir, contentScriptConfigs) {
         try {
           if (!jsPath || typeof jsPath !== "string") {
             throw new Error(
-              `Invalid JS path at config[${configIndex}].js[${jsIndex}]: ${jsPath}`
+              `Invalid JS path at config[${configIndex}].js[${jsIndex}]: ${jsPath}`,
             );
           }
 
@@ -166,7 +166,7 @@ async function readScriptsAndStyles(baseDir, contentScriptConfigs) {
                 processedJsPaths.add(relativePath);
               } catch (scriptError) {
                 errors.push(
-                  `Failed to read JS file ${relativePath}: ${scriptError.message}`
+                  `Failed to read JS file ${relativePath}: ${scriptError.message}`,
                 );
                 // Continue processing other files even if one fails
                 jsContents[relativePath] = ""; // Use empty content as fallback
@@ -181,7 +181,7 @@ async function readScriptsAndStyles(baseDir, contentScriptConfigs) {
             "Error processing JS path at config[%d].js[%d]: %s",
             configIndex,
             jsIndex,
-            error.message
+            error.message,
           );
         }
       }
@@ -193,7 +193,7 @@ async function readScriptsAndStyles(baseDir, contentScriptConfigs) {
         try {
           if (!cssPath || typeof cssPath !== "string") {
             throw new Error(
-              `Invalid CSS path at config[${configIndex}].css[${cssIndex}]: ${cssPath}`
+              `Invalid CSS path at config[${configIndex}].css[${cssIndex}]: ${cssPath}`,
             );
           }
 
@@ -207,7 +207,7 @@ async function readScriptsAndStyles(baseDir, contentScriptConfigs) {
               processedCssPaths.add(relativePath);
             } catch (cssError) {
               errors.push(
-                `Failed to read CSS file ${relativePath}: ${cssError.message}`
+                `Failed to read CSS file ${relativePath}: ${cssError.message}`,
               );
               // Continue processing other files even if one fails
               cssContents[relativePath] = "";
@@ -221,7 +221,7 @@ async function readScriptsAndStyles(baseDir, contentScriptConfigs) {
             "Error processing CSS path at config[%d].css[%d]: %s",
             configIndex,
             cssIndex,
-            error.message
+            error.message,
           );
         }
       }
@@ -232,7 +232,7 @@ async function readScriptsAndStyles(baseDir, contentScriptConfigs) {
   if (errors.length > 0) {
     debug(
       "Encountered %d error(s) while reading scripts and styles:",
-      errors.length
+      errors.length,
     );
     errors.forEach((error, index) => debug("  %d. %s", index + 1, error));
 
@@ -250,7 +250,7 @@ async function readScriptsAndStyles(baseDir, contentScriptConfigs) {
 
     if (totalReadFiles === 0 && totalExpectedFiles > 0) {
       throw new Error(
-        `Failed to read any of the ${totalExpectedFiles} expected script/style files. Check file paths and permissions.`
+        `Failed to read any of the ${totalExpectedFiles} expected script/style files. Check file paths and permissions.`,
       );
     }
   }
@@ -258,7 +258,7 @@ async function readScriptsAndStyles(baseDir, contentScriptConfigs) {
   debug(
     "Successfully processed %d JS file(s) and %d CSS file(s)",
     Object.keys(jsContents).length,
-    Object.keys(cssContents).length
+    Object.keys(cssContents).length,
   );
 
   return { jsContents, cssContents };
@@ -273,13 +273,13 @@ async function readScriptsAndStyles(baseDir, contentScriptConfigs) {
 async function readBackgroundScripts(baseDir, bgScripts = []) {
   if (!baseDir || typeof baseDir !== "string") {
     throw new Error(
-      `Invalid base directory for background scripts: ${baseDir}`
+      `Invalid base directory for background scripts: ${baseDir}`,
     );
   }
 
   if (!Array.isArray(bgScripts)) {
     throw new Error(
-      `Background scripts must be an array, got: ${typeof bgScripts}`
+      `Background scripts must be an array, got: ${typeof bgScripts}`,
     );
   }
 
@@ -298,7 +298,7 @@ async function readBackgroundScripts(baseDir, bgScripts = []) {
     try {
       if (!bgPath || typeof bgPath !== "string") {
         throw new Error(
-          `Invalid background script path at index ${index}: ${bgPath}`
+          `Invalid background script path at index ${index}: ${bgPath}`,
         );
       }
 
@@ -316,7 +316,7 @@ async function readBackgroundScripts(baseDir, bgScripts = []) {
         processed.add(rel);
       } catch (scriptError) {
         errors.push(
-          `Failed to read background script ${rel}: ${scriptError.message}`
+          `Failed to read background script ${rel}: ${scriptError.message}`,
         );
         // Add empty content as fallback
         bgContents[rel] = "";
@@ -328,7 +328,7 @@ async function readBackgroundScripts(baseDir, bgScripts = []) {
       debug(
         "Error processing background script at index %d: %s",
         index,
-        error.message
+        error.message,
       );
     }
   }
@@ -337,21 +337,21 @@ async function readBackgroundScripts(baseDir, bgScripts = []) {
   if (errors.length > 0) {
     debug(
       "Encountered %d error(s) while reading background scripts:",
-      errors.length
+      errors.length,
     );
     errors.forEach((error, index) => debug("  %d. %s", index + 1, error));
 
     // Only throw if we couldn't read any background scripts at all
     if (Object.keys(bgContents).length === 0 && bgScripts.length > 0) {
       throw new Error(
-        `Failed to read any of the ${bgScripts.length} expected background scripts. Check file paths and permissions.`
+        `Failed to read any of the ${bgScripts.length} expected background scripts. Check file paths and permissions.`,
       );
     }
   }
 
   debug(
     "Successfully processed %d background script(s)",
-    Object.keys(bgContents).length
+    Object.keys(bgContents).length,
   );
 
   return bgContents;

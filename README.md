@@ -9,7 +9,7 @@
   </summary>
 
 ##### 2x Speed (conversion takes 4s total normal speed, incl. downloading)
-  
+
 https://github.com/user-attachments/assets/e0adebcb-843d-4b04-830b-0b6ef5344652
 
 
@@ -17,7 +17,7 @@ https://github.com/user-attachments/assets/e0adebcb-843d-4b04-830b-0b6ef5344652
 
   https://github.com/user-attachments/assets/874dc6fd-ad6c-4e07-9d27-da1184f3036d
 
-  
+
 </details>
 
 A powerful CLI for converting browser extensions into standalone userscripts.
@@ -107,6 +107,7 @@ Alternatively, you can run it directly without a global installation using `npx`
 
 ### Planned APIs
 
+- [ ] `chrome.browserAction`
 - [ ] `chrome.tabs.insertCSS`
 - [ ] `chrome.tabs.reload`
 - [ ] `chrome.tabs.onActivated`
@@ -125,6 +126,8 @@ Alternatively, you can run it directly without a global installation using `npx`
 - [ ] (mostly implemented) `chrome.storage`: Proper listeners
 - [ ] `chrome.action`
   - `onClicked.addListener`: Add menu item for click
+- [ ] Keyboard shortcuts (from manifest)
+- [ ] `background.page` support
 
 ## General tasks
 
