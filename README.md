@@ -128,10 +128,11 @@ Alternatively, you can run it directly without a global installation using `npx`
 
 ## General tasks
 
-- API bindings: `import makeUserscript from 'to-userscript';`
-  - Vite plugin
-  - Take dir and output
-- Create reusable listener logic for supporting callbacks/promises
+- [ ] Make `vanilla` target better and more capable
+- [ ] API bindings: `import makeUserscript from 'to-userscript';`
+  - [ ] Vite plugin
+  - [ ] Take dir and output
+- [ ] Create reusable listener logic for supporting callbacks/promises
 
 ## Usage & Commands
 
@@ -206,6 +207,14 @@ to-userscript require ./material-design-fileicons.user.js | pbcopy
 ## How It Works
 
 For a detailed explanation of the internal conversion pipeline, see the **[Architecture Guide](docs/architecture.md)** _note: AI generated but proofread_.
+
+## What it can (and can't/shouldn't) convert
+
+-  Extensions intended for one site should work well, extensions meant to apply some sort of enhancement to the entire web might not work quite as well
+-  Extensions where the functionality is primarily browser API based (even though these are polyfilled most of the time it's not something useful for the functionality)
+  - E.g: An adblocker is a bad use case for this, as is something like a custom new tab page or similar, whereas an extension like "YouTube auto HD" might work really well
+
+
 
 ## Troubleshooting & Advanced Usage
 
